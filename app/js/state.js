@@ -1,0 +1,15 @@
+export const state = {
+    tasks: [],
+    isRendering: false,
+    taskToHighlightTemporarily: null,
+    selectedProject: 'all',
+    selectedResponsible: 'all',
+    sortColumn: 'createdAt',
+    sortDirection: 'desc',
+    currentView: 'list',
+    lastInteractedTaskId: null,
+    editingTaskId: null,
+    taskBeingMoved: null,
+    currentUser: null,
+    searchQuery: '',
+};

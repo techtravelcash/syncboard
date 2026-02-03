@@ -1,0 +1,24 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["post"],
+      "route": "dismissAlert/{id}"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+        "type": "signalR",
+        "name": "signalRMessage",
+        "hubName": "tasks",
+        "connectionStringSetting": "AzureSignalRConnectionString",
+        "direction": "out"
+    }
+  ]
+}

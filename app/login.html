@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SyncBoard</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/AoaA8WI.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-darkest': '#27374D',
+                        'custom-header': '#28344c',
+                        'custom-dark': '#526D82',
+                        'custom-medium': '#9DB2BF',
+                        'custom-light': '#DDE6ED',
+                        'base-white': '#FFFFFF',
+                        'base-bg': '#F9FAFB',
+                    },
+                    rotate: {
+                        '360': '360deg'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-custom-dark text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-custom-darkest p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-600/30 animate-fade-in">
+        
+        <div class="flex justify-center mb-6 items-center">
+            <img src="https://i.imgur.com/AoaA8WI.png" alt="SyncBoard Logo" class="h-8 w-auto drop-shadow-lg">
+            <span class="text-2xl font-bold text-white ml-3 tracking-wide">SyncBoard</span>
+        </div>
+
+        <p class="text-custom-medium mb-8 font-medium">Faça login para gerenciar suas tarefas.</p>
+
+        <a href="/.auth/login/google?post_login_redirect_uri=/" 
+           class="group relative flex items-center justify-center gap-3 w-full 
+                  bg-white text-custom-darkest 
+                  hover:bg-gray-100 hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.02]
+                  active:scale-[0.95] active:bg-gray-200
+                  focus:outline-none focus:ring-4 focus:ring-custom-medium/50
+                  font-bold py-3.5 px-4 rounded-xl 
+                  transition-all duration-300 ease-out shadow-lg shadow-black/20">
+            
+            <svg class="w-5 h-5 transition-transform duration-700 ease-in-out group-hover:rotate-360" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+            </svg>
+            <span class="tracking-wide">Entrar com Google</span>
+        </a>
+
+        <p class="mt-8 text-xs text-custom-medium/60">Acesso restrito a usuários autorizados.</p>
+    </div>
+
+</body>
+</html>

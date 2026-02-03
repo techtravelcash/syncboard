@@ -1,0 +1,58 @@
+{
+  "platform": {
+    "apiRuntime": "node:20"
+  },
+  "auth": {
+    "rolesSource": "/api/getRoles",
+    "identityProviders": {
+      "google": {
+        "registration": {
+          "clientIdSettingName": "GOOGLE_CLIENT_ID",
+          "clientSecretSettingName": "GOOGLE_CLIENT_SECRET"
+        },
+        "login": {
+          "scopes": [
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/calendar"
+          ]
+        }
+      }
+    }
+  },
+  "routes": [
+    {
+      "route": "/login",
+      "rewrite": "/login.html",
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/logout",
+      "redirect": "/.auth/logout"
+    },
+    {
+      "route": "/api/discord-interactions",
+      "methods": ["POST"],
+      "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/*",
+      "allowedRoles": [
+        "travelcash_user"
+      ]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/login",
+      "statusCode": 302
+    },
+    "403": {
+      "redirect": "/login",
+      "statusCode": 302
+    }
+  },
+  "globalHeaders": {
+    "Cache-Control": "no-cache"
+  }
+}
