@@ -3,67 +3,74 @@ const { CosmosClient } = require("@azure/cosmos");
 
 // --- Configuração do Cosmos DB ---
 const connectionString = process.env.CosmosDB;
-const client = new CosmosClient(connectionString);
-const database = client.database("TasksDB");
-const tasksContainer = database.container("Tasks"); 
-const usersContainer = database.container("Users");
+// Inicialização segura para evitar crash se a env estiver faltando durante o deploy
+const client = connectionString ? new CosmosClient(connectionString) : null;
+const database = client ? client.database("TasksDB") : null;
+const tasksContainer = database ? database.container("Tasks") : null;
+const usersContainer = database ? database.container("Users") : null;
 
-// --- Função Principal ---
 module.exports = async function (context, req) {
-    // 1. TRATAMENTO DO BODY (Parsing manual se vier como string)
-    let interaction = req.body;
-    if (typeof interaction === 'string') {
-        try {
-            interaction = JSON.parse(interaction);
-        } catch (e) {
-            context.log.error("Erro ao fazer parse manual do body:", e);
-        }
-    }
-
-    // 2. BYPASS DE SEGURANÇA PARA "PING" (Salvar URL no Discord)
-    // Se o Discord estiver apenas testando a URL (type 1), respondemos PONG imediatamente.
-    // Ignoramos a validação de chave aqui para garantir que o botão "Save Changes" funcione.
-    if (interaction && interaction.type === 1) {
-        context.log("PING recebido. Respondendo PONG sem validar assinatura (Bypass).");
-        context.res = {
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 1 })
-        };
-        return;
-    }
-
-    // 3. Validação de Segurança (Para comandos reais)
-    const signature = req.headers['x-signature-ed25519'];
-    const timestamp = req.headers['x-signature-timestamp'];
-    // O .trim() remove espaços invisíveis que costumam vir no copy-paste
+    // 1. Obter a chave pública
     const publicKey = (process.env.DISCORD_PUBLIC_KEY || '').trim();
-
     if (!publicKey) {
-        context.log.error("ERRO: Variável DISCORD_PUBLIC_KEY não encontrada ou vazia.");
+        context.log.error("ERRO: DISCORD_PUBLIC_KEY não configurada.");
         context.res = { status: 500, body: 'Erro interno: Chave não configurada' };
         return;
     }
 
-    // Tenta usar o rawBody nativo (melhor) ou reconstrói (fallback)
-    const rawBody = req.rawBody || JSON.stringify(req.body);
-
-    const isValidRequest = verifyKey(rawBody, signature, timestamp, publicKey);
+    // 2. Validação de Assinatura (CRÍTICO)
+    const signature = req.headers['x-signature-ed25519'];
+    const timestamp = req.headers['x-signature-timestamp'];
     
+    // Azure Functions normalmente fornece req.rawBody. Usar JSON.stringify é falho para criptografia.
+    const rawBody = req.rawBody; 
+    
+    // Se rawBody for undefined, a validação vai falhar.
+    // Certifique-se de não estar forçando conversão na function.json ou modifique para obter o buffer.
+    if (!rawBody && !req.body) {
+         context.res = { status: 400, body: 'Empty body' };
+         return;
+    }
+
+    // Fallback apenas se rawBody não existir (mas tente confiar no rawBody)
+    const bodyForVerification = rawBody || JSON.stringify(req.body);
+
+    const isValidRequest = verifyKey(bodyForVerification, signature, timestamp, publicKey);
+
     if (!isValidRequest) {
         context.log.warn("Assinatura inválida detectada.");
         context.res = { status: 401, body: 'Assinatura inválida' };
         return;
     }
 
-    // --- Lógica de Comandos (Só roda se passou na validação) ---
+    // 3. Parse do Body (se necessário)
+    let interaction = req.body;
+    if (typeof interaction === 'string') {
+        try {
+            interaction = JSON.parse(interaction);
+        } catch (e) {
+            context.log.error("Erro ao parsear body:", e);
+            context.res = { status: 400, body: 'Bad JSON' };
+            return;
+        }
+    }
 
-    // Autocomplete
+    // 4. Tratamento do PING (Obrigatório para o Discord validar a URL)
+    if (interaction.type === InteractionType.PING) {
+        context.log("PING recebido e validado.");
+        context.res = {
+            headers: { 'Content-Type': 'application/json' },
+            body: { type: InteractionResponseType.PONG }
+        };
+        return;
+    }
+
+    // --- Lógica de Comandos ---
     if (interaction.type === InteractionType.APPLICATION_COMMAND_AUTOCOMPLETE) {
         await handleAutocomplete(context, interaction);
         return;
     }
 
-    // Execução de Comandos
     if (interaction.type === InteractionType.APPLICATION_COMMAND) {
         await handleCommand(context, interaction);
     }
@@ -72,6 +79,12 @@ module.exports = async function (context, req) {
 // --- Funções Auxiliares ---
 
 async function handleAutocomplete(context, interaction) {
+    // Verificação de segurança para BD
+    if (!tasksContainer || !usersContainer) { 
+        context.res = { body: { type: InteractionResponseType.APPLICATION_COMMAND_AUTOCOMPLETE_RESULT, data: { choices: [] } } };
+        return; 
+    }
+
     const focusedOption = interaction.data.options.find(opt => opt.focused);
     let choices = [];
 
@@ -96,7 +109,6 @@ async function handleAutocomplete(context, interaction) {
                 data: { choices: choices.slice(0, 25) }
             }
         };
-
     } catch (error) {
         context.log.error("Erro no autocomplete:", error);
         context.res = {
@@ -128,6 +140,7 @@ async function handleCommand(context, interaction) {
             const sorteio = cobrancas[Math.floor(Math.random() * cobrancas.length)];
             responsePayload = { content: `${sorteio.msg}\n${sorteio.img}` };
         } else if (commandName === 'novatarefa') {
+            if (!tasksContainer) throw new Error("CosmosDB não conectado");
             responsePayload = await handleCreateTask(interaction, context);
         }
 
@@ -166,14 +179,12 @@ async function handleCreateTask(interaction, context) {
         return { content: `❌ Não foi possível encontrar o responsável "${responsibleName}" no quadro de tarefas. Por favor, selecione um utilizador da lista.` };
     }
 
-    // Lógica segura para ID: tenta incrementar, se falhar usa timestamp
     let newTaskId;
     try {
         const operations = [{ op: 'incr', path: '/currentId', value: 1 }];
         const { resource: updatedCounter } = await tasksContainer.item("taskCounter", "taskCounter").patch(operations);
         newTaskId = `TC-${String(updatedCounter.currentId).padStart(3, '0')}`;
     } catch (e) {
-        // Fallback caso o contador não exista
         newTaskId = `TC-${Date.now().toString().slice(-4)}`;
     }
     
