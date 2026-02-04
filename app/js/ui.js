@@ -31,7 +31,6 @@ export function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     
-    // Cores adaptadas ao tema Orbital
     const styles = {
         success: 'bg-custom-darkest text-white border-l-4 border-green-500',
         error:   'bg-red-600 text-white border-l-4 border-white',
@@ -53,7 +52,6 @@ export function showToast(message, type = 'success') {
     container.appendChild(toast);
     lucide.createIcons();
 
-    // Auto-remove após 4s
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(100%)';
@@ -107,14 +105,13 @@ export function renderModalAttachments(files) {
     renderAttachmentList('attachment-list', files);
 }
 
-// --- RENDERIZAÇÃO: CARD DE TAREFA (NOVO DESIGN) ---
+// --- RENDERIZAÇÃO: CARD DE TAREFA ---
 
 export const createTaskElement = (task) => {
     const taskCard = document.createElement('div');
     const isOverdue = isTaskOverdue(task);
     
-    // Classes base do card
-    let cardClasses = 'task-card bg-white dark:bg-[#1f2937] p-5 rounded-[20px] shadow-sm hover:shadow-lg relative flex flex-col gap-3 group border border-transparent hover:border-custom-medium/20';
+    let cardClasses = 'task-card bg-white dark:bg-[#27374d] p-5 rounded-[20px] shadow-sm hover:shadow-lg relative flex flex-col gap-3 group border border-transparent hover:border-custom-medium/20';
     
     if (isOverdue) {
         cardClasses += ' border-l-[6px] border-l-red-500';
@@ -123,20 +120,18 @@ export const createTaskElement = (task) => {
     taskCard.className = cardClasses;
     taskCard.dataset.taskId = task.id;
 
-    // 1. Badge do Projeto
+    // Badge do Projeto
     const projectColor = task.projectColor || '#9DB2BF';
     const projectBadge = task.project 
         ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm" style="background-color: ${projectColor}">${task.project}</span>`
         : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-700">Geral</span>`;
 
-    // 2. Avatares dos Responsáveis
+    // Avatares
     let responsibleDisplay = '';
     if (task.responsible && task.responsible.length > 0) {
         const avatars = task.responsible.slice(0, 3).map(r => {
             const name = typeof r === 'object' ? r.name : r;
             const pic = typeof r === 'object' ? r.picture : null;
-            
-            // Busca foto atualizada no state se disponível
             const userState = state.users.find(u => u.name === name);
             const finalPic = userState?.picture || pic;
 
@@ -147,11 +142,10 @@ export const createTaskElement = (task) => {
         }).join('');
         
         const extra = task.responsible.length > 3 ? `<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-[#1f2937] flex items-center justify-center text-[9px] font-bold text-gray-500">+${task.responsible.length - 3}</div>` : '';
-        
         responsibleDisplay = `<div class="flex -space-x-2">${avatars}${extra}</div>`;
     }
 
-    // 3. Indicadores (Anexo, Data)
+    // Indicadores
     const attachmentIcon = (task.attachments?.length > 0) 
         ? `<div class="flex items-center gap-1 text-gray-400 text-xs"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
         : '';
@@ -163,7 +157,6 @@ export const createTaskElement = (task) => {
         dateBadge = `<div class="flex items-center gap-1 ${dateColorClass} text-xs" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>`;
     }
 
-    // Ações Rápidas (aparecem no hover)
     const quickActions = `
         <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button class="info-btn p-1.5 rounded-lg text-gray-400 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" title="Ver Detalhes" data-task-id="${task.id}">
@@ -178,9 +171,7 @@ export const createTaskElement = (task) => {
             ${projectBadge}
         </div>
         ${quickActions}
-        
         <h3 class="text-sm font-bold text-custom-darkest dark:text-gray-100 leading-snug break-words">${task.title}</h3>
-        
         <div class="mt-auto pt-3 flex items-end justify-between border-t border-gray-100 dark:border-gray-700/50">
             <div class="flex flex-col gap-1.5">
                 <span class="text-[10px] font-mono font-bold text-gray-300 dark:text-gray-600">#${task.id}</span>
@@ -200,11 +191,10 @@ export const createTaskElement = (task) => {
 
 export function renderKanbanView() {
     const kanbanViewEl = document.getElementById('kanbanView');
-    kanbanViewEl.innerHTML = '';
     
+    // Filtra tarefas ativas
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
-    // Definição das Colunas
     const columns = [
         { id: 'todo', name: 'Backlog', color: 'bg-gray-400' },
         { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
@@ -213,40 +203,54 @@ export function renderKanbanView() {
     ];
 
     columns.forEach(col => {
-        const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => (a.order || 0) - (b.order || 0));
+        // Tenta encontrar a coluna existente pelo ID
+        let columnEl = kanbanViewEl.querySelector(`.board-column[data-column-id="${col.id}"]`);
         
-        const columnEl = document.createElement('div');
-        columnEl.className = 'board-column fade-in';
-        columnEl.setAttribute('data-column-id', col.id); // Importante para o Drag & Drop
+        // Filtra as tarefas dessa coluna específica
+        const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        columnEl.innerHTML = `
-            <div class="column-header select-none">
-                <div class="flex items-center gap-3">
-                    <span class="w-2.5 h-2.5 rounded-full ${col.color} shadow-sm"></span>
-                    <h2 class="font-extrabold text-lg text-custom-darkest dark:text-white tracking-tight">${col.name}</h2>
-                </div>
-                <span class="bg-custom-light dark:bg-white/10 text-custom-dark dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-lg">${tasksForColumn.length}</span>
-            </div>
-            
-            <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}">
-                </div>
-        `;
+        // Se a coluna não existe, cria (só acontece na primeira vez)
+        if (!columnEl) {
+            columnEl = document.createElement('div');
+            columnEl.className = 'board-column fade-in'; // Animação só na criação
+            columnEl.setAttribute('data-column-id', col.id);
 
+            columnEl.innerHTML = `
+                <div class="column-header select-none">
+                    <div class="flex items-center gap-3">
+                        <span class="w-2.5 h-2.5 rounded-full ${col.color} shadow-sm"></span>
+                        <h2 class="font-extrabold text-lg text-custom-darkest dark:text-white tracking-tight">${col.name}</h2>
+                    </div>
+                    <span class="column-count bg-custom-light dark:bg-white/10 text-custom-dark dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-lg">0</span>
+                </div>
+                <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}"></div>
+            `;
+            kanbanViewEl.appendChild(columnEl);
+        }
+
+        // --- ATUALIZAÇÃO (Sem destruir a coluna) ---
+        
+        // 1. Atualiza o contador
+        const countBadge = columnEl.querySelector('.column-count');
+        if (countBadge) countBadge.textContent = tasksForColumn.length;
+
+        // 2. Atualiza a lista de tarefas
         const listEl = columnEl.querySelector('.kanban-task-list');
+        
+        // Estratégia simples: Limpa e recria APENAS os cards (é rápido e mantém a coluna estável)
+        // Se quiser ser ainda mais suave, poderíamos fazer diffing de cards, mas isso já resolve o "flash" da coluna.
+        listEl.innerHTML = ''; 
         tasksForColumn.forEach(task => listEl.appendChild(createTaskElement(task)));
-        kanbanViewEl.appendChild(columnEl);
     });
 
     lucide.createIcons();
 }
 
-// --- RENDERIZAÇÃO: LISTA (MODO LINHA) ---
+// --- RENDERIZAÇÃO: LISTA ---
 
 export function renderListView() {
     const container = document.getElementById('listView');
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
-    
-    // Ordenação básica
     activeTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
 
     if (activeTasks.length === 0) {
@@ -256,14 +260,11 @@ export function renderListView() {
     }
 
     const rows = activeTasks.map(task => {
-        // Responsáveis (Texto Simples)
         const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
         
         return `
         <div class="list-row group bg-white dark:bg-[#1f2937] p-4 rounded-2xl mb-3 shadow-sm hover:shadow-md border border-transparent hover:border-custom-medium/30 transition-all cursor-pointer flex items-center gap-4 fade-in" data-task-id="${task.id}">
-            
             <div class="w-1 h-12 rounded-full bg-${task.status === 'stopped' ? 'red-500' : (task.status === 'homologation' ? 'orange-500' : 'gray-300')} shrink-0"></div>
-
             <div class="flex-grow min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
@@ -272,12 +273,10 @@ export function renderListView() {
                 <h3 class="font-bold text-custom-darkest dark:text-white truncate">${task.title}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">${respNames || 'Sem responsável'}</p>
             </div>
-
             <div class="hidden md:flex items-center gap-6 shrink-0">
                 ${task.dueDate ? `<div class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
                 ${task.attachments?.length ? `<div class="text-xs text-gray-400"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
             </div>
-
             <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0" data-task-id="${task.id}">
                 <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
             </button>
@@ -287,10 +286,8 @@ export function renderListView() {
 
     container.innerHTML = `<div class="max-w-4xl mx-auto space-y-1">${rows}</div>`;
     
-    // Listener de clique na linha inteira
     container.querySelectorAll('.list-row').forEach(row => {
         row.addEventListener('click', (e) => {
-            // Evita disparar se clicar num botão específico dentro da linha
             if (!e.target.closest('button, a')) {
                 const taskId = row.dataset.taskId;
                 highlightTask(taskId, false);
@@ -311,7 +308,6 @@ export async function renderArchivedTasks() {
 
     try {
         const tasks = await fetchArchivedTasks();
-        
         if (tasks.length === 0) {
             container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="archive" class="w-16 h-16 mb-4"></i><p>O arquivo está vazio.</p></div>`;
             lucide.createIcons();
@@ -344,7 +340,7 @@ export async function renderArchivedTasks() {
     }
 }
 
-// --- RENDERIZAÇÃO: GESTÃO DE UTILIZADORES ---
+// --- RENDERIZAÇÃO: UTILIZADORES ---
 
 export function renderUserManagementView() {
     const container = document.getElementById('userManagementView');
@@ -361,7 +357,6 @@ export function renderUserManagementView() {
             </div>
             <div class="flex items-center gap-4">
                 ${user.isAdmin ? '<span class="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] font-bold uppercase rounded-lg">Admin</span>' : '<span class="text-xs text-gray-400">Membro</span>'}
-                
                 <button class="delete-user-btn text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-user-id="${user.id || user.email}">
                     <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                 </button>
@@ -377,7 +372,6 @@ export function renderUserManagementView() {
                     ${rows}
                 </div>
             </div>
-            
             <div>
                 <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Novo Membro</h2>
                 <form id="addUserForm" class="bg-white dark:bg-[#1f2937] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
@@ -402,6 +396,7 @@ export function renderUserManagementView() {
 }
 
 // --- GERENCIADOR DE VISUALIZAÇÕES (ROTEADOR UI) ---
+// *** CORREÇÃO AQUI: Adicionado flex e gap-8 ao kanbanView para corrigir alinhamento vertical ***
 
 export function updateActiveView() {
     const kanban = document.getElementById('kanbanView');
@@ -414,7 +409,7 @@ export function updateActiveView() {
     // 1. Resetar Visibilidade
     [kanban, list, archived, users].forEach(el => el.classList.add('hidden'));
 
-    // 2. Atualizar Botões do Menu Orb
+    // 2. Atualizar Botões do Menu
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
         const isActive = btn.dataset.view === state.currentView;
         if (isActive) {
@@ -429,15 +424,23 @@ export function updateActiveView() {
     // 3. Renderizar View Escolhida
     if (state.currentView === 'kanban') {
         renderKanbanView();
-        kanban.classList.remove('hidden');
-        // O Kanban precisa do scroll horizontal do immersive-canvas
+        
+        // CORREÇÃO DE CENTRALIZAÇÃO:
+        // Removemos 'w-full' para o container não esticar 100%
+        // Adicionamos 'w-fit' (largura do conteúdo) e 'mx-auto' (margem auto horizontal)
+        kanban.classList.remove('hidden', 'w-full');
+        kanban.classList.add('flex', 'gap-8', 'w-fit', 'mx-auto'); 
+        
         main.classList.add('immersive-canvas');
         main.classList.remove('block'); 
         label.textContent = "Quadro Geral";
     } else {
-        // As outras views são verticais, removemos o layout horizontal
+        // Restauramos o padrão para outras views
+        kanban.classList.add('w-full');
+        kanban.classList.remove('flex', 'gap-8', 'w-fit', 'mx-auto');
+        
         main.classList.remove('immersive-canvas');
-        main.classList.add('block'); // Garante display: block
+        main.classList.add('block'); 
 
         if (state.currentView === 'list') {
             renderListView();
@@ -455,9 +458,8 @@ export function updateActiveView() {
     }
 }
 
-// --- FILTROS NO ORB (CHIPS) ---
+// --- FILTROS NO ORB ---
 
-// Função auxiliar para filtrar os dados antes de renderizar
 function filterTasks(tasks) {
     let filtered = tasks;
     if (state.selectedProject !== 'all') {
@@ -505,25 +507,20 @@ export function populateResponsibleFilter() {
     });
 }
 
-// --- MODAL: DETALHES DA TAREFA ---
+// --- MODAL: DETALHES ---
 
 export function renderTaskHistory(taskId) {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    // 1. Títulos e Badges
     document.getElementById('modal-info-title').textContent = task.title;
     document.getElementById('modal-info-project').textContent = task.project || 'Geral';
     document.getElementById('modal-info-project').style.color = task.projectColor || '#9DB2BF';
-    
-    // 2. Descrição
     document.getElementById('modal-info-description').textContent = task.description;
 
-    // 3. Responsáveis
     const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
     document.getElementById('modal-info-responsible').textContent = respNames || 'Não atribuído';
 
-    // 4. Datas (Agenda Google)
     const calendarBtn = document.getElementById('modal-calendar-btn');
     const respEmails = (task.responsible || []).map(r => r.email).filter(Boolean).join(',');
     const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description)}&add=${respEmails}`;
@@ -531,7 +528,6 @@ export function renderTaskHistory(taskId) {
 
     const dueDateEl = document.getElementById('modal-info-dueDate');
     const dueDateContainer = document.getElementById('modal-info-dueDate-container');
-    
     if (task.dueDate) {
         dueDateEl.querySelector('span').textContent = formatDate(task.dueDate);
         dueDateContainer.classList.remove('hidden');
@@ -539,7 +535,6 @@ export function renderTaskHistory(taskId) {
         dueDateContainer.classList.add('hidden');
     }
 
-    // 5. Links e Anexos
     const linkContainer = document.getElementById('modal-info-azure-link-container');
     const linkEl = document.getElementById('modal-info-azure-link');
     if (task.azureLink) {
@@ -558,7 +553,6 @@ export function renderTaskHistory(taskId) {
         attachContainer.classList.add('hidden');
     }
 
-    // 6. Histórico (Logs)
     const historyEl = document.getElementById('history-feed');
     const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
@@ -570,7 +564,6 @@ export function renderTaskHistory(taskId) {
         </div>
     `).join('');
 
-    // 7. Comentários
     const commentsEl = document.getElementById('comments-feed');
     const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
@@ -603,8 +596,6 @@ export function renderTaskHistory(taskId) {
         }).join('');
     }
 
-    // 8. Botão Sinalizar (Alerta)
-    // Removemos botão antigo se existir para não duplicar eventos
     const oldSignal = document.getElementById('signalBtn');
     if (oldSignal) oldSignal.remove();
 
@@ -614,11 +605,9 @@ export function renderTaskHistory(taskId) {
     signalBtn.title = 'Enviar Alerta Urgente';
     signalBtn.innerHTML = '<i data-lucide="siren" class="w-5 h-5"></i>';
     
-    // Inserir antes do botão de fechar
     const closeBtn = document.getElementById('closeHistoryBtn');
     closeBtn.parentNode.insertBefore(signalBtn, closeBtn);
 
-    // Lógica do clique (usa imports dinâmicos para evitar ciclo)
     signalBtn.onclick = () => {
         showConfirmModal(
             'Enviar Alerta', 
@@ -632,22 +621,17 @@ export function renderTaskHistory(taskId) {
         );
     };
 
-    // Abrir Modal
     document.getElementById('taskHistoryModal').classList.remove('hidden');
     lucide.createIcons();
-    
-    // Iniciar autocomplete de comentários
     setTimeout(() => setupCommentAutocomplete(), 300);
 }
 
-// --- UTILITÁRIOS DIVERSOS ---
+// --- UTILITÁRIOS ---
 
 export function highlightTask(taskId, temporary = true) {
     if (!taskId) return;
-    // Remove destaque anterior
     document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
     
-    // Busca elemento (Card ou Linha)
     const el = document.querySelector(`[data-task-id="${taskId}"]`);
     if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
@@ -664,7 +648,6 @@ export function showConfirmModal(title, message, onConfirm, onCancel) {
     modal.querySelector('p').textContent = message;
     
     const confirmBtn = document.getElementById('confirmDeleteBtn');
-    // Clona o botão para remover listeners antigos
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     
@@ -686,9 +669,8 @@ export async function updateNotificationBadge() {
     const unread = notifs.filter(n => !n.isRead);
     const count = unread.length;
     
-    // Atualiza badges (Perfil e Menu)
-    const badgeOrb = document.getElementById('notification-badge-orb'); // Bolinha no avatar
-    const badgeMenu = document.getElementById('orb-notif-count'); // Contador no menu
+    const badgeOrb = document.getElementById('notification-badge-orb');
+    const badgeMenu = document.getElementById('orb-notif-count');
     
     if (count > 0) {
         badgeOrb.classList.remove('hidden');
@@ -699,7 +681,6 @@ export async function updateNotificationBadge() {
         badgeMenu.classList.add('hidden');
     }
 
-    // Renderiza Lista no Menu Orb
     const listContainer = document.getElementById('orb-notifications-list');
     if (notifs.length === 0) {
         listContainer.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Sem notificações.</div>';
@@ -712,7 +693,6 @@ export async function updateNotificationBadge() {
             </div>
         `).join('');
         
-        // Click nas notificações
         listContainer.querySelectorAll('div[data-notif-id]').forEach(el => {
             el.addEventListener('click', async () => {
                 const notifId = el.dataset.notifId;
@@ -723,10 +703,8 @@ export async function updateNotificationBadge() {
                     updateNotificationBadge();
                 }
                 
-                // Fecha o Orb Menu e abre a tarefa
                 document.getElementById('orb-tools').classList.remove('expanded');
                 
-                // Se a tarefa existir no state local, abre
                 if (state.tasks.find(t => t.id === taskId)) {
                     highlightTask(taskId);
                     renderTaskHistory(taskId);
@@ -738,7 +716,7 @@ export async function updateNotificationBadge() {
     }
 }
 
-// --- AUTOCOMPLETE DE COMENTÁRIOS (@) ---
+// --- AUTOCOMPLETE E INPUTS ---
 
 export function setupCommentAutocomplete() {
     const input = document.getElementById('comment-input');
@@ -798,7 +776,6 @@ export function setupCommentAutocomplete() {
     });
 }
 
-// Configuração do input de responsáveis (Tags)
 export function setupResponsibleInput(initialResponsibles = []) {
     const container = document.getElementById('responsible-input-container');
     const input = document.getElementById('taskResponsible');
@@ -806,7 +783,6 @@ export function setupResponsibleInput(initialResponsibles = []) {
     let current = [...initialResponsibles];
 
     const render = () => {
-        // Remove tags existentes (exceto o input)
         Array.from(container.children).forEach(c => {
             if (c !== input) c.remove();
         });
@@ -856,7 +832,6 @@ export function setupResponsibleInput(initialResponsibles = []) {
         }
     };
     
-    // Fecha ao clicar fora
     document.addEventListener('click', (e) => {
         if (!container.contains(e.target)) suggestions.classList.add('hidden');
     });
@@ -864,14 +839,12 @@ export function setupResponsibleInput(initialResponsibles = []) {
     render();
 }
 
-// Configuração do input de Projetos (Suggestions)
 export function setupProjectSuggestions() {
     const input = document.getElementById('taskProject');
     const list = document.getElementById('project-suggestions');
     const colorInput = document.getElementById('taskProjectColor');
     const colorBtn = document.getElementById('color-picker-button');
 
-    // Mapeia projetos existentes
     const projectMap = new Map();
     state.tasks.forEach(t => { if(t.project) projectMap.set(t.project, t.projectColor); });
 
@@ -907,7 +880,6 @@ export function setupProjectSuggestions() {
     };
 }
 
-// Configuração do Color Picker Customizado
 export function setupCustomColorPicker() {
     const btn = document.getElementById('color-picker-button');
     const palette = document.getElementById('color-palette');
@@ -922,10 +894,9 @@ export function setupCustomColorPicker() {
 
     btn.onclick = () => palette.classList.toggle('hidden');
     
-    // Atualiza cor do botão quando input muda
     const updateBtn = () => btn.style.backgroundColor = input.value;
     input.oninput = updateBtn;
-    updateBtn(); // Init
+    updateBtn();
 
     Array.from(palette.children).forEach(swatch => {
         swatch.onclick = () => {
@@ -937,7 +908,6 @@ export function setupCustomColorPicker() {
 
     nativeTrig.onclick = () => input.click();
     
-    // Fecha palette ao clicar fora
     document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !palette.contains(e.target)) palette.classList.add('hidden');
     });

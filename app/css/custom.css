@@ -133,67 +133,84 @@
 
 /* --- Posicionamento e Expansão dos Orbs Específicos --- */
 
+/* Configuração Base para Círculos Perfeitos */
+.corner-orb {
+    /* Garante que comece redondo */
+    border-radius: 50%; 
+    /* Centraliza conteúdo */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
 /* 1. NAV (Canto Inferior Esquerdo) */
 #orb-nav {
-    bottom: -20px;
-    left: -20px;
-    width: 130px; 
-    height: 130px;
+    width: 200px;  /* Aumentado de 140px */
+    height: 200px; /* Aumentado de 140px */
+    bottom: -100px; /* Metade do tamanho para fora */
+    left: -100px;   /* Metade do tamanho para fora */
+    border-radius: 50%;
 }
-/* Ajuste fino do ícone para ficar visível no canto */
+
+/* Ícone no quadrante superior direito */
 #orb-nav .orb-icon-wrapper { 
-    padding-bottom: 25px; 
-    padding-right: 25px; 
-    align-items: flex-end; 
-    justify-content: flex-end; 
+    position: absolute;
+    top: 22%; /* Ajuste fino para o novo tamanho */
+    right: 22%;
+    transform: translate(50%, -50%);
 }
 
 #orb-nav.expanded {
-    width: 300px;
-    height: 480px;
+    width: 320px;
+    height: 500px;
     bottom: 30px;
     left: 30px;
     border-radius: 32px;
-    cursor: default;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
 }
 
 /* 2. FILTER (Canto Superior Esquerdo) */
 #orb-filter {
-    top: -20px;
-    left: -20px;
-    width: 100px; 
-    height: 100px;
+    width: 200px; 
+    height: 200px;
+    top: -100px;
+    left: -100px;
+    border-radius: 50%;
 }
+
+/* Ícone no quadrante inferior direito */
 #orb-filter .orb-icon-wrapper { 
-    padding-top: 25px; 
-    padding-right: 25px; 
-    align-items: flex-start; 
-    justify-content: flex-end; 
+    position: absolute;
+    bottom: 22%; 
+    right: 22%;
+    transform: translate(50%, 50%);
 }
 
 #orb-filter.expanded {
     width: 350px;
-    height: 500px; /* Fixo ou auto */
+    height: auto;
+    min-height: 500px;
     top: 30px;
     left: 30px;
     border-radius: 32px;
-    cursor: default;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
 /* 3. TOOLS (Canto Superior Direito) */
 #orb-tools {
-    top: -20px;
-    right: -20px;
-    width: 110px; 
-    height: 110px;
+    width: 200px; 
+    height: 200px;
+    top: -100px;
+    right: -100px;
+    border-radius: 50%;
 }
+
+/* Ícone no quadrante inferior esquerdo */
 #orb-tools .orb-icon-wrapper { 
-    padding-top: 25px; 
-    padding-left: 25px; 
-    align-items: flex-start; 
-    justify-content: flex-start; 
+    position: absolute;
+    bottom: 22%; 
+    left: 22%;
+    transform: translate(-50%, 50%);
 }
 
 #orb-tools.expanded {
@@ -203,31 +220,49 @@
     top: 30px;
     right: 30px;
     border-radius: 32px;
-    cursor: default;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* 4. FAB CREATE (Botão Flutuante) */
+/* 4. FAB CREATE (Botão Flutuante Normal - Mantido igual) */
 .orb-fab {
     position: fixed;
     bottom: 40px;
     right: 40px;
-    width: 64px;
-    height: 64px;
+    width: 72px; /* Ligeiramente maior também para equilibrar */
+    height: 72px;
     border-radius: 50%;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    /* Animação suave de pulso na borda */
     animation: pulse-border-soft 3s infinite;
 }
 
-@keyframes pulse-border-soft {
-    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
-    70% { box-shadow: 0 0 0 15px rgba(39, 55, 77, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0); }
+/* Mobile: Ajuste para telas menores */
+@media (max-width: 768px) {
+    #orb-nav, #orb-filter, #orb-tools {
+        width: 120px; /* Aumentado também no mobile */
+        height: 120px;
+    }
+    
+    #orb-nav { bottom: -60px; left: -60px; }
+    #orb-filter { top: -60px; left: -60px; }
+    #orb-tools { top: -60px; right: -60px; }
+
+    #orb-nav .orb-icon-wrapper { top: 20%; right: 20%; }
+    #orb-filter .orb-icon-wrapper { bottom: 20%; right: 20%; }
+    #orb-tools .orb-icon-wrapper { bottom: 20%; left: 20%; }
+
+    #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded {
+        width: 90vw;
+        height: auto;
+        left: 5vw;
+        right: 5vw;
+        top: 10vh;
+        bottom: auto;
+        border-radius: 24px;
+    }
 }
 
 /* --- Elementos de Interface --- */

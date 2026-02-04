@@ -40,11 +40,11 @@
         }
     </script>
 </head>
-<body class="antialiased bg-base-bg dark:bg-[#111827] text-custom-darkest dark:text-custom-light overflow-hidden h-screen font-sans">
+<body class="antialiased bg-base-bg dark:bg-custom-dark text-custom-darkest dark:text-custom-light overflow-hidden h-screen font-sans transition-colors duration-300">
     
     <div id="app">
         
-        <div class="corner-orb bg-custom-darkest text-white dark:bg-custom-dark dark:text-white shadow-2xl" id="orb-nav">
+        <div class="corner-orb bg-custom-darkest text-white dark:bg-custom-header dark:text-white shadow-2xl" id="orb-nav">
             <div class="orb-icon-wrapper">
                 <i data-lucide="layout-grid" class="w-8 h-8 cycling-icon active" data-idx="0"></i>
                 <i data-lucide="list" class="w-8 h-8 cycling-icon" data-idx="1"></i>
@@ -84,12 +84,12 @@
             </div>
         </div>
 
-        <div class="corner-orb bg-white text-custom-darkest border border-custom-light dark:bg-[#1f2937] dark:text-white dark:border-gray-700 shadow-xl" id="orb-filter">
+        <div class="corner-orb bg-white text-custom-darkest border border-custom-light dark:bg-custom-light dark:text-custom-darkest dark:border-custom-medium shadow-xl" id="orb-filter">
             <div class="orb-icon-wrapper">
                 <i data-lucide="filter" class="w-6 h-6"></i>
             </div>
 
-            <div class="menu-content text-custom-darkest dark:text-white">
+            <div class="menu-content text-custom-darkest">
                 <button class="close-btn absolute top-6 right-6 opacity-50 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -101,30 +101,30 @@
                 <div class="mb-6">
                     <div class="relative w-full group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="w-4 h-4 text-custom-medium group-focus-within:text-custom-dark transition-colors"></i>
+                            <i data-lucide="search" class="w-4 h-4 text-custom-dark group-focus-within:text-custom-darkest transition-colors"></i>
                         </div>
-                        <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-light/30 dark:bg-black/20 border border-custom-medium/30 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all">
+                        <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-darkest/5 border border-custom-darkest/10 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all placeholder-custom-dark/50">
                     </div>
                 </div>
 
                 <div class="filter-group mb-6">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-3">Projetos</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Projetos</div>
                     <div id="orb-project-filters" class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto scrollbar-hide">
                         </div>
                 </div>
 
                 <div class="filter-group flex-grow">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-3">Responsáveis</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Responsáveis</div>
                     <div id="orb-responsible-filters" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-hide">
                         </div>
                 </div>
             </div>
         </div>
 
-        <div class="corner-orb bg-white text-custom-darkest dark:bg-[#1f2937] dark:text-white shadow-xl border border-transparent dark:border-gray-700" id="orb-tools">
+        <div class="corner-orb bg-white text-custom-darkest dark:bg-custom-header dark:text-white shadow-xl border border-transparent dark:border-white/5" id="orb-tools">
             <div class="orb-icon-wrapper relative">
                 <i data-lucide="user" class="w-6 h-6"></i>
-                <span id="notification-badge-orb" class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 hidden border-2 border-white dark:border-[#1f2937] animate-pulse"></span>
+                <span id="notification-badge-orb" class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 hidden border-2 border-white dark:border-custom-header animate-pulse"></span>
             </div>
 
             <div class="menu-content">
@@ -133,7 +133,7 @@
                 </button>
                 
                 <div class="flex items-center gap-4 mb-8">
-                    <div id="user-avatar-container" class="w-14 h-14 rounded-full overflow-hidden border-2 border-custom-light dark:border-gray-600 shadow-sm relative">
+                    <div id="user-avatar-container" class="w-14 h-14 rounded-full overflow-hidden border-2 border-custom-light dark:border-white/20 shadow-sm relative">
                         <div class="absolute inset-0 bg-gray-200 animate-pulse"></div>
                     </div>
                     <div>
@@ -154,19 +154,18 @@
                         <i id="theme-icon" data-lucide="moon" class="w-5 h-5 text-custom-dark group-hover:text-custom-darkest dark:text-gray-400 dark:group-hover:text-white"></i> <span>Tema</span>
                     </button>
                     
-                    <div class="h-px bg-custom-light dark:bg-gray-700 my-3"></div>
+                    <div class="h-px bg-custom-light dark:bg-white/10 my-3"></div>
                     
                     <a href="/logout" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-bold">
                         <i data-lucide="log-out" class="w-5 h-5"></i> Sair
                     </a>
                 </div>
                 
-                <div id="orb-notifications-list" class="hidden mt-4 pt-4 border-t border-custom-light dark:border-gray-700 overflow-y-auto max-h-[150px] custom-scrollbar">
-                    </div>
+                <div id="orb-notifications-list" class="hidden mt-4 pt-4 border-t border-custom-light dark:border-white/10 overflow-y-auto max-h-[150px] custom-scrollbar"></div>
             </div>
         </div>
 
-        <button id="addTaskBtn" class="orb-fab bg-custom-darkest text-white dark:bg-white dark:text-custom-darkest shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group" title="Nova Tarefa">
+        <button id="addTaskBtn" class="orb-fab bg-custom-darkest text-white dark:bg-custom-light dark:text-custom-darkest shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group" title="Nova Tarefa">
             <i data-lucide="plus" class="w-8 h-8 group-hover:rotate-90 transition-transform duration-300"></i>
         </button>
 
@@ -178,7 +177,7 @@
             </div>
         </div>
 
-        <div id="loader-container" class="fixed inset-0 z-[2000] flex justify-center items-center bg-base-white dark:bg-[#111827]">
+        <div id="loader-container" class="fixed inset-0 z-[2000] flex justify-center items-center bg-base-white dark:bg-custom-dark">
             <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] [background-size:20px_20px] opacity-50"></div>
             <video id="loader-video" autoplay muted loop playsinline class="absolute w-64 h-64 object-cover opacity-20 rounded-full blur-3xl">
                 <source src="https://syncboard.blob.core.windows.net/geral/Apresentação1.mp4" type="video/mp4">
@@ -190,7 +189,7 @@
         </div>
 
         <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out">
-            <div id="kanbanView" class="hidden w-full h-full"></div>
+            <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto"></div>
             <div id="listView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
             <div id="archivedView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
             <div id="userManagementView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>

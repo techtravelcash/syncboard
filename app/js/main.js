@@ -107,45 +107,74 @@ function updateDragAndDropState() {
         columns.forEach(list => {
             const sortable = new Sortable(list, {
                 group: 'kanban',
-                animation: 200,
-                delay: 100, // Previne arrastar acidentalmente no touch
+                animation: 150,
+                delay: 100,
                 delayOnTouchOnly: true,
                 ghostClass: 'opacity-50',
-                dragClass: 'rotate-2', // Leve rotação ao arrastar
+                dragClass: 'rotate-2',
+                
                 onEnd: async (evt) => {
-                    const taskId = evt.item.dataset.taskId;
+                    const itemEl = evt.item;
+                    const taskId = itemEl.dataset.taskId;
                     const newStatus = evt.to.dataset.columnId;
-                    const task = state.tasks.find(t => t.id === taskId);
+                    const oldStatus = evt.from.dataset.columnId;
                     
-                    // 1. Mudança de Coluna (Status)
-                    if (task && task.status !== newStatus) {
-                        try {
-                            await api.updateTask(taskId, { status: newStatus });
-                            // Feedback visual rápido é tratado pelo Sortable, o SignalR confirma depois
-                        } catch (error) {
-                            ui.showToast('Erro ao mover tarefa', 'error');
-                            // Reverte visualmente em caso de erro (opcional, requer reload da view)
+                    const task = state.tasks.find(t => t.id === taskId);
+                    if (!task) return;
+
+                    // 1. Atualização Otimista dos DADOS (Sem re-renderizar DOM)
+                    task.status = newStatus;
+
+                    // Se mudou de coluna (ex: para 'Parado'), atualizamos o visual do card manualmente
+                    // para evitar ter de recriar a lista inteira.
+                    if (oldStatus !== newStatus) {
+                        // Remove borda vermelha antiga se existir
+                        itemEl.classList.remove('border-l-[6px]', 'border-l-red-500');
+                        
+                        // Adiciona se for status de risco/parado (lógica copiada do createTaskElement)
+                        if (ui.isTaskOverdue(task) || newStatus === 'stopped') {
+                           // Adicione classes visuais se necessário, ou deixe simples por enquanto
+                           // O render completo virá via SignalR depois
                         }
+                        
+                        // Atualiza contadores das colunas manualmente
+                        const oldColHeader = evt.from.parentElement.querySelector('.column-count');
+                        const newColHeader = evt.to.parentElement.querySelector('.column-count');
+                        if(oldColHeader) oldColHeader.textContent = parseInt(oldColHeader.textContent) - 1;
+                        if(newColHeader) newColHeader.textContent = parseInt(newColHeader.textContent) + 1;
                     }
 
-                    // 2. Mudança de Ordem
-                    // Coleta todos os IDs da coluna de destino na nova ordem
+                    // 2. Recalcula Ordem Baseado no DOM Visual (Onde o utilizador largou)
                     const orderedTasksPayload = [];
+                    
                     document.querySelectorAll('.kanban-task-list').forEach(column => {
                         Array.from(column.children).forEach((card, index) => {
-                            if (card.dataset.taskId) {
-                                orderedTasksPayload.push({
-                                    id: card.dataset.taskId,
-                                    order: index
-                                });
+                            const cId = card.dataset.taskId;
+                            if (cId) {
+                                const t = state.tasks.find(k => k.id === cId);
+                                if (t) {
+                                    t.order = index; // Atualiza State Local
+                                    orderedTasksPayload.push({ id: cId, order: index });
+                                }
                             }
                         });
                     });
 
+                    // 3. REMOVIDO: ui.renderKanbanView() 
+                    // Não chamamos render aqui. Confiamos que o SortableJS já deixou o elemento no sítio certo.
+                    // Isso elimina o "flash" ou "pulo" visual.
+
+                    // 4. Envio para API
                     try {
+                        if (oldStatus !== newStatus) {
+                            await api.updateTask(taskId, { status: newStatus });
+                        }
                         await api.updateOrder(orderedTasksPayload);
                     } catch (error) {
-                        console.error("Erro ao reordenar:", error);
+                        console.error("Erro no sync:", error);
+                        ui.showToast('Erro ao salvar posição.', 'error');
+                        // Em caso de erro, aí sim forçamos um render para voltar ao estado real
+                        ui.renderKanbanView();
                     }
                 }
             });
@@ -510,6 +539,45 @@ function initializeEventListeners() {
         notifBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             notifList.classList.toggle('hidden');
+        });
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    
+    // Função para aplicar o tema
+    const applyTheme = (isDark) => {
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            if(themeIcon) {
+                themeIcon.setAttribute('data-lucide', 'sun'); // Mostra sol para mudar para claro
+                // Opcional: mudar texto se houver
+            }
+        } else {
+            document.documentElement.classList.remove('dark');
+            if(themeIcon) {
+                themeIcon.setAttribute('data-lucide', 'moon'); // Mostra lua para mudar para escuro
+            }
+        }
+        lucide.createIcons();
+    };
+
+    // Inicialização (Padrão: DARK)
+    // Se não houver preferência salva, assume 'dark'. Se houver, respeita.
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = savedTheme === 'dark' || !savedTheme; // !savedTheme torna o dark default
+
+    applyTheme(prefersDark);
+
+    // Event Listener do Botão
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita fechar o menu Orb
+            const isDarkNow = document.documentElement.classList.contains('dark');
+            const newThemeIsDark = !isDarkNow;
+            
+            applyTheme(newThemeIsDark);
+            localStorage.setItem('theme', newThemeIsDark ? 'dark' : 'light');
         });
     }
 }
