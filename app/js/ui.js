@@ -111,6 +111,7 @@ export const createTaskElement = (task) => {
     const taskCard = document.createElement('div');
     const isOverdue = isTaskOverdue(task);
     
+    // Cor ajustada para dark mode: #27374d
     let cardClasses = 'task-card bg-white dark:bg-[#27374d] p-5 rounded-[20px] shadow-sm hover:shadow-lg relative flex flex-col gap-3 group border border-transparent hover:border-custom-medium/20';
     
     if (isOverdue) {
@@ -189,10 +190,23 @@ export const createTaskElement = (task) => {
 
 // --- RENDERIZAÇÃO: KANBAN HORIZONTAL ---
 
+function filterTasks(tasks) {
+    let filtered = tasks;
+    if (state.selectedProject !== 'all') {
+        filtered = filtered.filter(t => t.project === state.selectedProject);
+    }
+    if (state.selectedResponsible !== 'all') {
+        filtered = filtered.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
+    }
+    if (state.searchQuery) {
+        const q = state.searchQuery.toLowerCase();
+        filtered = filtered.filter(t => t.title.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+    }
+    return filtered;
+}
+
 export function renderKanbanView() {
     const kanbanViewEl = document.getElementById('kanbanView');
-    
-    // Filtra tarefas ativas
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
     const columns = [
@@ -203,16 +217,12 @@ export function renderKanbanView() {
     ];
 
     columns.forEach(col => {
-        // Tenta encontrar a coluna existente pelo ID
         let columnEl = kanbanViewEl.querySelector(`.board-column[data-column-id="${col.id}"]`);
-        
-        // Filtra as tarefas dessa coluna específica
         const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        // Se a coluna não existe, cria (só acontece na primeira vez)
         if (!columnEl) {
             columnEl = document.createElement('div');
-            columnEl.className = 'board-column fade-in'; // Animação só na criação
+            columnEl.className = 'board-column fade-in';
             columnEl.setAttribute('data-column-id', col.id);
 
             columnEl.innerHTML = `
@@ -228,17 +238,10 @@ export function renderKanbanView() {
             kanbanViewEl.appendChild(columnEl);
         }
 
-        // --- ATUALIZAÇÃO (Sem destruir a coluna) ---
-        
-        // 1. Atualiza o contador
         const countBadge = columnEl.querySelector('.column-count');
         if (countBadge) countBadge.textContent = tasksForColumn.length;
 
-        // 2. Atualiza a lista de tarefas
         const listEl = columnEl.querySelector('.kanban-task-list');
-        
-        // Estratégia simples: Limpa e recria APENAS os cards (é rápido e mantém a coluna estável)
-        // Se quiser ser ainda mais suave, poderíamos fazer diffing de cards, mas isso já resolve o "flash" da coluna.
         listEl.innerHTML = ''; 
         tasksForColumn.forEach(task => listEl.appendChild(createTaskElement(task)));
     });
@@ -396,7 +399,6 @@ export function renderUserManagementView() {
 }
 
 // --- GERENCIADOR DE VISUALIZAÇÕES (ROTEADOR UI) ---
-// *** CORREÇÃO AQUI: Adicionado flex e gap-8 ao kanbanView para corrigir alinhamento vertical ***
 
 export function updateActiveView() {
     const kanban = document.getElementById('kanbanView');
@@ -406,10 +408,8 @@ export function updateActiveView() {
     const main = document.getElementById('main-content');
     const label = document.getElementById('current-view-label');
     
-    // 1. Resetar Visibilidade
     [kanban, list, archived, users].forEach(el => el.classList.add('hidden'));
 
-    // 2. Atualizar Botões do Menu
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
         const isActive = btn.dataset.view === state.currentView;
         if (isActive) {
@@ -421,13 +421,9 @@ export function updateActiveView() {
         }
     });
 
-    // 3. Renderizar View Escolhida
     if (state.currentView === 'kanban') {
         renderKanbanView();
         
-        // CORREÇÃO DE CENTRALIZAÇÃO:
-        // Removemos 'w-full' para o container não esticar 100%
-        // Adicionamos 'w-fit' (largura do conteúdo) e 'mx-auto' (margem auto horizontal)
         kanban.classList.remove('hidden', 'w-full');
         kanban.classList.add('flex', 'gap-8', 'w-fit', 'mx-auto'); 
         
@@ -435,7 +431,6 @@ export function updateActiveView() {
         main.classList.remove('block'); 
         label.textContent = "Quadro Geral";
     } else {
-        // Restauramos o padrão para outras views
         kanban.classList.add('w-full');
         kanban.classList.remove('flex', 'gap-8', 'w-fit', 'mx-auto');
         
@@ -459,21 +454,6 @@ export function updateActiveView() {
 }
 
 // --- FILTROS NO ORB ---
-
-function filterTasks(tasks) {
-    let filtered = tasks;
-    if (state.selectedProject !== 'all') {
-        filtered = filtered.filter(t => t.project === state.selectedProject);
-    }
-    if (state.selectedResponsible !== 'all') {
-        filtered = filtered.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
-    }
-    if (state.searchQuery) {
-        const q = state.searchQuery.toLowerCase();
-        filtered = filtered.filter(t => t.title.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
-    }
-    return filtered;
-}
 
 export function populateProjectFilter() {
     const container = document.getElementById('orb-project-filters');
@@ -671,14 +651,19 @@ export async function updateNotificationBadge() {
     
     const badgeOrb = document.getElementById('notification-badge-orb');
     const badgeMenu = document.getElementById('orb-notif-count');
+    const badgeOrbExternal = document.getElementById('notification-orb-badge');
     
     if (count > 0) {
-        badgeOrb.classList.remove('hidden');
-        badgeMenu.textContent = count > 9 ? '9+' : count;
-        badgeMenu.classList.remove('hidden');
+        if(badgeOrb) badgeOrb.classList.remove('hidden');
+        if(badgeOrbExternal) badgeOrbExternal.classList.remove('hidden');
+        if(badgeMenu) {
+            badgeMenu.textContent = count > 9 ? '9+' : count;
+            badgeMenu.classList.remove('hidden');
+        }
     } else {
-        badgeOrb.classList.add('hidden');
-        badgeMenu.classList.add('hidden');
+        if(badgeOrb) badgeOrb.classList.add('hidden');
+        if(badgeOrbExternal) badgeOrbExternal.classList.add('hidden');
+        if(badgeMenu) badgeMenu.classList.add('hidden');
     }
 
     const listContainer = document.getElementById('orb-notifications-list');

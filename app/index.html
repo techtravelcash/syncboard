@@ -55,9 +55,7 @@
                 <button class="close-btn absolute top-6 right-6 opacity-70 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
-                
                 <h4 class="text-2xl font-bold mb-8 tracking-tight">Navegação</h4>
-                
                 <div id="view-switcher-orb" class="space-y-3">
                     <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
@@ -76,7 +74,6 @@
                         <span class="font-semibold">Utilizadores</span>
                     </button>
                 </div>
-                
                 <div class="mt-auto pt-6 border-t border-white/10 flex items-center gap-3 opacity-60">
                     <i data-lucide="command" class="w-4 h-4"></i>
                     <span class="text-xs font-mono tracking-widest uppercase">SyncBoard Orbital</span>
@@ -84,20 +81,28 @@
             </div>
         </div>
 
+        <div id="orb-nav-label" class="pointer-events-none fixed z-[900] opacity-0 transition-all duration-500 ease-out">
+            <svg viewBox="0 0 320 320" class="w-full h-full overflow-visible">
+                <path id="curvePath" d="M 160,35 A 125,125 0 0 1 285,160" fill="transparent" />
+                <text class="fill-custom-darkest dark:fill-white font-bold text-sm tracking-[0.3em] uppercase drop-shadow-md">
+                    <textPath href="#curvePath" startOffset="50%" text-anchor="middle">
+                        Navegação
+                    </textPath>
+                </text>
+            </svg>
+        </div>
+
         <div class="corner-orb bg-white text-custom-darkest border border-custom-light dark:bg-custom-light dark:text-custom-darkest dark:border-custom-medium shadow-xl" id="orb-filter">
             <div class="orb-icon-wrapper">
                 <i data-lucide="filter" class="w-6 h-6"></i>
             </div>
-
             <div class="menu-content text-custom-darkest">
                 <button class="close-btn absolute top-6 right-6 opacity-50 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-                
                 <h5 class="text-lg font-bold mb-6 flex items-center gap-2">
                     <i data-lucide="list-filter" class="w-5 h-5 text-custom-dark"></i> Filtrar
                 </h5>
-
                 <div class="mb-6">
                     <div class="relative w-full group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -106,34 +111,30 @@
                         <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-darkest/5 border border-custom-darkest/10 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all placeholder-custom-dark/50">
                     </div>
                 </div>
-
                 <div class="filter-group mb-6">
                     <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Projetos</div>
-                    <div id="orb-project-filters" class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto scrollbar-hide">
-                        </div>
+                    <div id="orb-project-filters" class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto scrollbar-hide"></div>
                 </div>
-
                 <div class="filter-group flex-grow">
                     <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Responsáveis</div>
-                    <div id="orb-responsible-filters" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-hide">
-                        </div>
+                    <div id="orb-responsible-filters" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-hide"></div>
                 </div>
             </div>
         </div>
 
         <div class="corner-orb bg-white text-custom-darkest dark:bg-custom-header dark:text-white shadow-xl border border-transparent dark:border-white/5" id="orb-tools">
             <div class="orb-icon-wrapper relative">
-                <i data-lucide="user" class="w-6 h-6"></i>
-                <span id="notification-badge-orb" class="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 hidden border-2 border-white dark:border-custom-header animate-pulse"></span>
+                <div id="orb-avatar-container" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex items-center justify-center bg-white/10">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </div>
+                <span id="notification-orb-badge" class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-white dark:border-custom-header rounded-full hidden animate-pulse"></span>
             </div>
-
             <div class="menu-content">
                 <button class="close-btn absolute top-6 right-6 opacity-50 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
-                
                 <div class="flex items-center gap-4 mb-8">
-                    <div id="user-avatar-container" class="w-14 h-14 rounded-full overflow-hidden border-2 border-custom-light dark:border-white/20 shadow-sm relative">
+                    <div id="user-avatar-menu" class="w-14 h-14 rounded-full overflow-hidden border-2 border-custom-light dark:border-white/20 shadow-sm relative">
                         <div class="absolute inset-0 bg-gray-200 animate-pulse"></div>
                     </div>
                     <div>
@@ -141,7 +142,6 @@
                         <div id="user-role-display" class="text-xs font-medium text-custom-dark dark:text-custom-medium mt-0.5">...</div>
                     </div>
                 </div>
-
                 <div class="space-y-2">
                     <button id="orb-notif-btn" class="nav-item w-full text-left p-3 rounded-xl flex items-center justify-between hover:bg-custom-light/50 dark:hover:bg-white/5 transition-colors group">
                         <div class="flex items-center gap-3 text-sm font-medium">
@@ -149,18 +149,14 @@
                         </div>
                         <span id="orb-notif-count" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm">0</span>
                     </button>
-
                     <button id="theme-toggle" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 hover:bg-custom-light/50 dark:hover:bg-white/5 transition-colors text-sm font-medium group">
                         <i id="theme-icon" data-lucide="moon" class="w-5 h-5 text-custom-dark group-hover:text-custom-darkest dark:text-gray-400 dark:group-hover:text-white"></i> <span>Tema</span>
                     </button>
-                    
                     <div class="h-px bg-custom-light dark:bg-white/10 my-3"></div>
-                    
                     <a href="/logout" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-bold">
                         <i data-lucide="log-out" class="w-5 h-5"></i> Sair
                     </a>
                 </div>
-                
                 <div id="orb-notifications-list" class="hidden mt-4 pt-4 border-t border-custom-light dark:border-white/10 overflow-y-auto max-h-[150px] custom-scrollbar"></div>
             </div>
         </div>
@@ -194,7 +190,6 @@
             <div id="archivedView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
             <div id="userManagementView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
         </main>
-
     </div>
 
     <div id="taskModal" class="fixed inset-0 bg-custom-darkest/40 dark:bg-black/60 backdrop-blur-md z-[1500] hidden flex items-center justify-center p-4 modal-backdrop">
@@ -204,7 +199,6 @@
                     <h2 id="modalTitle" class="text-xl font-bold text-custom-darkest dark:text-white">Nova Tarefa</h2>
                     <p class="text-sm text-custom-dark dark:text-gray-400">Preencha os detalhes para criar um novo card.</p>
                 </div>
-                
                 <div class="p-6 space-y-5 overflow-y-auto flex-grow custom-scrollbar">
                     <div>
                         <label for="taskTitle" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Título</label>
@@ -213,12 +207,10 @@
                             <button type="button" id="openAiModalBtn" class="bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-xl transition-colors shadow-lg shadow-purple-500/20"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
                         </div>
                     </div>
-                    
                     <div>
                         <label for="taskDescription" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Descrição</label>
                         <textarea id="taskDescription" rows="3" class="form-input bg-custom-light/30 dark:bg-black/20 border-custom-medium/30 focus:ring-custom-dark w-full rounded-xl resize-none" required placeholder="Detalhes da tarefa..."></textarea>
                     </div>
-
                     <div class="relative">
                         <label for="taskResponsible" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Responsáveis</label>
                         <div id="responsible-input-container" class="flex items-center flex-wrap gap-2 p-2 bg-custom-light/30 dark:bg-black/20 border border-custom-medium/30 rounded-xl w-full min-h-[46px]">
@@ -226,7 +218,6 @@
                         </div>
                         <div id="responsible-suggestions" class="absolute z-20 w-full bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar"></div>
                     </div>
-
                     <div id="status-container" class="hidden"> 
                         <label for="taskStatus" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Status</label>
                         <select id="taskStatus" class="form-select bg-custom-light/30 dark:bg-black/20 border-custom-medium/30 rounded-xl w-full">
@@ -237,7 +228,6 @@
                             <option value="done">Concluída</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label for="taskPriority" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Prioridade</label>
@@ -259,7 +249,6 @@
                             <input type="date" id="taskDueDate" class="form-input bg-custom-light/30 dark:bg-black/20 border-custom-medium/30 rounded-xl w-full">
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div class="relative">
                             <label for="taskProject" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Projeto</label>
@@ -276,7 +265,6 @@
                             <div id="color-palette" class="absolute z-30 mt-2 w-full p-3 bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl hidden grid grid-cols-6 gap-2"></div>
                         </div>
                     </div>
-
                     <div>
                         <label for="taskAzureLink" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Link Externo (DevOps)</label>
                         <div class="relative">
@@ -286,7 +274,6 @@
                             <input type="url" id="taskAzureLink" placeholder="https://dev.azure.com/..." class="form-input pl-10 bg-custom-light/30 dark:bg-black/20 border-custom-medium/30 rounded-xl w-full text-sm">
                         </div>
                     </div>
-
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Anexos</label>
                         <div id="attachment-list" class="space-y-2 mb-3"></div>
@@ -297,7 +284,6 @@
                         <input type="file" id="task-attachment-input" multiple class="hidden">
                     </div>
                 </div>
-
                 <div class="p-4 bg-gray-50/80 dark:bg-black/20 flex items-center justify-end gap-3 flex-shrink-0 backdrop-blur-sm">
                     <button type="button" id="cancelBtn" class="px-5 py-2.5 rounded-xl text-sm font-bold text-custom-dark hover:bg-custom-light/50 dark:text-gray-300 dark:hover:bg-white/10 transition-colors">Cancelar</button>
                     <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 transition-transform active:scale-95">Salvar Tarefa</button>
@@ -308,7 +294,6 @@
 
     <div id="taskHistoryModal" class="fixed inset-0 bg-custom-darkest/40 dark:bg-black/70 backdrop-blur-md z-[1500] hidden flex items-center justify-center p-4 modal-backdrop">
         <div class="bg-base-white dark:bg-[#1f2937] border border-white/20 dark:border-gray-700 rounded-3xl shadow-2xl p-0 w-full max-w-6xl mx-4 flex flex-col max-h-[90vh] modal-content overflow-hidden">
-             
             <div class="flex justify-between items-start p-6 border-b border-custom-light dark:border-gray-700 bg-gray-50/50 dark:bg-white/5">
                 <div class="pr-8">
                     <p id="modal-info-project" class="text-xs font-bold uppercase tracking-widest mb-2 opacity-80"></p>
@@ -320,14 +305,12 @@
                     <button id="closeHistoryBtn" class="p-2.5 rounded-xl hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-5 h-full overflow-hidden">
                 <div class="md:col-span-3 p-6 overflow-y-auto custom-scrollbar space-y-6">
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Descrição</h3>
                         <p id="modal-info-description" class="text-custom-darkest dark:text-gray-200 whitespace-pre-wrap leading-relaxed text-sm"></p>
                     </div>
-
                     <div class="grid grid-cols-2 gap-6 pt-6 border-t border-custom-light dark:border-gray-700">
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Responsáveis</h3>
@@ -340,7 +323,6 @@
                             </p>
                         </div>
                     </div>
-
                     <div id="modal-info-azure-link-container" class="hidden pt-6 border-t border-custom-light dark:border-gray-700">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">DevOps Link</h3>
                         <a id="modal-info-azure-link" href="#" target="_blank" class="flex items-center gap-2 text-sm text-blue-500 hover:underline break-all bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl border border-blue-100 dark:border-blue-800">
@@ -348,12 +330,10 @@
                             <span class="truncate"></span>
                         </a>
                     </div>
-
                     <div id="modal-info-attachments-container" class="hidden pt-6 border-t border-custom-light dark:border-gray-700">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Anexos</h3>
                         <div id="modal-info-attachments" class="space-y-2"></div>
                     </div>
-
                     <div class="pt-6 border-t border-custom-light dark:border-gray-700">
                         <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-2">
                             <i data-lucide="history" class="w-3 h-3"></i> Log de Atividades
@@ -361,15 +341,11 @@
                         <div id="history-feed" class="space-y-4 pl-2 border-l-2 border-custom-light dark:border-gray-700 ml-1"></div>
                     </div>
                 </div>
-
                 <div class="md:col-span-2 bg-gray-50 dark:bg-black/20 p-6 flex flex-col border-l border-custom-light dark:border-gray-700 h-full overflow-hidden">
                     <h3 class="font-bold text-lg text-custom-darkest dark:text-white mb-4 flex items-center gap-2">
                         <i data-lucide="messages-square" class="w-5 h-5 text-custom-medium"></i> Discussão
                     </h3>
-                    
-                    <div id="comments-feed" class="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar mb-4">
-                        </div>
-
+                    <div id="comments-feed" class="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar mb-4"></div>
                     <div class="mt-auto bg-white dark:bg-[#2d3748] p-3 rounded-2xl border border-custom-light dark:border-gray-600 shadow-sm focus-within:ring-2 focus-within:ring-custom-dark/20 transition-all">
                         <textarea id="comment-input" class="w-full bg-transparent border-none focus:ring-0 text-sm p-1 max-h-32 resize-none text-custom-darkest dark:text-white placeholder-gray-400" placeholder="Escreva um comentário (@ para mencionar)..." rows="2"></textarea>
                         <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100 dark:border-gray-600">
@@ -393,7 +369,6 @@
                 </div>
                 <button id="closeAiModalBtn" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            
             <div class="p-6 space-y-5">
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Título Original</label>
@@ -412,7 +387,6 @@
                     <textarea id="ai-result-text" rows="2" class="w-full bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800 rounded-xl p-3 text-custom-darkest dark:text-white font-medium focus:ring-0"></textarea>
                 </div>
             </div>
-            
             <div class="p-4 bg-gray-50 dark:bg-black/20 flex items-center justify-end gap-3">
                 <button type="button" id="cancelAiBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 font-semibold py-2 px-4 rounded-lg text-sm">Cancelar</button>
                 <button type="button" id="generateAiBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-purple-500/20 transition-transform active:scale-95"><i data-lucide="sparkles" class="w-4 h-4"></i> Gerar</button>
@@ -438,7 +412,6 @@
     <div id="alertModal" class="fixed inset-0 z-[1800] hidden flex flex-col items-center justify-center bg-red-600/90 backdrop-blur-md">
         <div class="bg-white dark:bg-[#1f2937] p-8 rounded-3xl shadow-2xl max-w-lg w-full text-center border-4 border-yellow-400 animate-pulse-border relative overflow-hidden">
             <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="alert-triangle" class="w-32 h-32 text-red-500"></i></div>
-            
             <div class="mb-6 flex justify-center relative">
                 <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center animate-bounce shadow-xl">
                     <i data-lucide="siren" class="w-12 h-12 text-red-600"></i>
@@ -446,12 +419,10 @@
             </div>
             <h2 class="text-3xl font-black text-red-600 mb-2 uppercase tracking-tight">Atenção!</h2>
             <p class="text-gray-600 dark:text-gray-300 mb-6 font-medium">Sua atenção é necessária nesta tarefa:</p>
-            
             <div class="bg-gray-50 dark:bg-black/20 p-5 rounded-2xl mb-8 text-left border-l-8 border-red-500 shadow-inner">
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">ID: <span id="alert-task-id">...</span></p>
                 <h3 id="alert-task-title" class="text-xl font-bold text-gray-900 dark:text-white leading-tight">...</h3>
             </div>
-
             <button id="dismissAlertBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-xl shadow-red-900/20 flex items-center justify-center gap-3 transition-transform hover:scale-105">
                 <i data-lucide="check-circle-2" class="w-6 h-6"></i>
                 <span>Confirmar Leitura</span>
@@ -461,7 +432,6 @@
     </div>
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
-
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

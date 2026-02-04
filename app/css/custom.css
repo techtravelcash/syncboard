@@ -41,14 +41,12 @@
 .immersive-canvas {
     width: 100%;
     height: 100vh;
-    /* Espaçamento: Topo maior para título, laterais para os orbs */
     padding: 110px 40px 40px 40px; 
     overflow-x: auto;
     overflow-y: hidden;
     display: flex;
     align-items: flex-start;
     gap: 32px;
-    /* Comportamento de scroll suave */
     scroll-behavior: smooth;
 }
 
@@ -59,7 +57,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    /* padding-bottom garante que o conteúdo não encoste no chão do canvas */
     padding-bottom: 20px; 
     transition: opacity 0.3s ease;
 }
@@ -70,22 +67,20 @@
     overflow-y: auto;
     padding-right: 4px;
     padding-left: 4px;
-    /* Espaço extra no final para não cortar sombra do último card */
     padding-bottom: 100px; 
 }
 
 /* --- SISTEMA ORBITAL (Menus Flutuantes) --- */
 .corner-orb {
     position: fixed;
-    width: 80px;  /* Tamanho fechado padrão */
-    height: 80px;
-    border-radius: 40px; /* Redondo */
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
     z-index: 1000;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Transição complexa para o efeito de "bolha" expandindo */
     transition: 
         width 0.5s var(--transition-bounce),
         height 0.5s var(--transition-bounce),
@@ -96,7 +91,7 @@
     overflow: hidden;
 }
 
-/* Ícone central do Orb (desaparece ao expandir) */
+/* Ícone central do Orb */
 .orb-icon-wrapper {
     position: absolute;
     width: 100%;
@@ -113,7 +108,7 @@
     transform: scale(0.5);
 }
 
-/* Conteúdo interno do menu (aparece ao expandir) */
+/* Conteúdo interno do menu */
 .menu-content {
     width: 100%;
     height: 100%;
@@ -122,7 +117,6 @@
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    /* Delay na opacidade para só aparecer depois que o orb cresceu */
     transition: opacity 0.3s ease 0.15s; 
 }
 
@@ -133,33 +127,19 @@
 
 /* --- Posicionamento e Expansão dos Orbs Específicos --- */
 
-/* Configuração Base para Círculos Perfeitos */
-.corner-orb {
-    /* Garante que comece redondo */
-    border-radius: 50%; 
-    /* Centraliza conteúdo */
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-}
-
 /* 1. NAV (Canto Inferior Esquerdo) */
 #orb-nav {
-    width: 200px;  /* Aumentado de 140px */
-    height: 200px; /* Aumentado de 140px */
-    bottom: -100px; /* Metade do tamanho para fora */
-    left: -100px;   /* Metade do tamanho para fora */
-    border-radius: 50%;
+    bottom: -100px;
+    left: -100px;
+    /* Efeito de glowing pulsante */
+    animation: orbGlow 3s infinite ease-in-out;
 }
-
-/* Ícone no quadrante superior direito */
 #orb-nav .orb-icon-wrapper { 
     position: absolute;
-    top: 22%; /* Ajuste fino para o novo tamanho */
-    right: 22%;
+    top: 28%;    
+    right: 28%;
     transform: translate(50%, -50%);
 }
-
 #orb-nav.expanded {
     width: 320px;
     height: 500px;
@@ -167,25 +147,40 @@
     left: 30px;
     border-radius: 32px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    /* Remove a animação ao abrir */
+    animation: none;
+}
+
+/* Animação de Glowing para o Nav */
+@keyframes orbGlow {
+    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
+    50% { box-shadow: 0 0 20px 5px rgba(39, 55, 77, 0.5); }
+    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
+}
+
+/* Ícones Cíclicos */
+.cycling-icon {
+    position: absolute;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cycling-icon.active {
+    opacity: 1;
+    transform: scale(1);
 }
 
 /* 2. FILTER (Canto Superior Esquerdo) */
 #orb-filter {
-    width: 200px; 
-    height: 200px;
     top: -100px;
     left: -100px;
-    border-radius: 50%;
 }
-
-/* Ícone no quadrante inferior direito */
 #orb-filter .orb-icon-wrapper { 
     position: absolute;
-    bottom: 22%; 
-    right: 22%;
+    bottom: 28%; 
+    right: 28%;
     transform: translate(50%, 50%);
 }
-
 #orb-filter.expanded {
     width: 350px;
     height: auto;
@@ -198,21 +193,15 @@
 
 /* 3. TOOLS (Canto Superior Direito) */
 #orb-tools {
-    width: 200px; 
-    height: 200px;
     top: -100px;
     right: -100px;
-    border-radius: 50%;
 }
-
-/* Ícone no quadrante inferior esquerdo */
 #orb-tools .orb-icon-wrapper { 
     position: absolute;
-    bottom: 22%; 
-    left: 22%;
+    bottom: 28%; 
+    left: 28%;
     transform: translate(-50%, 50%);
 }
-
 #orb-tools.expanded {
     width: 320px;
     height: auto;
@@ -223,12 +212,25 @@
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* 4. FAB CREATE (Botão Flutuante Normal - Mantido igual) */
+/* Avatar Container no Botão */
+#orb-avatar-container {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#orb-avatar-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 4. FAB CREATE */
 .orb-fab {
     position: fixed;
     bottom: 40px;
     right: 40px;
-    width: 72px; /* Ligeiramente maior também para equilibrar */
+    width: 72px;
     height: 72px;
     border-radius: 50%;
     z-index: 1000;
@@ -239,103 +241,57 @@
     animation: pulse-border-soft 3s infinite;
 }
 
-/* Mobile: Ajuste para telas menores */
-@media (max-width: 768px) {
-    #orb-nav, #orb-filter, #orb-tools {
-        width: 120px; /* Aumentado também no mobile */
-        height: 120px;
-    }
-    
-    #orb-nav { bottom: -60px; left: -60px; }
-    #orb-filter { top: -60px; left: -60px; }
-    #orb-tools { top: -60px; right: -60px; }
-
-    #orb-nav .orb-icon-wrapper { top: 20%; right: 20%; }
-    #orb-filter .orb-icon-wrapper { bottom: 20%; right: 20%; }
-    #orb-tools .orb-icon-wrapper { bottom: 20%; left: 20%; }
-
-    #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded {
-        width: 90vw;
-        height: auto;
-        left: 5vw;
-        right: 5vw;
-        top: 10vh;
-        bottom: auto;
-        border-radius: 24px;
-    }
+@keyframes pulse-border-soft {
+    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
+    70% { box-shadow: 0 0 0 15px rgba(39, 55, 77, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0); }
 }
 
 /* --- Elementos de Interface --- */
-
-/* Chips de Filtro */
 .filter-chip {
-    font-size: 0.75rem; /* text-xs */
+    font-size: 0.75rem;
     font-weight: 600;
     padding: 6px 12px;
-    border-radius: 9999px; /* full */
-    background-color: rgba(221, 230, 237, 0.5); /* custom-light com opacidade */
-    color: #526D82; /* custom-dark */
+    border-radius: 9999px;
+    background-color: rgba(221, 230, 237, 0.5);
+    color: #526D82;
     cursor: pointer;
     border: 1px solid transparent;
     transition: all 0.2s ease;
     white-space: nowrap;
 }
-
 .dark .filter-chip {
     background-color: rgba(255, 255, 255, 0.1);
     color: #9DB2BF;
 }
-
-.filter-chip:hover {
-    background-color: rgba(221, 230, 237, 0.8);
-}
-.dark .filter-chip:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-}
-
+.filter-chip:hover { background-color: rgba(221, 230, 237, 0.8); }
+.dark .filter-chip:hover { background-color: rgba(255, 255, 255, 0.15); }
 .filter-chip.active {
-    background-color: #27374D; /* custom-darkest */
+    background-color: #27374D;
     color: white;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 .dark .filter-chip.active {
-    background-color: #DDE6ED; /* custom-light */
+    background-color: #DDE6ED;
     color: #27374D;
 }
 
-/* Ícones Cíclicos (Orb Nav) */
-.cycling-icon {
-    position: absolute;
-    opacity: 0;
-    transform: scale(0.5) rotate(-45deg);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cycling-icon.active {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-}
-
-/* Task Card (Interações) */
+/* Task Card */
 .task-card {
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s;
     cursor: grab;
-    /* Garante que o conteúdo não vaze nas bordas arredondadas */
     overflow: hidden; 
 }
-
 .task-card:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     z-index: 10;
 }
-
 .task-card:active {
     cursor: grabbing;
     transform: scale(0.98);
 }
 
-/* Efeito Highlight (para encontrar tarefa) */
 @keyframes highlightPulse {
     0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); border-color: #3b82f6; }
     100% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); border-color: transparent; }
@@ -346,116 +302,121 @@
     z-index: 50;
 }
 
-/* --- Animações Gerais --- */
+/* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-.fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-}
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
 
 @keyframes fadeInDelayed {
     0% { opacity: 0; transform: translateY(-10px); }
     50% { opacity: 0; transform: translateY(-10px); }
     100% { opacity: 1; transform: translateY(0); }
 }
-.fade-in-delayed {
-    animation: fadeInDelayed 0.8s ease-out forwards;
-}
+.fade-in-delayed { animation: fadeInDelayed 0.8s ease-out forwards; }
 
-/* Animação Modal Backdrop */
 @keyframes modalBackdropFade {
     from { opacity: 0; backdrop-filter: blur(0); }
     to { opacity: 1; backdrop-filter: blur(12px); }
 }
-.modal-backdrop {
-    animation: modalBackdropFade 0.3s ease-out forwards;
-}
+.modal-backdrop { animation: modalBackdropFade 0.3s ease-out forwards; }
 
-/* Animação Modal Content (Pop up) */
 @keyframes modalContentPop {
     from { opacity: 0; transform: scale(0.9) translateY(20px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
-.modal-content {
-    animation: modalContentPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+.modal-content { animation: modalContentPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* Animação Toast */
 @keyframes toastSlideUp {
     from { transform: translate(-50%, 100%); opacity: 0; }
     to { transform: translate(-50%, 0); opacity: 1; }
 }
-.toast-enter {
-    animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
+.toast-enter { animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* Animação Borda Alerta (Siren) */
 @keyframes borderPulseAlert {
     0% { border-color: #FACC15; }
     50% { border-color: #EF4444; }
     100% { border-color: #FACC15; }
 }
-.animate-pulse-border {
-    animation: borderPulseAlert 2s infinite;
+.animate-pulse-border { animation: borderPulseAlert 2s infinite; }
+
+/* --- Label Curvado (Navegação) --- */
+#orb-nav-label {
+    position: fixed;
+    /* Tamanho maior que o botão para o texto ficar em volta */
+    width: 320px; 
+    height: 320px;
+    
+    /* Centralizado no canto (metade do tamanho para fora) */
+    bottom: -160px; 
+    left: -160px;
+    
+    z-index: 900; /* Menor que o z-index do botão (1000) para ficar atrás */
+    pointer-events: none; /* Não interfere no clique */
+    
+    /* Estado Inicial: Invisível, menor e levemente rodado */
+    opacity: 0;
+    transform: scale(0.8) rotate(-15deg);
+    transform-origin: center;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* --- Responsividade Mobile --- */
+/* Quando passar o mouse no botão (#orb-nav), o rótulo vizinho aparece */
+#orb-nav:hover + #orb-nav-label {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+/* Se o menu estiver expandido, esconde o rótulo forçadamente */
+#orb-nav.expanded + #orb-nav-label {
+    opacity: 0 !important;
+    transform: scale(0.8);
+}
+
+/* Esconde em dispositivos móveis para não atrapalhar */
 @media (max-width: 768px) {
-    /* Canvas vira vertical no mobile */
     .immersive-canvas {
         flex-direction: column;
         overflow-x: hidden;
         overflow-y: auto;
-        padding: 90px 20px 100px 20px; /* Mais espaço embaixo para o menu nav */
+        padding: 90px 20px 100px 20px;
         align-items: center;
     }
-    
     .board-column {
         min-width: 100%;
-        width: 100%;
         max-width: 100%;
         height: auto;
         padding-bottom: 0;
         margin-bottom: 40px;
     }
-
     .kanban-task-list {
-        /* Altura mínima para conseguir soltar cards */
         min-height: 150px; 
         padding-bottom: 20px;
     }
+    
+    .corner-orb { width: 120px; height: 120px; }
 
-    /* Ajuste dos Orbs para Mobile (Ficam menores e mais nos cantos) */
-    .corner-orb {
-        width: 60px;
-        height: 60px;
-    }
-
-    #orb-nav { bottom: -10px; left: -10px; }
-    #orb-nav .orb-icon-wrapper { padding-bottom: 15px; padding-right: 15px; }
-
-    #orb-filter { top: -10px; left: -10px; }
-    #orb-filter .orb-icon-wrapper { padding-top: 15px; padding-right: 15px; }
-
-    #orb-tools { top: -10px; right: -10px; }
-    #orb-tools .orb-icon-wrapper { padding-top: 15px; padding-left: 15px; }
+    #orb-nav { bottom: -60px; left: -60px; }
+    #orb-filter { top: -60px; left: -60px; }
+    #orb-tools { top: -60px; right: -60px; }
+    
+    #orb-nav .orb-icon-wrapper { top: 22%; right: 22%; }
+    #orb-filter .orb-icon-wrapper { bottom: 22%; right: 22%; }
+    #orb-tools .orb-icon-wrapper { bottom: 22%; left: 22%; }
 
     .orb-fab { width: 56px; height: 56px; bottom: 20px; right: 20px; }
 
-    /* Quando expandido no mobile, vira um modal quase tela cheia */
-    #orb-nav.expanded, 
-    #orb-filter.expanded, 
-    #orb-tools.expanded {
+    #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded {
         width: 90vw;
         height: auto;
         left: 5vw;
         right: 5vw;
-        border-radius: 24px;
-        
-        /* Centraliza verticalmente aprox */
-        top: 15%; 
+        top: 15%;
         bottom: auto;
+        border-radius: 24px;
     }
+    
+    /* Esconde o label no mobile */
+    #orb-nav-label { display: none; }
 }
