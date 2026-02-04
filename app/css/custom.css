@@ -1,126 +1,426 @@
-/* --- Animações e Transições Globais --- */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+/* --- Variáveis Globais e Configurações --- */
+:root {
+    --card-radius: 20px;
+    --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --orb-bg-dark: #27374D;
+    --orb-bg-light: #FFFFFF;
 }
 
-@keyframes modal-show {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+/* --- Scrollbar Customizada (Fina e Discreta) --- */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
 }
-
-@keyframes toast-in {
-    from { transform: translateY(20px) scale(0.9); opacity: 0; }
-    to { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-@keyframes toast-out {
-    from { transform: translateY(0) scale(1); opacity: 1; }
-    to { transform: translateY(20px) scale(0.9); opacity: 0; }
-}
-
-/* --- Estilização do Scrollbar --- */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
-::-webkit-scrollbar-thumb {
-    background: #9DB2BF;
-    border-radius: 4px;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(157, 178, 191, 0.5);
+    border-radius: 3px;
 }
-.dark ::-webkit-scrollbar-thumb {
-    background: #526D82;
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(82, 109, 130, 0.5);
 }
-::-webkit-scrollbar-thumb:hover {
-    background: #526D82;
-}
-.dark ::-webkit-scrollbar-thumb:hover {
-     background: #27374D;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(82, 109, 130, 0.8);
 }
 
-
-/* --- Estilos dos Componentes --- */
-.task-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    border: 1px solid transparent;
+/* Esconde scrollbar da área principal (Immersive Canvas) */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }
-.task-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+.immersive-canvas::-webkit-scrollbar {
+    display: none;
 }
-.dark .task-card:hover {
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    border-color: #526D82;
+.immersive-canvas {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-/* --- Feedback Visual para Botões --- */
-button, .view-btn, .color-swatch {
-    transition: all 0.2s ease-out;
-}
-button:active, .view-btn:active {
-    transform: scale(0.96);
-    filter: brightness(0.95);
-}
-
-/* --- Estilos dos Modais --- */
-.modal-backdrop {
-    animation: fadeIn 0.3s ease forwards;
-}
-.modal-content {
-    animation: modal-show 0.35s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+/* --- CANVAS IMERSIVO (Layout Horizontal) --- */
+.immersive-canvas {
+    width: 100%;
+    height: 100vh;
+    /* Espaçamento: Topo maior para título, laterais para os orbs */
+    padding: 110px 40px 40px 40px; 
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    /* Comportamento de scroll suave */
+    scroll-behavior: smooth;
 }
 
-/* --- Estilos para Toasts/Alerts --- */
-.toast {
-    animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-.toast.toast-exit {
-    animation: toast-out 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-}
-
-/* --- Estilos para Dropdown Customizado --- */
-.dropdown-button {
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.dropdown-panel {
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    transform-origin: top;
+/* Coluna do Quadro (Board Column) */
+.board-column {
+    min-width: 360px;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* padding-bottom garante que o conteúdo não encoste no chão do canvas */
+    padding-bottom: 20px; 
+    transition: opacity 0.3s ease;
 }
 
-.dropdown-panel.hidden {
-    opacity: 0;
-    transform: scale(0.98) translateY(-10px);
+/* Lista de tarefas dentro da coluna */
+.kanban-task-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+    padding-left: 4px;
+    /* Espaço extra no final para não cortar sombra do último card */
+    padding-bottom: 100px; 
+}
+
+/* --- SISTEMA ORBITAL (Menus Flutuantes) --- */
+.corner-orb {
+    position: fixed;
+    width: 80px;  /* Tamanho fechado padrão */
+    height: 80px;
+    border-radius: 40px; /* Redondo */
+    z-index: 1000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Transição complexa para o efeito de "bolha" expandindo */
+    transition: 
+        width 0.5s var(--transition-bounce),
+        height 0.5s var(--transition-bounce),
+        border-radius 0.5s var(--transition-bounce),
+        top 0.5s ease, left 0.5s ease, right 0.5s ease, bottom 0.5s ease,
+        background-color 0.3s ease,
+        box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+/* Ícone central do Orb (desaparece ao expandir) */
+.orb-icon-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, transform 0.2s;
     pointer-events: none;
 }
 
-/* --- Destaque na Barra de Cor do Projeto --- */
-.task-card .color-bar {
-    transition: filter 0.2s ease;
+.corner-orb.expanded .orb-icon-wrapper {
+    opacity: 0;
+    transform: scale(0.5);
 }
 
-.task-card:hover .color-bar {
-    filter: brightness(1.15); /* Aumenta o brilho da cor no hover */
+/* Conteúdo interno do menu (aparece ao expandir) */
+.menu-content {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    /* Delay na opacidade para só aparecer depois que o orb cresceu */
+    transition: opacity 0.3s ease 0.15s; 
 }
 
-/* --- Estilos para Anexos --- */
-.attachment-item {
-    transition: background-color 0.2s ease;
-}
-
-.attachment-item:hover .remove-attachment-btn {
+.corner-orb.expanded .menu-content {
     opacity: 1;
+    pointer-events: all;
 }
 
-@keyframes border-pulse {
-    0% { border-color: #FACC15; box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-    70% { border-color: #EF4444; box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-    100% { border-color: #FACC15; box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+/* --- Posicionamento e Expansão dos Orbs Específicos --- */
+
+/* 1. NAV (Canto Inferior Esquerdo) */
+#orb-nav {
+    bottom: -20px;
+    left: -20px;
+    width: 130px; 
+    height: 130px;
+}
+/* Ajuste fino do ícone para ficar visível no canto */
+#orb-nav .orb-icon-wrapper { 
+    padding-bottom: 25px; 
+    padding-right: 25px; 
+    align-items: flex-end; 
+    justify-content: flex-end; 
 }
 
+#orb-nav.expanded {
+    width: 300px;
+    height: 480px;
+    bottom: 30px;
+    left: 30px;
+    border-radius: 32px;
+    cursor: default;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 2. FILTER (Canto Superior Esquerdo) */
+#orb-filter {
+    top: -20px;
+    left: -20px;
+    width: 100px; 
+    height: 100px;
+}
+#orb-filter .orb-icon-wrapper { 
+    padding-top: 25px; 
+    padding-right: 25px; 
+    align-items: flex-start; 
+    justify-content: flex-end; 
+}
+
+#orb-filter.expanded {
+    width: 350px;
+    height: 500px; /* Fixo ou auto */
+    top: 30px;
+    left: 30px;
+    border-radius: 32px;
+    cursor: default;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* 3. TOOLS (Canto Superior Direito) */
+#orb-tools {
+    top: -20px;
+    right: -20px;
+    width: 110px; 
+    height: 110px;
+}
+#orb-tools .orb-icon-wrapper { 
+    padding-top: 25px; 
+    padding-left: 25px; 
+    align-items: flex-start; 
+    justify-content: flex-start; 
+}
+
+#orb-tools.expanded {
+    width: 320px;
+    height: auto;
+    min-height: 400px;
+    top: 30px;
+    right: 30px;
+    border-radius: 32px;
+    cursor: default;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* 4. FAB CREATE (Botão Flutuante) */
+.orb-fab {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* Animação suave de pulso na borda */
+    animation: pulse-border-soft 3s infinite;
+}
+
+@keyframes pulse-border-soft {
+    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
+    70% { box-shadow: 0 0 0 15px rgba(39, 55, 77, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0); }
+}
+
+/* --- Elementos de Interface --- */
+
+/* Chips de Filtro */
+.filter-chip {
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 9999px; /* full */
+    background-color: rgba(221, 230, 237, 0.5); /* custom-light com opacidade */
+    color: #526D82; /* custom-dark */
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.dark .filter-chip {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #9DB2BF;
+}
+
+.filter-chip:hover {
+    background-color: rgba(221, 230, 237, 0.8);
+}
+.dark .filter-chip:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.filter-chip.active {
+    background-color: #27374D; /* custom-darkest */
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.dark .filter-chip.active {
+    background-color: #DDE6ED; /* custom-light */
+    color: #27374D;
+}
+
+/* Ícones Cíclicos (Orb Nav) */
+.cycling-icon {
+    position: absolute;
+    opacity: 0;
+    transform: scale(0.5) rotate(-45deg);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cycling-icon.active {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+}
+
+/* Task Card (Interações) */
+.task-card {
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s;
+    cursor: grab;
+    /* Garante que o conteúdo não vaze nas bordas arredondadas */
+    overflow: hidden; 
+}
+
+.task-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 10;
+}
+
+.task-card:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+/* Efeito Highlight (para encontrar tarefa) */
+@keyframes highlightPulse {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); border-color: #3b82f6; }
+    100% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); border-color: transparent; }
+}
+.highlight {
+    animation: highlightPulse 1.5s ease-out;
+    position: relative;
+    z-index: 50;
+}
+
+/* --- Animações Gerais --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeInDelayed {
+    0% { opacity: 0; transform: translateY(-10px); }
+    50% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+.fade-in-delayed {
+    animation: fadeInDelayed 0.8s ease-out forwards;
+}
+
+/* Animação Modal Backdrop */
+@keyframes modalBackdropFade {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; backdrop-filter: blur(12px); }
+}
+.modal-backdrop {
+    animation: modalBackdropFade 0.3s ease-out forwards;
+}
+
+/* Animação Modal Content (Pop up) */
+@keyframes modalContentPop {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-content {
+    animation: modalContentPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Animação Toast */
+@keyframes toastSlideUp {
+    from { transform: translate(-50%, 100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+.toast-enter {
+    animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Animação Borda Alerta (Siren) */
+@keyframes borderPulseAlert {
+    0% { border-color: #FACC15; }
+    50% { border-color: #EF4444; }
+    100% { border-color: #FACC15; }
+}
 .animate-pulse-border {
-    animation: border-pulse 2s infinite;
+    animation: borderPulseAlert 2s infinite;
+}
+
+/* --- Responsividade Mobile --- */
+@media (max-width: 768px) {
+    /* Canvas vira vertical no mobile */
+    .immersive-canvas {
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 90px 20px 100px 20px; /* Mais espaço embaixo para o menu nav */
+        align-items: center;
+    }
+    
+    .board-column {
+        min-width: 100%;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        padding-bottom: 0;
+        margin-bottom: 40px;
+    }
+
+    .kanban-task-list {
+        /* Altura mínima para conseguir soltar cards */
+        min-height: 150px; 
+        padding-bottom: 20px;
+    }
+
+    /* Ajuste dos Orbs para Mobile (Ficam menores e mais nos cantos) */
+    .corner-orb {
+        width: 60px;
+        height: 60px;
+    }
+
+    #orb-nav { bottom: -10px; left: -10px; }
+    #orb-nav .orb-icon-wrapper { padding-bottom: 15px; padding-right: 15px; }
+
+    #orb-filter { top: -10px; left: -10px; }
+    #orb-filter .orb-icon-wrapper { padding-top: 15px; padding-right: 15px; }
+
+    #orb-tools { top: -10px; right: -10px; }
+    #orb-tools .orb-icon-wrapper { padding-top: 15px; padding-left: 15px; }
+
+    .orb-fab { width: 56px; height: 56px; bottom: 20px; right: 20px; }
+
+    /* Quando expandido no mobile, vira um modal quase tela cheia */
+    #orb-nav.expanded, 
+    #orb-filter.expanded, 
+    #orb-tools.expanded {
+        width: 90vw;
+        height: auto;
+        left: 5vw;
+        right: 5vw;
+        border-radius: 24px;
+        
+        /* Centraliza verticalmente aprox */
+        top: 15%; 
+        bottom: auto;
+    }
 }

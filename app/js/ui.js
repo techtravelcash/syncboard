@@ -1,23 +1,18 @@
 import { state } from './state.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
-// --- Funções Auxiliares de Formatação ---
+// --- HELPERS E FORMATAÇÃO ---
+
 export const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+    return date.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 };
 
 export const formatDateTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-export const getSortIndicator = (columnName) => {
-    if (state.sortColumn !== columnName) return '';
-    const icon = state.sortDirection === 'asc' ? 'arrow-up' : 'arrow-down';
-    return `<i data-lucide="${icon}" class="w-4 h-4 ml-1"></i>`;
+    return date.toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 export const isTaskOverdue = (task) => {
@@ -30,63 +25,75 @@ export const isTaskOverdue = (task) => {
     return dueDate < todayUTC;
 };
 
-// --- Função para Toasts ---
+// --- TOASTS / NOTIFICAÇÕES VISUAIS ---
+
 export function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     
-    const icons = {
-        success: 'check-circle-2',
-        error: 'alert-circle',
-        info: 'info'
-    };
-    const colors = {
-        success: 'bg-green-500 border-green-600',
-        error: 'bg-red-500 border-red-600',
-        info: 'bg-blue-500 border-blue-600'
+    // Cores adaptadas ao tema Orbital
+    const styles = {
+        success: 'bg-custom-darkest text-white border-l-4 border-green-500',
+        error:   'bg-red-600 text-white border-l-4 border-white',
+        info:    'bg-white text-custom-darkest border-l-4 border-custom-dark shadow-xl'
     };
 
-    toast.className = `toast flex items-center gap-3 text-white text-sm font-semibold px-4 py-3 rounded-lg shadow-2xl border-b-4 ${colors[type]}`;
+    toast.className = `min-w-[300px] p-4 rounded-r-xl shadow-2xl flex items-center gap-3 toast-enter ${styles[type]}`;
+    
+    let icon = '';
+    if(type === 'success') icon = 'check-circle-2';
+    if(type === 'error') icon = 'alert-circle';
+    if(type === 'info') icon = 'info';
+
     toast.innerHTML = `
-        <i data-lucide="${icons[type]}" class="w-5 h-5"></i>
-        <span>${message}</span>
+        <i data-lucide="${icon}" class="w-5 h-5 flex-shrink-0"></i>
+        <span class="text-sm font-semibold">${message}</span>
     `;
     
     container.appendChild(toast);
     lucide.createIcons();
 
+    // Auto-remove após 4s
     setTimeout(() => {
-        toast.classList.add('toast-exit');
-        toast.addEventListener('animationend', () => toast.remove());
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(100%)';
+        toast.style.transition = 'all 0.5s ease';
+        setTimeout(() => toast.remove(), 500);
     }, 4000);
 }
 
-// --- Funções para Renderizar Anexos ---
+// --- ANEXOS ---
+
 function renderAttachmentList(containerId, attachments) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
+    
     if (attachments && attachments.length > 0) {
         attachments.forEach((file, index) => {
             const isLocalFile = file instanceof File;
-            const fileName = isLocalFile ? file.name : (file.name || 'arquivo');
-            const fileSize = isLocalFile ? `${(file.size / 1024).toFixed(1)} KB` : '';
-            
+            const fileName = isLocalFile ? file.name : (file.name || 'documento');
             const blobName = !isLocalFile && file.url ? decodeURIComponent(file.url.split('/').pop()) : '';
 
             const item = document.createElement('div');
-            item.className = 'attachment-item bg-custom-light/60 dark:bg-custom-dark/40 p-2 rounded-md flex items-center justify-between';
+            item.className = 'flex items-center justify-between p-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
+            
+            const downloadLink = !isLocalFile ? `
+                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Baixar">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                </a>
+            ` : '';
+
             item.innerHTML = `
-                <div class="flex items-center gap-2 overflow-hidden">
-                    <i data-lucide="file-text" class="w-5 h-5 text-custom-dark dark:text-custom-medium flex-shrink-0"></i>
-                    <div class="flex flex-col overflow-hidden">
-                        <span class="text-sm font-medium truncate">${fileName}</span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400">${fileSize}</span>
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="bg-gray-100 dark:bg-gray-700 p-1.5 rounded-md text-gray-500 dark:text-gray-300">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
                     </div>
+                    <span class="text-xs font-medium truncate text-custom-darkest dark:text-gray-200">${fileName}</span>
                 </div>
-                <div class="flex items-center flex-shrink-0">
-                    ${!isLocalFile ? `<a href="${file.url || '#'}" target="_blank" class="p-1 text-blue-500 hover:text-blue-700"><i data-lucide="download-cloud" class="w-4 h-4"></i></a>` : ''}
-                    <button type="button" class="remove-attachment-btn p-1 text-red-500 hover:text-red-700" data-index="${index}" data-blob-name="${blobName}">
-                        <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
+                <div class="flex items-center gap-1">
+                    ${downloadLink}
+                    <button type="button" class="remove-attachment-btn text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-index="${index}" data-blob-name="${blobName}" title="Remover">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
             `;
@@ -100,767 +107,293 @@ export function renderModalAttachments(files) {
     renderAttachmentList('attachment-list', files);
 }
 
-// --- Funções de Renderização da UI Principal ---
+// --- RENDERIZAÇÃO: CARD DE TAREFA (NOVO DESIGN) ---
+
 export const createTaskElement = (task) => {
-
     const taskCard = document.createElement('div');
-    const overdueClass = isTaskOverdue(task) ? ' task-overdue' : '';
-    taskCard.className = `task-card bg-base-white dark:bg-custom-darkest rounded-lg shadow-sm flex flex-col overflow-hidden fade-in ${overdueClass}`;
-    taskCard.dataset.taskId = task.id;
-
-    let responsibleDisplay = '';
+    const isOverdue = isTaskOverdue(task);
     
-    // Verifica se existem responsáveis
-    if (Array.isArray(task.responsible) && task.responsible.length > 0) {
-        
-        const avatars = task.responsible.map(resp => {
-            // 1. Normaliza o nome e busca a imagem
-            const isObject = typeof resp === 'object' && resp !== null && resp.name;
-            const name = isObject ? resp.name : resp;
-            
-            // BUSCA DINÂMICA: Tenta pegar a foto atualizada do state
-            const userFromState = state.users.find(u => u.name === name);
-            const picture = userFromState?.picture || (isObject ? resp.picture : null);
-
-            // 2. Renderiza o avatar apropriado
-            if (name === 'DEFINIR') {
-                return `<div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-bold border-2 border-white dark:border-custom-darkest" title="A Definir">?</div>`;
-            }
-            
-            if (picture) {
-                return `<img src="${picture}" alt="${name}" class="w-6 h-6 rounded-full border-2 border-white dark:border-custom-darkest" title="${name}">`;
-            }
-            
-            // Fallback: Bola colorida com a inicial
-            return `<div class="w-6 h-6 rounded-full bg-custom-dark text-white flex items-center justify-center text-xs font-bold border-2 border-white dark:border-custom-darkest" title="${name}">${name.charAt(0)}</div>`;
-        
-        }).slice(0, 3).join(''); // Pega apenas os 3 primeiros
-
-        // Contador para os restantes (+2, +3 etc)
-        const remainingCount = task.responsible.length > 3 
-            ? `<div class="w-6 h-6 rounded-full bg-custom-medium text-custom-darkest flex items-center justify-center text-xs font-bold border-2 border-white dark:border-custom-darkest">+${task.responsible.length - 3}</div>` 
-            : '';
-            
-        responsibleDisplay = `<div class="flex -space-x-2">${avatars}${remainingCount}</div>`;
+    // Classes base do card
+    let cardClasses = 'task-card bg-white dark:bg-[#1f2937] p-5 rounded-[20px] shadow-sm hover:shadow-lg relative flex flex-col gap-3 group border border-transparent hover:border-custom-medium/20';
+    
+    if (isOverdue) {
+        cardClasses += ' border-l-[6px] border-l-red-500';
     }
 
-    // Botões e Elementos Visuais do Card
-    const approveButton = task.status === 'homologation' 
-        ? `<button class="approve-btn bg-green-500/10 hover:bg-green-500/20 text-green-600 p-1.5 rounded-full" data-task-id="${task.id}" title="Aprovar e Arquivar"><i data-lucide="check-circle-2" class="w-5 h-5 pointer-events-none"></i></button>` 
+    taskCard.className = cardClasses;
+    taskCard.dataset.taskId = task.id;
+
+    // 1. Badge do Projeto
+    const projectColor = task.projectColor || '#9DB2BF';
+    const projectBadge = task.project 
+        ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm" style="background-color: ${projectColor}">${task.project}</span>`
+        : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-700">Geral</span>`;
+
+    // 2. Avatares dos Responsáveis
+    let responsibleDisplay = '';
+    if (task.responsible && task.responsible.length > 0) {
+        const avatars = task.responsible.slice(0, 3).map(r => {
+            const name = typeof r === 'object' ? r.name : r;
+            const pic = typeof r === 'object' ? r.picture : null;
+            
+            // Busca foto atualizada no state se disponível
+            const userState = state.users.find(u => u.name === name);
+            const finalPic = userState?.picture || pic;
+
+            if (finalPic) {
+                return `<img src="${finalPic}" class="w-6 h-6 rounded-full border-2 border-white dark:border-[#1f2937] object-cover" title="${name}">`;
+            }
+            return `<div class="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-[#1f2937] flex items-center justify-center text-[9px] font-bold text-gray-600 dark:text-gray-200" title="${name}">${name.charAt(0)}</div>`;
+        }).join('');
+        
+        const extra = task.responsible.length > 3 ? `<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-[#1f2937] flex items-center justify-center text-[9px] font-bold text-gray-500">+${task.responsible.length - 3}</div>` : '';
+        
+        responsibleDisplay = `<div class="flex -space-x-2">${avatars}${extra}</div>`;
+    }
+
+    // 3. Indicadores (Anexo, Data)
+    const attachmentIcon = (task.attachments?.length > 0) 
+        ? `<div class="flex items-center gap-1 text-gray-400 text-xs"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
         : '';
+    
+    let dateBadge = '';
+    if(task.dueDate) {
+        const dateText = formatDate(task.dueDate);
+        const dateColorClass = isOverdue ? 'text-red-500 font-bold' : 'text-gray-400';
+        dateBadge = `<div class="flex items-center gap-1 ${dateColorClass} text-xs" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>`;
+    }
 
-    const dueDateTag = task.dueDate 
-        ? `<div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-custom-light dark:bg-custom-dark/50 px-2 py-0.5 rounded"><i data-lucide="calendar" class="w-3 h-3"></i><span>${formatDate(task.dueDate)}</span></div>` 
-        : `<div class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-custom-dark/30 px-2 py-0.5 rounded"><i data-lucide="calendar-off" class="w-3 h-3"></i><span>Sem prazo definido</span></div>`;
+    // Ações Rápidas (aparecem no hover)
+    const quickActions = `
+        <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="info-btn p-1.5 rounded-lg text-gray-400 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" title="Ver Detalhes" data-task-id="${task.id}">
+                <i data-lucide="maximize-2" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+            ${task.status === 'homologation' ? `<button class="approve-btn p-1.5 rounded-lg text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-4 h-4 pointer-events-none"></i></button>` : ''}
+        </div>
+    `;
 
-    const attachmentIcon = (task.attachments && task.attachments.length > 0) 
-        ? `<div class="flex items-center gap-1 text-xs text-custom-medium dark:text-custom-light font-semibold"><i data-lucide="paperclip" class="w-3 h-3"></i>${task.attachments.length}</div>` 
-        : '';
-
-    // Monta o HTML final do card
     taskCard.innerHTML = `
-        <div class="flex flex-col justify-between w-full flex-grow">
-            <div class="p-3">
-                <div class="flex justify-between items-start gap-2">
-                    <p class="text-custom-darkest dark:text-custom-light font-semibold pr-2 break-words">${task.title || ''}</p>
-                </div>
-                <div class="mt-3 flex items-center justify-between gap-2 flex-wrap">
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-xs font-bold text-custom-medium dark:text-custom-light">${task.id}</span>
-                        ${dueDateTag}
-                    </div>
+        <div class="flex justify-between items-start pr-12">
+            ${projectBadge}
+        </div>
+        ${quickActions}
+        
+        <h3 class="text-sm font-bold text-custom-darkest dark:text-gray-100 leading-snug break-words">${task.title}</h3>
+        
+        <div class="mt-auto pt-3 flex items-end justify-between border-t border-gray-100 dark:border-gray-700/50">
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] font-mono font-bold text-gray-300 dark:text-gray-600">#${task.id}</span>
+                <div class="flex items-center gap-3">
+                    ${dateBadge}
                     ${attachmentIcon}
                 </div>
             </div>
-            <div class="px-3 py-2 border-t border-custom-light dark:border-custom-dark/50 flex justify-between items-center">
-                ${responsibleDisplay}
-                <div class="flex items-center gap-1">
-                    ${approveButton}                   
-                    <button class="info-btn text-custom-medium hover:text-custom-dark dark:hover:text-custom-light p-1.5 rounded-full transition-colors" data-task-id="${task.id}" title="Ver Detalhes"><i data-lucide="info" class="w-5 h-5 pointer-events-none"></i></button>
-                    <a href="${task.azureLink || '#'}" target="_blank" class="${task.azureLink ? '' : 'hidden'} text-blue-600 hover:text-blue-800 dark:hover:text-blue-400 p-1.5 rounded-full" title="Abrir no Azure"><i data-lucide="external-link" class="w-5 h-5 pointer-events-none"></i></a>
-                    <button class="delete-btn text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-full transition-colors" data-task-id="${task.id}" title="Excluir"><i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i></button>
-                </div>
-            </div>
-        </div>
-        <div class="h-auto w-full color-bar flex items-center justify-end px-3 py-0.5" style="background-color: ${task.projectColor || '#9DB2BF'};">
-            <span class="text-white text-xs font-bold truncate">${task.project || ''}</span>
+            ${responsibleDisplay}
         </div>
     `;
 
     return taskCard;
 };
 
+// --- RENDERIZAÇÃO: KANBAN HORIZONTAL ---
+
 export function renderKanbanView() {
     const kanbanViewEl = document.getElementById('kanbanView');
-    kanbanViewEl.querySelectorAll('.task-list').forEach(list => list.innerHTML = '');
+    kanbanViewEl.innerHTML = '';
     
-    let activeTasks = state.tasks.filter(t => t.status !== 'done');
+    let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
-    // FILTROS
-    if (state.selectedResponsible !== 'all') {
-        activeTasks = activeTasks.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
-    }
-    if (state.selectedProject !== 'all') {
-        activeTasks = activeTasks.filter(t => t.project === state.selectedProject);
-    }
-    // FILTRO DE BUSCA
-    if (state.searchQuery) {
-        activeTasks = activeTasks.filter(t =>
-            (t.title && t.title.toLowerCase().includes(state.searchQuery)) ||
-            (t.description && t.description.toLowerCase().includes(state.searchQuery)) ||
-            (t.id && t.id.toLowerCase().includes(state.searchQuery))
-        );
-    }
+    // Definição das Colunas
+    const columns = [
+        { id: 'todo', name: 'Backlog', color: 'bg-gray-400' },
+        { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
+        { id: 'inprogress', name: 'Em Progresso', color: 'bg-blue-500' },
+        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' }
+    ];
 
-    const columns = [ { id: 'todo', name: 'Fila' }, { id: 'stopped', name: 'Parado' }, { id: 'inprogress', name: 'Andamento' }, { id: 'homologation', name: 'Homologação' }];
     columns.forEach(col => {
-        const columnEl = kanbanViewEl.querySelector(`.kanban-column:has([data-column-id="${col.id}"])`);
-        if (columnEl) {
-            const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => a.order - b.order);
-            const header = columnEl.querySelector('h2');
-            const list = columnEl.querySelector('.task-list');
-            header.innerHTML = `<span>${col.name}</span><span class="bg-custom-light dark:bg-custom-dark/80 text-custom-darkest dark:text-custom-light text-xs font-bold px-2 py-1 rounded-full">${tasksForColumn.length}</span>`;
-            tasksForColumn.forEach(task => list.appendChild(createTaskElement(task)));
-        }   
+        const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        const columnEl = document.createElement('div');
+        columnEl.className = 'board-column fade-in';
+        columnEl.setAttribute('data-column-id', col.id); // Importante para o Drag & Drop
+
+        columnEl.innerHTML = `
+            <div class="column-header select-none">
+                <div class="flex items-center gap-3">
+                    <span class="w-2.5 h-2.5 rounded-full ${col.color} shadow-sm"></span>
+                    <h2 class="font-extrabold text-lg text-custom-darkest dark:text-white tracking-tight">${col.name}</h2>
+                </div>
+                <span class="bg-custom-light dark:bg-white/10 text-custom-dark dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-lg">${tasksForColumn.length}</span>
+            </div>
+            
+            <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}">
+                </div>
+        `;
+
+        const listEl = columnEl.querySelector('.kanban-task-list');
+        tasksForColumn.forEach(task => listEl.appendChild(createTaskElement(task)));
+        kanbanViewEl.appendChild(columnEl);
     });
+
     lucide.createIcons();
 }
+
+// --- RENDERIZAÇÃO: LISTA (MODO LINHA) ---
 
 export function renderListView() {
-    const listViewEl = document.getElementById('listView');
-    let activeTasks = state.tasks.filter(t => t.status !== 'done');
-    const statusLabels = { todo: 'Fila', stopped: 'Parado', inprogress: 'Em Andamento', homologation: 'Em Homologação', done: 'Pronto', edited: 'Editado' };
+    const container = document.getElementById('listView');
+    let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
-    // FILTROS
-    if (state.selectedResponsible !== 'all') {
-        activeTasks = activeTasks.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
-    }
-    if (state.selectedProject !== 'all') {
-        activeTasks = activeTasks.filter(t => t.project === state.selectedProject);
-    }
-    // FILTRO DE BUSCA
-    if (state.searchQuery) {
-        activeTasks = activeTasks.filter(t =>
-            (t.title && t.title.toLowerCase().includes(state.searchQuery)) ||
-            (t.description && t.description.toLowerCase().includes(state.searchQuery)) ||
-            (t.id && t.id.toLowerCase().includes(state.searchQuery))
-        );
+    // Ordenação básica
+    activeTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    if (activeTasks.length === 0) {
+        container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="clipboard-list" class="w-16 h-16 mb-4"></i><p>Nenhuma tarefa encontrada.</p></div>`;
+        lucide.createIcons();
+        return;
     }
 
-    if (state.selectedResponsible !== 'all') {
-        activeTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
-    } else {
-        activeTasks.sort((a, b) => {
-            const getFirstName = (respArray) => {
-                if (!Array.isArray(respArray) || respArray.length === 0) return '';
-                const firstResp = respArray[0];
-                return typeof firstResp === 'object' ? firstResp.name : firstResp;
-            };
-            const valA = (state.sortColumn === 'responsible' ? getFirstName(a.responsible) : a[state.sortColumn]) || '';
-            const valB = (state.sortColumn === 'responsible' ? getFirstName(b.responsible) : b[state.sortColumn]) || '';
-
-            if (state.sortColumn === 'createdAt' || state.sortColumn === 'dueDate') {
-                if (!valA) return 1; if (!valB) return -1;
-                return state.sortDirection === 'asc' ? new Date(valA) - new Date(valB) : new Date(valB) - new Date(valA);
-            }
-            return state.sortDirection === 'asc' 
-                ? String(valA).trim().toLowerCase().localeCompare(String(valB).trim().toLowerCase()) 
-                : String(valB).trim().toLowerCase().localeCompare(String(valA).trim().toLowerCase());
-        });
-    }
-
-    const isDraggable = state.selectedResponsible !== 'all';
-
-    const tableBody = activeTasks.map(task => {
-        const overdueClass = isTaskOverdue(task) ? ' bg-red-500/5 dark:bg-red-500/10' : '';
-        let projectTag = task.project ? `<span class="text-xs font-semibold rounded px-2 py-1 text-white" style="background-color:${task.projectColor};">${task.project}</span>` : '';
-        const attachmentIcon = (task.attachments && task.attachments.length > 0) ? `<div class="flex items-center gap-1 text-xs text-custom-medium dark:text-custom-light font-semibold"><i data-lucide="paperclip" class="w-4 h-4"></i>${task.attachments.length}</div>` : '';
-        const responsibleNames = (task.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).join(', ');
-
+    const rows = activeTasks.map(task => {
+        // Responsáveis (Texto Simples)
+        const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
+        
         return `
-            <tr class="list-row hover:bg-custom-light/50 dark:hover:bg-custom-dark/50 fade-in${overdueClass}" data-task-id="${task.id}">
-                <td class="px-3 py-3 text-center text-custom-medium ${isDraggable ? 'drag-handle cursor-grab' : 'opacity-50'}"><i data-lucide="grip-vertical" class="w-5 h-5 inline-block"></i></td>
-                <td class="px-3 py-3 font-mono text-xs font-bold text-custom-medium dark:text-custom-light whitespace-nowrap">${task.id}</td>
-                <td class="px-3 py-3">
-                    <div class="text-custom-darkest dark:text-custom-light">${task.title}</div>
-                </td>
-                <td class="px-3 py-3 whitespace-nowrap">${projectTag}</td>
-                <td class="px-3 py-3 whitespace-nowrap text-sm">${responsibleNames}</td>
-                <td class="px-3 py-3 whitespace-nowrap">${attachmentIcon}</td>
-                <td class="px-3 py-3 whitespace-nowrap"><span class="text-xs font-semibold rounded-full px-2.5 py-1 bg-custom-medium/50 dark:bg-custom-dark/80">${statusLabels[task.status] || task.status}</span></td>
-                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${formatDate(task.createdAt)}</td>
-                <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">${task.dueDate ? formatDate(task.dueDate) : 'Sem prazo'}</td>
-                <td class="px-3 py-3 whitespace-nowrap"><div class="flex items-center gap-1">
-                    <button class="info-btn text-custom-medium hover:text-custom-dark dark:hover:text-custom-light p-1.5 rounded-full" data-task-id="${task.id}" title="Ver detalhes"><i data-lucide="info" class="w-5 h-5 pointer-events-none"></i></button>
-                    <a href="${task.azureLink || '#'}" target="_blank" rel="noopener noreferrer" class="${task.azureLink ? '' : 'hidden'} text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 p-1.5 rounded-full" title="Abrir no Azure DevOps"><i data-lucide="external-link" class="w-5 h-5 pointer-events-none"></i></a>
-                    <button class="delete-btn text-red-400 hover:text-red-600 dark:hover:text-red-500 p-1.5 rounded-full" data-task-id="${task.id}" title="Excluir tarefa"><i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i></button>
-                </div></td>
-            </tr>`;
+        <div class="list-row group bg-white dark:bg-[#1f2937] p-4 rounded-2xl mb-3 shadow-sm hover:shadow-md border border-transparent hover:border-custom-medium/30 transition-all cursor-pointer flex items-center gap-4 fade-in" data-task-id="${task.id}">
+            
+            <div class="w-1 h-12 rounded-full bg-${task.status === 'stopped' ? 'red-500' : (task.status === 'homologation' ? 'orange-500' : 'gray-300')} shrink-0"></div>
+
+            <div class="flex-grow min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
+                    <span class="text-[10px] font-mono text-gray-400">#${task.id}</span>
+                </div>
+                <h3 class="font-bold text-custom-darkest dark:text-white truncate">${task.title}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">${respNames || 'Sem responsável'}</p>
+            </div>
+
+            <div class="hidden md:flex items-center gap-6 shrink-0">
+                ${task.dueDate ? `<div class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
+                ${task.attachments?.length ? `<div class="text-xs text-gray-400"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
+            </div>
+
+            <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0" data-task-id="${task.id}">
+                <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
+            </button>
+        </div>
+        `;
     }).join('');
 
-    const headerClass = isDraggable ? '' : 'cursor-pointer sortable-header';
+    container.innerHTML = `<div class="max-w-4xl mx-auto space-y-1">${rows}</div>`;
+    
+    // Listener de clique na linha inteira
+    container.querySelectorAll('.list-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+            // Evita disparar se clicar num botão específico dentro da linha
+            if (!e.target.closest('button, a')) {
+                const taskId = row.dataset.taskId;
+                highlightTask(taskId, false);
+                renderTaskHistory(taskId);
+            }
+        });
+    });
 
-    const tableHtml = `
-        <div class="bg-base-white dark:bg-custom-darkest/40 rounded-lg shadow-sm overflow-hidden">
-            <table class="min-w-full">
-                <thead class="bg-custom-light/50 dark:bg-custom-darkest/60">
-                    <tr>
-                        <th class="px-3 py-3 w-12"></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="id"><div class="flex items-center">ID ${getSortIndicator('id')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="title"><div class="flex items-center gap-2"><span>Tarefa</span><span class="bg-custom-medium/50 dark:bg-custom-dark/80 text-custom-darkest dark:text-custom-light text-xs font-bold px-2 py-1 rounded-full">${activeTasks.length}</span>${getSortIndicator('title')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="project"><div class="flex items-center">Projeto ${getSortIndicator('project')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="responsible"><div class="flex items-center">Responsável ${getSortIndicator('responsible')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider"><div class="flex items-center"><i data-lucide="paperclip" class="w-4 h-4"></i></div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="status"><div class="flex items-center">Estado ${getSortIndicator('status')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="createdAt"><div class="flex items-center">Criação ${getSortIndicator('createdAt')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider ${headerClass}" data-sort-by="dueDate"><div class="flex items-center">Previsão ${getSortIndicator('dueDate')}</div></th>
-                        <th class="px-3 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="list-view-tbody" class="divide-y divide-custom-light dark:divide-custom-dark">${tableBody}</tbody>
-            </table>
-        </div>`;
-    listViewEl.innerHTML = tableHtml;
     lucide.createIcons();
 }
 
-export function updateActiveView() {
-    const viewSwitcherEl = document.getElementById('view-switcher');
-    const kanbanViewEl = document.getElementById('kanbanView');
-    const listViewEl = document.getElementById('listView');
-    const archivedViewEl = document.getElementById('archivedView');
-    const userManagementViewEl = document.getElementById('userManagementView');
-
-    populateResponsibleFilter();
-    populateProjectFilter();
-    
-    viewSwitcherEl.querySelectorAll('.view-btn').forEach(btn => {
-        const isSelected = btn.dataset.view === state.currentView;
-        btn.classList.toggle('bg-custom-darkest', isSelected);
-        btn.classList.toggle('dark:bg-custom-light', isSelected);
-        btn.classList.toggle('text-white', isSelected);
-        btn.classList.toggle('dark:text-custom-darkest', isSelected);
-        btn.classList.toggle('text-custom-dark', !isSelected);
-        btn.classList.toggle('dark:text-custom-light', !isSelected);
-    });
-
-    kanbanViewEl.classList.toggle('hidden', state.currentView !== 'kanban');
-    listViewEl.classList.toggle('hidden', state.currentView !== 'list');
-    archivedViewEl.classList.toggle('hidden', state.currentView !== 'archived');
-    userManagementViewEl.classList.toggle('hidden', state.currentView !== 'users');
-
-    if (state.currentView === 'kanban') renderKanbanView();
-    else if (state.currentView === 'list') renderListView();
-    else if (state.currentView === 'archived') renderArchivedTasks();
-    else if (state.currentView === 'users') renderUserManagementView();
-
-    if (state.lastInteractedTaskId) {
-        setTimeout(() => highlightTask(state.lastInteractedTaskId, state.currentView === 'kanban'), 0);
-    }
-}
+// --- RENDERIZAÇÃO: ARQUIVADOS ---
 
 export async function renderArchivedTasks() {
-    const archivedViewEl = document.getElementById('archivedView');
-    archivedViewEl.innerHTML = '<p class="text-center p-8">Carregando tarefas arquivadas...</p>';
+    const container = document.getElementById('archivedView');
+    container.innerHTML = '<div class="flex justify-center mt-20"><i class="animate-spin text-custom-dark" data-lucide="loader-2"></i></div>';
+    lucide.createIcons();
 
     try {
-        const archivedTasks = await fetchArchivedTasks();
-
-        const tableBody = archivedTasks.map(task => {
-            const responsibleNames = (task.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).join(', ');
-            return `
-            <tr class="list-row hover:bg-custom-light/50 dark:hover:bg-custom-dark/50 fade-in" data-task-id="${task.id}">
-                <td class="px-4 py-4">
-                    <div class="font-semibold text-custom-darkest dark:text-custom-light">${task.title}</div>
-                    <div class="text-xs text-custom-dark dark:text-custom-medium truncate" style="max-width: 300px;">${task.description}</div>
-                </td>
-                <td class="px-4 py-4 whitespace-nowrap">${task.project || ''}</td>
-                <td class="px-4 py-4 whitespace-nowrap">${responsibleNames}</td>
-                <td class="px-4 py-4 whitespace-nowrap">${formatDate(task.createdAt)}</td>
-                <td class="px-4 py-4 whitespace-nowrap">
-                    <div class="flex items-center gap-1">
-                        <button class="restore-btn text-blue-500 hover:text-blue-700 p-1.5 rounded-full" data-task-id="${task.id}" title="Restaurar Tarefa"><i data-lucide="undo-2" class="w-5 h-5 pointer-events-none"></i></button>
-                        <button class="delete-btn text-red-400 hover:text-red-600 p-1.5 rounded-full" data-task-id="${task.id}" title="Excluir Tarefa Definitivamente"><i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i></button>
-                    </div>
-                </td>
-            </tr>`;
-        }).join('');
-
-        const tableHtml = `
-            <div class="bg-base-white dark:bg-custom-darkest/40 rounded-lg shadow-sm overflow-hidden">
-                <table class="min-w-full">
-                    <thead class="bg-custom-light/50 dark:bg-custom-darkest/60">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider"><div class="flex items-center gap-2"><span>Tarefa Concluída</span><span class="bg-custom-medium/50 dark:bg-custom-dark/80 text-custom-darkest dark:text-custom-light text-xs font-bold px-2 py-1 rounded-full">${archivedTasks.length}</span></div></th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Projeto</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Responsável</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Criação</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-custom-light dark:divide-custom-dark">
-                        ${tableBody}
-                        ${archivedTasks.length === 0 ? '<tr><td colspan="5" class="text-center py-10 text-custom-dark dark:text-custom-medium">Nenhuma tarefa arquivada.</td></tr>' : ''}
-                    </tbody>
-                </table>
-            </div>`;
-
-        archivedViewEl.innerHTML = tableHtml;
-        lucide.createIcons();
-    } catch (error) {
-        console.error("Erro ao renderizar tarefas arquivadas:", error);
-        archivedViewEl.innerHTML = '<p class="text-center p-8 text-red-500">Falha ao carregar tarefas arquivadas.</p>';
-    }
-}
-
-export function renderTaskHistory(taskId) {
-    const task = state.tasks.find(t => t.id === taskId);
-    if (!task) return;
-    const statusLabels = { 
-        todo: 'A fazer', 
-        stopped: 'Parado', 
-        inprogress: 'Em Andamento', 
-        homologation: 'Em Homologação', 
-        done: 'Pronto', 
-        edited: 'Editado' 
-    };
-
-    const calendarBtn = document.getElementById('modal-calendar-btn');
-    if (calendarBtn) {
-        // 1. Coleta emails dos responsáveis
-        const responsibleEmails = (task.responsible || [])
-            .map(r => (typeof r === 'object' ? r.email : null))
-            .filter(email => email)
-            .join(',');
-
-        // 2. Gera o Link
-        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("SyncBoard Meet: " + task.title)}&details=${encodeURIComponent("Discussão sobre a tarefa: " + task.title + "\n\nProjeto: " + (task.project || "Geral"))}&add=${responsibleEmails}`;
+        const tasks = await fetchArchivedTasks();
         
-        // 3. Atualiza o botão
-        calendarBtn.href = googleUrl;
-    }
-    
-    // 1. Preenchimento das Informações Básicas
-    document.getElementById('modal-info-title').textContent = `${task.id}: ${task.title || ''}`;
-    
-    const projectTag = document.getElementById('modal-info-project');
-    if (task.project) {
-        projectTag.textContent = task.project;
-        projectTag.style.color = task.projectColor;
-    } else { 
-        projectTag.textContent = ''; 
-    }
-    
-    document.getElementById('modal-info-description').textContent = task.description;
-    document.getElementById('modal-info-responsible').textContent = (task.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).join(', ');
+        if (tasks.length === 0) {
+            container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="archive" class="w-16 h-16 mb-4"></i><p>O arquivo está vazio.</p></div>`;
+            lucide.createIcons();
+            return;
+        }
 
-    // 2. Links, Datas e Anexos (Campos Opcionais)
-    const linkContainer = document.getElementById('modal-info-azure-link-container');
-    const linkEl = document.getElementById('modal-info-azure-link');
-    if (task.azureLink) {
-        linkEl.href = task.azureLink;
-        linkEl.textContent = task.azureLink;
-        linkContainer.classList.remove('hidden');
-    } else { 
-        linkContainer.classList.add('hidden'); 
-    }
-    
-    const dueDateContainer = document.getElementById('modal-info-dueDate-container');
-    const dueDateEl = document.getElementById('modal-info-dueDate');
-    if (task.dueDate) {
-        dueDateEl.textContent = formatDate(task.dueDate);
-        dueDateContainer.classList.remove('hidden');
-    } else { 
-        dueDateContainer.classList.add('hidden'); 
-    }
-
-    const attachmentsContainer = document.getElementById('modal-info-attachments-container');
-    if (task.attachments && task.attachments.length > 0) {
-        renderAttachmentList('modal-info-attachments', task.attachments);
-        attachmentsContainer.classList.remove('hidden');
-    } else {
-        attachmentsContainer.classList.add('hidden');
-    }
-    
-    // 3. Renderizar Histórico do Sistema (Logs de Status)
-    const historyFeedEl = document.getElementById('history-feed');
-    if (historyFeedEl) {
-        const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        historyFeedEl.innerHTML = historyItems.map(item => `
-            <div class="flex items-start gap-3 opacity-80">
-                <div class="mt-1 w-1.5 h-1.5 rounded-full bg-custom-medium shrink-0"></div>
+        const rows = tasks.map(task => `
+            <div class="bg-white dark:bg-[#1f2937] p-5 rounded-2xl mb-3 border border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-75 hover:opacity-100 transition-opacity">
                 <div>
-                    <p class="text-xs text-custom-darkest dark:text-custom-light">
-                        Status alterado para <span class="font-semibold">${statusLabels[item.status] || item.status}</span>
-                    </p>
-                    <p class="text-[10px] text-custom-dark dark:text-custom-medium">${formatDateTime(item.timestamp)}</p>
+                    <h3 class="font-bold text-gray-600 dark:text-gray-300 line-through decoration-gray-400">${task.title}</h3>
+                    <p class="text-xs text-gray-400 mt-1">Concluída em ${formatDate(task.updatedAt || new Date())} • ${task.project}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="restore-btn text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2.5 rounded-xl transition-colors" data-task-id="${task.id}" title="Restaurar para Fila">
+                        <i data-lucide="undo-2" class="w-4 h-4 pointer-events-none"></i>
+                    </button>
+                    <button class="delete-btn text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 p-2.5 rounded-xl transition-colors" data-task-id="${task.id}" title="Excluir Permanentemente">
+                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                    </button>
                 </div>
             </div>
         `).join('');
-    }
 
-    // 4. Renderizar Comentários (Interação Humana)
-    const commentsFeedEl = document.getElementById('comments-feed');
-    if (commentsFeedEl) {
-        const commentItems = (task.comments || []).map((item, index) => ({ ...item, index }))
-                                                  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-        commentsFeedEl.innerHTML = commentItems.length > 0 ? commentItems.map(item => {
-            const authorName = item.author || 'Utilizador';
-            const user = state.users.find(u => u.name === authorName || u.email === authorName);
-            const authorPicture = user ? user.picture : (state.currentUser && state.currentUser.userDetails === authorName ? state.currentUser.claims.picture : null);
-            
-            const avatar = authorPicture
-                ? `<img src="${authorPicture}" alt="${authorName}" class="w-7 h-7 mt-0.5 rounded-full">`
-                : `<div class="w-7 h-7 mt-0.5 rounded-full bg-custom-dark text-white flex items-center justify-center text-xs font-bold">${authorName.charAt(0)}</div>`;
-
-            return `
-                <div class="flex items-start gap-3 group relative">
-                    ${avatar}
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-center">
-                            <p class="font-bold text-sm text-custom-darkest dark:text-custom-light">${authorName}</p>
-                            <p class="text-[10px] text-custom-dark dark:text-custom-medium">${formatDateTime(item.timestamp)}</p>
-                        </div>
-                        <div class="bg-custom-light dark:bg-custom-dark/50 p-3 rounded-lg mt-1">
-                            <p class="text-sm text-custom-darkest dark:text-custom-light">${item.text}</p>
-                        </div>
-                    </div>
-                    <button class="delete-comment-btn absolute -top-1 -right-1 p-1 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" data-task-id="${taskId}" data-comment-index="${item.index}" title="Excluir comentário">
-                        <i data-lucide="trash-2" class="w-3 h-3 pointer-events-none"></i>
-                    </button>
-                </div>`;
-        }).join('') : '<p class="text-center text-sm text-custom-dark py-10 italic">Nenhum comentário ainda.</p>';
-    }
-
-    // 5. Lógica do Botão de Sinalização
-    const headerButtonsContainer = document.querySelector('#taskHistoryModal .flex.items-center.gap-2');
-    const oldSignalBtn = document.getElementById('signalBtn');
-    if(oldSignalBtn) oldSignalBtn.remove();
-
-    const signalBtn = document.createElement('button');
-    signalBtn.id = 'signalBtn';
-    signalBtn.className = 'p-2 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors';
-    signalBtn.title = 'Sinalizar Responsável (Enviar Alerta)';
-    signalBtn.innerHTML = '<i data-lucide="megaphone" class="w-5 h-5"></i>';
-    signalBtn.onclick = () => {
-        showConfirmModal(
-            'Sinalizar Responsável',
-            'Deseja realmente enviar um alerta de atenção para os responsáveis desta tarefa?',
-            async () => {
-                try {
-                    const apiModule = await import('./api.js');
-                    await apiModule.signalResponsible(taskId);
-                    showToast('Responsável sinalizado com sucesso!', 'success');
-                } catch (e) {
-                    console.error(e);
-                    showToast('Erro ao sinalizar.', 'error');
-                }
-            },
-            null,           // onCancel
-            'Sinalizar',    // Texto do botão confirmar
-            'Voltar',       // Texto do botão cancelar
-            'megaphone'     // ÍCONE
-        );
-    };
-
-    const closeBtn = document.getElementById('closeHistoryBtn');
-    if (headerButtonsContainer && closeBtn) {
-        headerButtonsContainer.insertBefore(signalBtn, closeBtn);
-    }
-    
-    // 6. Exibição do Modal e Ícones
-    document.getElementById('taskHistoryModal').classList.remove('hidden');
-    lucide.createIcons();
-}
-
-export function highlightTask(taskId, temporary = true) {
-    document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-    if (!taskId) return;
-    const selector = `.task-card[data-task-id="${taskId}"], .list-row[data-task-id="${taskId}"]`;
-    const elementToHighlight = document.querySelector(selector);
-    if (elementToHighlight) {
-        elementToHighlight.classList.add('highlight');
-        if (temporary) {
-            setTimeout(() => {
-                elementToHighlight.classList.remove('highlight');
-            }, 2500);
-        }
-    }
-}
-
-export function populateResponsibleFilter() {
-    const panel = document.getElementById('responsible-filter-panel');
-    const responsibles = [...new Set(state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).filter(Boolean))].sort();
-    
-    panel.innerHTML = '<div class="p-2"><button data-value="all" class="w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-custom-light dark:hover:bg-custom-dark">Todos os Responsáveis</button></div>';
-
-    responsibles.forEach(r => {
-        panel.querySelector('.p-2').innerHTML += `<button data-value="${r}" class="w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-custom-light dark:hover:bg-custom-dark">${r}</button>`;
-    });
-}
-
-export function populateProjectFilter() {
-    const panel = document.getElementById('project-filter-panel');
-    const projects = [...new Set(state.tasks.map(t => t.project).filter(Boolean))].sort();
-
-    panel.innerHTML = '<div class="p-2"><button data-value="all" class="w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-custom-light dark:hover:bg-custom-dark">Todos os Projetos</button></div>';
-    
-    projects.forEach(p => {
-        panel.querySelector('.p-2').innerHTML += `<button data-value="${p}" class="w-full text-left px-3 py-1.5 text-sm rounded-md hover:bg-custom-light dark:hover:bg-custom-dark">${p}</button>`;
-    });
-}
-
-export function setupResponsibleInput(initialResponsibles = []) {
-    const container = document.getElementById('responsible-input-container');
-    const input = document.getElementById('taskResponsible');
-    const suggestionsContainer = document.getElementById('responsible-suggestions');
-    let currentResponsibles = [...initialResponsibles];
-
-    const renderTags = () => {
-        container.querySelectorAll('.responsible-tag').forEach(tag => tag.remove());
-        currentResponsibles.forEach(user => {
-            const tag = document.createElement('div');
-            tag.className = 'responsible-tag';
-            
-            const name = typeof user === 'object' ? user.name : user;
-            const picture = typeof user === 'object' ? user.picture : null;
-            
-            const avatar = picture
-                ? `<img src="${picture}" class="w-5 h-5 rounded-full">`
-                : `<div class="w-5 h-5 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-bold">${name === 'DEFINIR' ? '?' : name.charAt(0)}</div>`;
-
-            tag.innerHTML = `${avatar}<span>${name}</span>`;
-            
-            const removeBtn = document.createElement('span');
-            removeBtn.className = 'tag-remove-btn';
-            removeBtn.innerHTML = `<i data-lucide="x" class="w-3 h-3 pointer-events-none"></i>`;
-            removeBtn.onclick = () => {
-                currentResponsibles = currentResponsibles.filter(r => (typeof r === 'object' ? r.name : r) !== name);
-                renderTags();
-            };
-            tag.appendChild(removeBtn);
-            container.insertBefore(tag, input);
-        });
+        container.innerHTML = `<div class="max-w-3xl mx-auto"><h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Arquivo Morto</h2>${rows}</div>`;
         lucide.createIcons();
-    };
 
-    const addResponsible = (user) => {
-        if (user && !currentResponsibles.some(r => (typeof r === 'object' ? r.name : r) === user.name)) {
-            currentResponsibles.push(user);
-            renderTags();
-        }
-        input.value = '';
-        suggestionsContainer.classList.add('hidden');
-    };
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p class="text-center text-red-500 mt-10">Erro ao carregar arquivo.</p>';
+    }
+}
 
-    input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const matchingUser = state.users.find(u => u.name.toLowerCase() === input.value.trim().toLowerCase());
-            if(matchingUser) addResponsible(matchingUser);
-        }
-        if (e.key === 'Backspace' && input.value === '' && currentResponsibles.length > 0) {
-            currentResponsibles.pop();
-            renderTags();
-        }
-    });
-
-    const showSuggestions = (filteredData) => {
-        suggestionsContainer.innerHTML = '';
-        if (filteredData.length === 0) {
-            suggestionsContainer.classList.add('hidden');
-            return;
-        }
-        filteredData.forEach(user => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.className = 'p-2 cursor-pointer hover:bg-custom-light dark:hover:bg-custom-dark flex items-center gap-2';
-            
-            const avatar = user.picture
-                ? `<img src="${user.picture}" class="w-6 h-6 rounded-full">`
-                : `<div class="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-bold">${user.name === 'DEFINIR' ? '?' : user.name.charAt(0)}</div>`;
-
-            suggestionItem.innerHTML = `${avatar}<span>${user.name}</span>`;
-            suggestionItem.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                addResponsible(user);
-                setTimeout(() => input.focus(), 0);
-            });
-            suggestionsContainer.appendChild(suggestionItem);
-        });
-        suggestionsContainer.classList.remove('hidden');
-    };
-
-    const updateSuggestions = () => {
-        const query = input.value.trim().toLowerCase();
-        const availableSuggestions = state.users.filter(u => !currentResponsibles.some(r => (typeof r === 'object' ? r.name : r) === u.name));
-        
-        if (query === '') {
-            showSuggestions(availableSuggestions);
-        } else {
-            const filtered = availableSuggestions.filter(u => u.name.toLowerCase().includes(query));
-            showSuggestions(filtered);
-        }
-    };
-
-    input.addEventListener('focus', updateSuggestions);
-    input.addEventListener('input', updateSuggestions);
-    document.addEventListener('click', (e) => {
-        if (!container.parentElement.contains(e.target)) {
-            suggestionsContainer.classList.add('hidden');
-        }
-    });
-
-    renderTags();
-};
-
-export function setupProjectSuggestions() {
-    const input = document.getElementById('taskProject');
-    const suggestionsContainer = document.getElementById('project-suggestions');
-    const colorInput = document.getElementById('taskProjectColor');
-    const colorButton = document.getElementById('color-picker-button');
-    
-    const projects = new Map();
-    state.tasks.forEach(task => {
-        if (task.project && !projects.has(task.project)) {
-            projects.set(task.project, task.projectColor);
-        }
-    });
-    const allProjects = Array.from(projects.keys());
-
-    const selectProject = (name) => {
-        const projectName = name.trim();
-        input.value = projectName;
-        suggestionsContainer.classList.add('hidden');
-        
-        if (projects.has(projectName)) {
-            const existingColor = projects.get(projectName);
-            colorInput.value = existingColor;
-            colorButton.style.backgroundColor = existingColor;
-        }
-    };
-
-    const showSuggestions = (filteredData) => {
-        suggestionsContainer.innerHTML = '';
-        if (filteredData.length === 0) {
-            suggestionsContainer.classList.add('hidden');
-            return;
-        }
-        filteredData.forEach(name => {
-            const suggestionItem = document.createElement('div');
-            suggestionItem.className = 'p-2 cursor-pointer hover:bg-custom-light dark:hover:bg-custom-dark';
-            suggestionItem.textContent = name;
-            suggestionItem.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                selectProject(name);
-            });
-            suggestionsContainer.appendChild(suggestionItem);
-        });
-        suggestionsContainer.classList.remove('hidden');
-    };
-
-    const updateSuggestions = () => {
-        const query = input.value.toLowerCase();
-        const filtered = allProjects.filter(name => name.toLowerCase().includes(query));
-        showSuggestions(filtered);
-    };
-
-    input.addEventListener('focus', updateSuggestions);
-    input.addEventListener('input', updateSuggestions);
-    input.addEventListener('blur', () => {
-        setTimeout(() => {
-            suggestionsContainer.classList.add('hidden');
-        }, 200);
-    });
-};
-
-export function setupCustomColorPicker() {
-    const colorInput = document.getElementById('taskProjectColor');
-    const colorButton = document.getElementById('color-picker-button');
-    const colorPalette = document.getElementById('color-palette');
-    const nativePickerTrigger = document.getElementById('native-color-picker-trigger');
-    const colors = ['#526D82', '#9DB2BF', '#27374D', '#1D5B79', '#468B97', '#EF6262', '#F3AA60', '#F9D949', '#68B984', '#3D5656', '#A25B5B', '#635985'];
-    
-    colorPalette.innerHTML = colors.map(color => `<div class="w-full h-8 rounded-md cursor-pointer color-swatch" style="background-color: ${color};" data-color="${color}"></div>`).join('');
-    
-    const syncColor = () => { colorButton.style.backgroundColor = colorInput.value; };
-    
-    colorButton.addEventListener('click', () => colorPalette.classList.toggle('hidden'));
-    colorPalette.addEventListener('click', (e) => {
-        const swatch = e.target.closest('.color-swatch');
-        if (swatch) {
-            colorInput.value = swatch.dataset.color;
-            syncColor();
-            colorPalette.classList.add('hidden');
-        }
-    });
-    nativePickerTrigger.addEventListener('click', () => colorInput.click());
-    colorInput.addEventListener('input', syncColor);
-    syncColor();
-};
+// --- RENDERIZAÇÃO: GESTÃO DE UTILIZADORES ---
 
 export function renderUserManagementView() {
-    const userManagementViewEl = document.getElementById('userManagementView');
-    // Filtramos o utilizador 'DEFINIR' para não aparecer na gestão
+    const container = document.getElementById('userManagementView');
     const allUsers = state.users.filter(u => u.name !== 'DEFINIR');
 
-    const userRows = allUsers.map(user => `
-        <tr class="hover:bg-custom-light/50 dark:hover:bg-custom-dark/50">
-            <td class="px-4 py-3">
-                <div class="flex items-center gap-3">
-                    <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-8 h-8 rounded-full">
-                    <div>
-                        <div class="font-semibold text-custom-darkest dark:text-custom-light">${user.name}</div>
-                        <div class="text-sm text-custom-dark dark:text-custom-medium">${user.email}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="px-4 py-3">
-                ${user.isAdmin ? '<span class="text-xs font-semibold rounded-full px-2.5 py-1 bg-purple-200 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Admin</span>' : '<span class="text-xs text-gray-500">Utilizador</span>'}
-            </td>
-            <td class="px-4 py-3 text-right">
-                <button class="delete-user-btn text-red-400 hover:text-red-600 dark:hover:text-red-500 p-1.5 rounded-full transition-colors" data-user-id="${user.id || user.email}" title="Eliminar Utilizador">
-                    <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-
-    userManagementViewEl.innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="md:col-span-2">
-                <h2 class="text-2xl font-bold mb-4 text-custom-darkest dark:text-custom-light">Utilizadores Cadastrados</h2>
-                <div class="bg-base-white dark:bg-custom-darkest/40 rounded-lg shadow-sm overflow-hidden">
-                    <table class="min-w-full">
-                        <thead class="bg-custom-light/50 dark:bg-custom-darkest/60">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Utilizador</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Permissões</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-custom-dark dark:text-custom-light uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-custom-light dark:divide-custom-dark">
-                            ${userRows}
-                        </tbody>
-                    </table>
+    const rows = allUsers.map(user => `
+        <div class="flex items-center justify-between p-4 bg-white dark:bg-[#1f2937] border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+            <div class="flex items-center gap-4">
+                <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600">
+                <div>
+                    <p class="font-bold text-custom-darkest dark:text-white">${user.name}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">${user.email}</p>
                 </div>
             </div>
+            <div class="flex items-center gap-4">
+                ${user.isAdmin ? '<span class="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] font-bold uppercase rounded-lg">Admin</span>' : '<span class="text-xs text-gray-400">Membro</span>'}
+                
+                <button class="delete-user-btn text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-user-id="${user.id || user.email}">
+                    <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="md:col-span-2">
+                <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Equipa</h2>
+                <div class="bg-white dark:bg-[#1f2937] rounded-3xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+                    ${rows}
+                </div>
+            </div>
+            
             <div>
-                <h2 class="text-2xl font-bold mb-4 text-custom-darkest dark:text-custom-light">Adicionar Novo Utilizador</h2>
-                <form id="addUserForm" class="bg-base-white dark:bg-custom-darkest/40 rounded-lg shadow-sm p-6 space-y-4">
+                <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Novo Membro</h2>
+                <form id="addUserForm" class="bg-white dark:bg-[#1f2937] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
                     <div>
-                        <label for="newUserName" class="block text-sm font-bold mb-2 text-custom-dark dark:text-custom-medium">Nome Completo</label>
-                        <input type="text" id="newUserName" required class="w-full bg-transparent border border-custom-medium dark:border-custom-dark rounded-lg py-2 px-3 text-custom-darkest dark:text-custom-light focus:ring-2 focus:ring-custom-dark focus:outline-none">
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Nome</label>
+                        <input type="text" id="newUserName" required class="w-full bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:ring-custom-dark focus:border-custom-dark">
                     </div>
                     <div>
-                        <label for="newUserEmail" class="block text-sm font-bold mb-2 text-custom-dark dark:text-custom-medium">E-mail (@travelcash.me)</label>
-                        <input type="email" id="newUserEmail" required class="w-full bg-transparent border border-custom-medium dark:border-custom-dark rounded-lg py-2 px-3 text-custom-darkest dark:text-custom-light focus:ring-2 focus:ring-custom-dark focus:outline-none">
+                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Email</label>
+                        <input type="email" id="newUserEmail" required class="w-full bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:ring-custom-dark focus:border-custom-dark">
                     </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" id="newUserIsAdmin" class="h-4 w-4 rounded border-gray-300 text-custom-dark focus:ring-custom-dark">
-                        <label for="newUserIsAdmin" class="text-sm font-medium text-custom-darkest dark:text-custom-light">Conceder permissões de Administrador</label>
+                    <div class="flex items-center gap-2 py-2">
+                        <input type="checkbox" id="newUserIsAdmin" class="rounded border-gray-300 text-custom-dark focus:ring-custom-dark">
+                        <label for="newUserIsAdmin" class="text-sm text-gray-600 dark:text-gray-300">Acesso Administrador</label>
                     </div>
-                    <button type="submit" class="w-full bg-custom-darkest hover:bg-opacity-90 dark:bg-custom-light dark:text-custom-darkest dark:hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-lg transition-colors">Adicionar Utilizador</button>
+                    <button type="submit" class="w-full bg-custom-darkest text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition-opacity">Adicionar</button>
                 </form>
             </div>
         </div>
@@ -868,164 +401,544 @@ export function renderUserManagementView() {
     lucide.createIcons();
 }
 
-export function showConfirmModal(title, message, onConfirm, onCancel = null, confirmLabel = 'Excluir', cancelLabel = 'Cancelar', iconName = 'trash-2') {
-    const deleteConfirmModal = document.getElementById('deleteConfirmModal');
-    const confirmTitle = deleteConfirmModal.querySelector('h2');
-    const confirmMessage = deleteConfirmModal.querySelector('p');
-    const confirmButton = document.getElementById('confirmDeleteBtn');
-    const cancelButton = document.getElementById('cancelDeleteBtn');
+// --- GERENCIADOR DE VISUALIZAÇÕES (ROTEADOR UI) ---
 
-    const iconElement = document.getElementById('modal-icon');
-    if (iconElement) {
-        iconElement.setAttribute('data-lucide', iconName);
-    }
-
-    confirmTitle.textContent = title;
-    confirmMessage.textContent = message;
-
-    // Atualiza o texto dos botões
-    confirmButton.textContent = confirmLabel;
-    cancelButton.textContent = cancelLabel;
-
-    confirmButton.onclick = () => {
-        onConfirm();
-        deleteConfirmModal.classList.add('hidden');
-    };
-    cancelButton.onclick = () => {
-        if (onCancel) onCancel();
-        deleteConfirmModal.classList.add('hidden');
-    };
+export function updateActiveView() {
+    const kanban = document.getElementById('kanbanView');
+    const list = document.getElementById('listView');
+    const archived = document.getElementById('archivedView');
+    const users = document.getElementById('userManagementView');
+    const main = document.getElementById('main-content');
+    const label = document.getElementById('current-view-label');
     
-    deleteConfirmModal.classList.remove('hidden');
+    // 1. Resetar Visibilidade
+    [kanban, list, archived, users].forEach(el => el.classList.add('hidden'));
 
-
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-}
-
-// --- ATUALIZAR LISTA DE NOTIFICAÇÕES ---
-export async function updateNotificationBadge() {
-    const notifications = await fetchNotifications();
-    const unreadCount = notifications.filter(n => !n.isRead).length;
-    
-    const badge = document.getElementById('notification-badge');
-    const list = document.getElementById('notification-list');
-    
-    if (unreadCount > 0) {
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-
-    list.innerHTML = '';
-    if (notifications.length === 0) {
-        list.innerHTML = '<p class="p-6 text-center text-sm text-gray-500">Você não tem notificações.</p>';
-        return;
-    }
-
-    notifications.forEach(notif => {
-        const item = document.createElement('div');
-        // Estilo diferente se não lida
-        const bgClass = notif.isRead ? 'bg-transparent opacity-70' : 'bg-blue-50 dark:bg-blue-900/20';
-        item.className = `p-3 border-b border-custom-light dark:border-custom-dark hover:bg-gray-100 dark:hover:bg-custom-dark/40 cursor-pointer transition-colors ${bgClass}`;
-        
-        item.innerHTML = `
-            <div class="flex items-start gap-3">
-                <div class="mt-1 bg-custom-dark text-white rounded-full p-1.5 shrink-0"><i data-lucide="at-sign" class="w-3 h-3"></i></div>
-                <div>
-                    <p class="text-xs font-bold text-custom-darkest dark:text-custom-light">${notif.message}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic line-clamp-2">"${notif.commentPreview}"</p>
-                    <p class="text-[10px] text-gray-400 mt-1">${new Date(notif.createdAt).toLocaleString('pt-BR')}</p>
-                </div>
-            </div>
-        `;
-        
-        item.addEventListener('click', async () => {
-            // 1. Marca como lida
-            if (!notif.isRead) {
-                await markNotificationRead(notif.id);
-                updateNotificationBadge(); // Atualiza contador
-            }
-            // 2. Abre a tarefa
-            const task = state.tasks.find(t => t.id === notif.taskId);
-            if (task) {
-                state.lastInteractedTaskId = task.id;
-                // Fecha dropdown
-                document.getElementById('notification-dropdown').classList.add('hidden');
-                
-                // Abre modal usando a função existente
-                highlightTask(task.id, false);
-                renderTaskHistory(task.id);
-            } else {
-                showToast('A tarefa não foi encontrada (pode ter sido excluída).', 'error');
-            }
-        });
-        
-        list.appendChild(item);
+    // 2. Atualizar Botões do Menu Orb
+    document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
+        const isActive = btn.dataset.view === state.currentView;
+        if (isActive) {
+            btn.classList.add('bg-white/20', 'font-bold', 'ring-1', 'ring-white/30');
+            btn.classList.remove('ring-transparent');
+        } else {
+            btn.classList.remove('bg-white/20', 'font-bold', 'ring-white/30');
+            btn.classList.add('ring-transparent');
+        }
     });
-    lucide.createIcons();
+
+    // 3. Renderizar View Escolhida
+    if (state.currentView === 'kanban') {
+        renderKanbanView();
+        kanban.classList.remove('hidden');
+        // O Kanban precisa do scroll horizontal do immersive-canvas
+        main.classList.add('immersive-canvas');
+        main.classList.remove('block'); 
+        label.textContent = "Quadro Geral";
+    } else {
+        // As outras views são verticais, removemos o layout horizontal
+        main.classList.remove('immersive-canvas');
+        main.classList.add('block'); // Garante display: block
+
+        if (state.currentView === 'list') {
+            renderListView();
+            list.classList.remove('hidden');
+            label.textContent = "Lista de Tarefas";
+        } else if (state.currentView === 'archived') {
+            renderArchivedTasks();
+            archived.classList.remove('hidden');
+            label.textContent = "Arquivo";
+        } else if (state.currentView === 'users') {
+            renderUserManagementView();
+            users.classList.remove('hidden');
+            label.textContent = "Utilizadores";
+        }
+    }
 }
 
-// --- AUTOCOMPLETE NO COMENTÁRIO (@) ---
+// --- FILTROS NO ORB (CHIPS) ---
+
+// Função auxiliar para filtrar os dados antes de renderizar
+function filterTasks(tasks) {
+    let filtered = tasks;
+    if (state.selectedProject !== 'all') {
+        filtered = filtered.filter(t => t.project === state.selectedProject);
+    }
+    if (state.selectedResponsible !== 'all') {
+        filtered = filtered.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
+    }
+    if (state.searchQuery) {
+        const q = state.searchQuery.toLowerCase();
+        filtered = filtered.filter(t => t.title.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+    }
+    return filtered;
+}
+
+export function populateProjectFilter() {
+    const container = document.getElementById('orb-project-filters');
+    const projects = [...new Set(state.tasks.map(t => t.project).filter(Boolean))].sort();
+
+    container.innerHTML = `<div class="filter-chip ${state.selectedProject === 'all' ? 'active' : ''}" data-value="all">Todos</div>`;
+    
+    projects.forEach(p => {
+        const isActive = state.selectedProject === p ? 'active' : '';
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${isActive}`;
+        chip.dataset.value = p;
+        chip.textContent = p;
+        container.appendChild(chip);
+    });
+}
+
+export function populateResponsibleFilter() {
+    const container = document.getElementById('orb-responsible-filters');
+    const responsibles = [...new Set(state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).filter(Boolean))].sort();
+    
+    container.innerHTML = `<div class="filter-chip ${state.selectedResponsible === 'all' ? 'active' : ''}" data-value="all">Todos</div>`;
+    
+    responsibles.forEach(r => {
+        const isActive = state.selectedResponsible === r ? 'active' : '';
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${isActive}`;
+        chip.dataset.value = r;
+        chip.textContent = r;
+        container.appendChild(chip);
+    });
+}
+
+// --- MODAL: DETALHES DA TAREFA ---
+
+export function renderTaskHistory(taskId) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // 1. Títulos e Badges
+    document.getElementById('modal-info-title').textContent = task.title;
+    document.getElementById('modal-info-project').textContent = task.project || 'Geral';
+    document.getElementById('modal-info-project').style.color = task.projectColor || '#9DB2BF';
+    
+    // 2. Descrição
+    document.getElementById('modal-info-description').textContent = task.description;
+
+    // 3. Responsáveis
+    const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
+    document.getElementById('modal-info-responsible').textContent = respNames || 'Não atribuído';
+
+    // 4. Datas (Agenda Google)
+    const calendarBtn = document.getElementById('modal-calendar-btn');
+    const respEmails = (task.responsible || []).map(r => r.email).filter(Boolean).join(',');
+    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description)}&add=${respEmails}`;
+    calendarBtn.href = googleUrl;
+
+    const dueDateEl = document.getElementById('modal-info-dueDate');
+    const dueDateContainer = document.getElementById('modal-info-dueDate-container');
+    
+    if (task.dueDate) {
+        dueDateEl.querySelector('span').textContent = formatDate(task.dueDate);
+        dueDateContainer.classList.remove('hidden');
+    } else {
+        dueDateContainer.classList.add('hidden');
+    }
+
+    // 5. Links e Anexos
+    const linkContainer = document.getElementById('modal-info-azure-link-container');
+    const linkEl = document.getElementById('modal-info-azure-link');
+    if (task.azureLink) {
+        linkEl.href = task.azureLink;
+        linkEl.querySelector('span').textContent = task.azureLink;
+        linkContainer.classList.remove('hidden');
+    } else {
+        linkContainer.classList.add('hidden');
+    }
+
+    const attachContainer = document.getElementById('modal-info-attachments-container');
+    if (task.attachments?.length > 0) {
+        renderAttachmentList('modal-info-attachments', task.attachments);
+        attachContainer.classList.remove('hidden');
+    } else {
+        attachContainer.classList.add('hidden');
+    }
+
+    // 6. Histórico (Logs)
+    const historyEl = document.getElementById('history-feed');
+    const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    historyEl.innerHTML = historyItems.map(item => `
+        <div class="relative pl-4 pb-4 border-l border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
+            <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+            <p class="text-xs text-gray-600 dark:text-gray-300">Mudou para <span class="font-bold">${item.status}</span></p>
+            <p class="text-[10px] text-gray-400">${formatDateTime(item.timestamp)}</p>
+        </div>
+    `).join('');
+
+    // 7. Comentários
+    const commentsEl = document.getElementById('comments-feed');
+    const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    if (comments.length === 0) {
+        commentsEl.innerHTML = '<div class="text-center text-gray-400 py-10 italic text-sm">Nenhum comentário ainda.<br>Inicie a discussão!</div>';
+    } else {
+        commentsEl.innerHTML = comments.map(c => {
+            const author = state.users.find(u => u.name === c.author) || { name: c.author, picture: null };
+            const avatar = author.picture 
+                ? `<img src="${author.picture}" class="w-8 h-8 rounded-full border border-gray-200">`
+                : `<div class="w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs">${author.name.charAt(0)}</div>`;
+
+            return `
+                <div class="flex gap-3 group">
+                    <div class="shrink-0">${avatar}</div>
+                    <div class="flex-grow">
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-sm font-bold text-custom-darkest dark:text-white">${c.author}</span>
+                            <span class="text-[10px] text-gray-400">${formatDateTime(c.timestamp)}</span>
+                        </div>
+                        <div class="bg-white dark:bg-white/5 p-3 rounded-tr-xl rounded-b-xl border border-gray-100 dark:border-gray-700 text-sm text-custom-darkest dark:text-gray-200 mt-1 shadow-sm relative">
+                            ${c.text}
+                            <button class="delete-comment-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity" data-task-id="${taskId}" data-comment-index="${c.index}">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 8. Botão Sinalizar (Alerta)
+    // Removemos botão antigo se existir para não duplicar eventos
+    const oldSignal = document.getElementById('signalBtn');
+    if (oldSignal) oldSignal.remove();
+
+    const signalBtn = document.createElement('button');
+    signalBtn.id = 'signalBtn';
+    signalBtn.className = 'p-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors';
+    signalBtn.title = 'Enviar Alerta Urgente';
+    signalBtn.innerHTML = '<i data-lucide="siren" class="w-5 h-5"></i>';
+    
+    // Inserir antes do botão de fechar
+    const closeBtn = document.getElementById('closeHistoryBtn');
+    closeBtn.parentNode.insertBefore(signalBtn, closeBtn);
+
+    // Lógica do clique (usa imports dinâmicos para evitar ciclo)
+    signalBtn.onclick = () => {
+        showConfirmModal(
+            'Enviar Alerta', 
+            'Isto enviará um aviso sonoro/visual de tela cheia para o responsável. Usar apenas em emergências.', 
+            async () => {
+                const api = await import('./api.js');
+                await api.signalResponsible(taskId);
+                showToast('Alerta enviado!', 'success');
+            }, 
+            null
+        );
+    };
+
+    // Abrir Modal
+    document.getElementById('taskHistoryModal').classList.remove('hidden');
+    lucide.createIcons();
+    
+    // Iniciar autocomplete de comentários
+    setTimeout(() => setupCommentAutocomplete(), 300);
+}
+
+// --- UTILITÁRIOS DIVERSOS ---
+
+export function highlightTask(taskId, temporary = true) {
+    if (!taskId) return;
+    // Remove destaque anterior
+    document.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
+    
+    // Busca elemento (Card ou Linha)
+    const el = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        el.classList.add('highlight');
+        if (temporary) {
+            setTimeout(() => el.classList.remove('highlight'), 2000);
+        }
+    }
+}
+
+export function showConfirmModal(title, message, onConfirm, onCancel) {
+    const modal = document.getElementById('deleteConfirmModal');
+    modal.querySelector('h2').textContent = title;
+    modal.querySelector('p').textContent = message;
+    
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    // Clona o botão para remover listeners antigos
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newConfirmBtn.onclick = () => {
+        onConfirm();
+        modal.classList.add('hidden');
+    };
+    
+    document.getElementById('cancelDeleteBtn').onclick = () => {
+        if(onCancel) onCancel();
+        modal.classList.add('hidden');
+    };
+    
+    modal.classList.remove('hidden');
+}
+
+export async function updateNotificationBadge() {
+    const notifs = await fetchNotifications();
+    const unread = notifs.filter(n => !n.isRead);
+    const count = unread.length;
+    
+    // Atualiza badges (Perfil e Menu)
+    const badgeOrb = document.getElementById('notification-badge-orb'); // Bolinha no avatar
+    const badgeMenu = document.getElementById('orb-notif-count'); // Contador no menu
+    
+    if (count > 0) {
+        badgeOrb.classList.remove('hidden');
+        badgeMenu.textContent = count > 9 ? '9+' : count;
+        badgeMenu.classList.remove('hidden');
+    } else {
+        badgeOrb.classList.add('hidden');
+        badgeMenu.classList.add('hidden');
+    }
+
+    // Renderiza Lista no Menu Orb
+    const listContainer = document.getElementById('orb-notifications-list');
+    if (notifs.length === 0) {
+        listContainer.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Sem notificações.</div>';
+    } else {
+        listContainer.innerHTML = notifs.map(n => `
+            <div class="p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer ${n.isRead ? 'opacity-50' : 'bg-blue-50/50 dark:bg-blue-900/10'}" data-notif-id="${n.id}" data-task-id="${n.taskId}">
+                <p class="text-xs font-bold text-custom-darkest dark:text-white">${n.message}</p>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate">"${n.commentPreview}"</p>
+                <p class="text-[9px] text-gray-400 text-right mt-1">${formatDateTime(n.createdAt)}</p>
+            </div>
+        `).join('');
+        
+        // Click nas notificações
+        listContainer.querySelectorAll('div[data-notif-id]').forEach(el => {
+            el.addEventListener('click', async () => {
+                const notifId = el.dataset.notifId;
+                const taskId = el.dataset.taskId;
+                
+                if (!el.classList.contains('opacity-50')) {
+                    await markNotificationRead(notifId);
+                    updateNotificationBadge();
+                }
+                
+                // Fecha o Orb Menu e abre a tarefa
+                document.getElementById('orb-tools').classList.remove('expanded');
+                
+                // Se a tarefa existir no state local, abre
+                if (state.tasks.find(t => t.id === taskId)) {
+                    highlightTask(taskId);
+                    renderTaskHistory(taskId);
+                } else {
+                    showToast('Tarefa não encontrada (pode ter sido excluída).', 'error');
+                }
+            });
+        });
+    }
+}
+
+// --- AUTOCOMPLETE DE COMENTÁRIOS (@) ---
+
 export function setupCommentAutocomplete() {
     const input = document.getElementById('comment-input');
-    if (!input) return; 
+    if (!input) return;
 
-    // Cria o container de sugestão se não existir e anexa ao pai do input
-    let suggestionBox = document.getElementById('comment-suggestions');
-    if (!suggestionBox) {
-        suggestionBox = document.createElement('div');
-        suggestionBox.id = 'comment-suggestions';
-        suggestionBox.className = 'absolute bottom-16 left-0 w-64 bg-white dark:bg-custom-darkest border border-custom-medium dark:border-custom-dark rounded-md shadow-xl hidden z-[60] max-h-40 overflow-y-auto';
-        input.parentNode.style.position = 'relative'; // Garante posicionamento relativo
-        input.parentNode.appendChild(suggestionBox);
+    let box = document.getElementById('mention-suggestions');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'mention-suggestions';
+        box.className = 'absolute bottom-16 left-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl hidden z-50 overflow-hidden';
+        input.parentElement.style.position = 'relative';
+        input.parentElement.appendChild(box);
     }
 
     input.addEventListener('keyup', (e) => {
-        const cursorPosition = input.selectionStart;
-        const textBeforeCursor = input.value.substring(0, cursorPosition);
-        const lastAt = textBeforeCursor.lastIndexOf('@');
+        const val = input.value;
+        const cursor = input.selectionStart;
+        const lastAt = val.lastIndexOf('@', cursor - 1);
         
         if (lastAt !== -1) {
-            const query = textBeforeCursor.substring(lastAt + 1);
-            // Se houver espaço, assume que parou de digitar o nome
+            const query = val.substring(lastAt + 1, cursor);
             if (query.includes(' ')) {
-                suggestionBox.classList.add('hidden');
+                box.classList.add('hidden');
                 return;
             }
-
-            // Filtra usuários (excluindo 'DEFINIR')
-            const matches = state.users.filter(u => u.name.toLowerCase().includes(query.toLowerCase()) && u.name !== 'DEFINIR');
             
-            if (matches.length > 0) {
-                suggestionBox.innerHTML = '';
-                matches.forEach(user => {
-                    const div = document.createElement('div');
-                    div.className = 'p-2 hover:bg-custom-light dark:hover:bg-custom-dark cursor-pointer flex items-center gap-2 text-sm text-custom-darkest dark:text-custom-light';
-                    
-                    const avatar = user.picture 
-                        ? `<img src="${user.picture}" class="w-5 h-5 rounded-full">` 
-                        : `<div class="w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center text-[10px] text-white">${user.name.charAt(0)}</div>`;
+            const matches = state.users.filter(u => 
+                u.name !== 'DEFINIR' && 
+                u.name.toLowerCase().includes(query.toLowerCase())
+            );
 
-                    div.innerHTML = `${avatar}<span class="font-bold">@${user.name}</span>`;
-                    
-                    div.onmousedown = (evt) => { // Usar onmousedown previne perder foco antes do clique
-                        evt.preventDefault();
-                        const textAfterCursor = input.value.substring(cursorPosition);
-                        const newText = input.value.substring(0, lastAt) + `@${user.name} ` + textAfterCursor;
-                        input.value = newText;
-                        suggestionBox.classList.add('hidden');
+            if (matches.length > 0) {
+                box.innerHTML = matches.map(u => `
+                    <div class="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer text-sm text-custom-darkest dark:text-white" data-name="${u.name}">
+                        <div class="w-5 h-5 rounded-full bg-custom-dark text-white flex items-center justify-center text-[10px]">${u.name.charAt(0)}</div>
+                        <span>${u.name}</span>
+                    </div>
+                `).join('');
+                box.classList.remove('hidden');
+                
+                box.querySelectorAll('div').forEach(el => {
+                    el.onclick = () => {
+                        const name = el.dataset.name;
+                        const before = val.substring(0, lastAt);
+                        const after = val.substring(cursor);
+                        input.value = `${before}@${name} ${after}`;
+                        box.classList.add('hidden');
                         input.focus();
                     };
-                    suggestionBox.appendChild(div);
                 });
-                suggestionBox.classList.remove('hidden');
             } else {
-                suggestionBox.classList.add('hidden');
+                box.classList.add('hidden');
             }
         } else {
-            suggestionBox.classList.add('hidden');
+            box.classList.add('hidden');
         }
+    });
+}
+
+// Configuração do input de responsáveis (Tags)
+export function setupResponsibleInput(initialResponsibles = []) {
+    const container = document.getElementById('responsible-input-container');
+    const input = document.getElementById('taskResponsible');
+    const suggestions = document.getElementById('responsible-suggestions');
+    let current = [...initialResponsibles];
+
+    const render = () => {
+        // Remove tags existentes (exceto o input)
+        Array.from(container.children).forEach(c => {
+            if (c !== input) c.remove();
+        });
+
+        current.forEach(u => {
+            const name = typeof u === 'object' ? u.name : u;
+            const tag = document.createElement('div');
+            tag.className = 'flex items-center gap-1 bg-white dark:bg-white/10 px-2 py-1 rounded-lg text-xs font-bold text-custom-darkest dark:text-white shadow-sm';
+            tag.innerHTML = `<span>${name}</span><i data-lucide="x" class="w-3 h-3 cursor-pointer hover:text-red-500"></i>`;
+            tag.querySelector('i').onclick = () => {
+                current = current.filter(x => (typeof x === 'object' ? x.name : x) !== name);
+                render();
+            };
+            container.insertBefore(tag, input);
+        });
+        lucide.createIcons();
+    };
+
+    input.oninput = () => {
+        const val = input.value.toLowerCase();
+        if (!val) { suggestions.classList.add('hidden'); return; }
+
+        const matches = state.users.filter(u => 
+            u.name.toLowerCase().includes(val) && 
+            !current.some(c => (typeof c === 'object' ? c.name : c) === u.name)
+        );
+
+        suggestions.innerHTML = matches.map(u => `
+            <div class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer flex items-center gap-2 text-sm text-custom-darkest dark:text-white">
+                <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-5 h-5 rounded-full">
+                ${u.name}
+            </div>
+        `).join('');
+
+        if (matches.length > 0) {
+            suggestions.classList.remove('hidden');
+            Array.from(suggestions.children).forEach((el, i) => {
+                el.onclick = () => {
+                    current.push(matches[i]);
+                    input.value = '';
+                    suggestions.classList.add('hidden');
+                    render();
+                };
+            });
+        } else {
+            suggestions.classList.add('hidden');
+        }
+    };
+    
+    // Fecha ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) suggestions.classList.add('hidden');
+    });
+
+    render();
+}
+
+// Configuração do input de Projetos (Suggestions)
+export function setupProjectSuggestions() {
+    const input = document.getElementById('taskProject');
+    const list = document.getElementById('project-suggestions');
+    const colorInput = document.getElementById('taskProjectColor');
+    const colorBtn = document.getElementById('color-picker-button');
+
+    // Mapeia projetos existentes
+    const projectMap = new Map();
+    state.tasks.forEach(t => { if(t.project) projectMap.set(t.project, t.projectColor); });
+
+    input.oninput = () => {
+        const val = input.value.toLowerCase();
+        if (!val) { list.classList.add('hidden'); return; }
+
+        const matches = Array.from(projectMap.keys()).filter(p => p.toLowerCase().includes(val));
+        
+        list.innerHTML = matches.map(p => `
+            <div class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer text-sm text-custom-darkest dark:text-white flex justify-between">
+                <span>${p}</span>
+                <span class="w-3 h-3 rounded-full" style="background-color: ${projectMap.get(p)}"></span>
+            </div>
+        `).join('');
+
+        if (matches.length > 0) {
+            list.classList.remove('hidden');
+            Array.from(list.children).forEach((el, i) => {
+                el.onclick = () => {
+                    input.value = matches[i];
+                    const color = projectMap.get(matches[i]);
+                    if(color) {
+                        colorInput.value = color;
+                        colorBtn.style.backgroundColor = color;
+                    }
+                    list.classList.add('hidden');
+                };
+            });
+        } else {
+            list.classList.add('hidden');
+        }
+    };
+}
+
+// Configuração do Color Picker Customizado
+export function setupCustomColorPicker() {
+    const btn = document.getElementById('color-picker-button');
+    const palette = document.getElementById('color-palette');
+    const input = document.getElementById('taskProjectColor');
+    const nativeTrig = document.getElementById('native-color-picker-trigger');
+
+    const colors = ['#526D82', '#9DB2BF', '#27374D', '#1D5B79', '#468B97', '#EF6262', '#F3AA60', '#F9D949', '#68B984', '#3D5656', '#A25B5B', '#635985'];
+
+    palette.innerHTML = colors.map(c => `
+        <div class="w-full h-8 rounded-lg cursor-pointer hover:scale-110 transition-transform shadow-sm" style="background-color: ${c}" data-color="${c}"></div>
+    `).join('');
+
+    btn.onclick = () => palette.classList.toggle('hidden');
+    
+    // Atualiza cor do botão quando input muda
+    const updateBtn = () => btn.style.backgroundColor = input.value;
+    input.oninput = updateBtn;
+    updateBtn(); // Init
+
+    Array.from(palette.children).forEach(swatch => {
+        swatch.onclick = () => {
+            input.value = swatch.dataset.color;
+            updateBtn();
+            palette.classList.add('hidden');
+        };
+    });
+
+    nativeTrig.onclick = () => input.click();
+    
+    // Fecha palette ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (!btn.contains(e.target) && !palette.contains(e.target)) palette.classList.add('hidden');
     });
 }
