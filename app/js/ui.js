@@ -3,6 +3,28 @@ import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './
 
 // --- HELPERS E FORMATAÇÃO ---
 
+function hexToRgba(hex, alpha) {
+    let c;
+    if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+        c= hex.substring(1).split('');
+        if(c.length== 3){
+            c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c= '0x'+c.join('');
+        return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+    }
+    return hex; 
+}
+
+function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace("#",""), 16),
+    amt = Math.round(2.55 * percent),
+    R = (num >> 16) + amt,
+    G = (num >> 8 & 0x00FF) + amt,
+    B = (num & 0x0000FF) + amt;
+    return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+}
+
 export const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -25,7 +47,7 @@ export const isTaskOverdue = (task) => {
     return dueDate < todayUTC;
 };
 
-// --- TOASTS / NOTIFICAÇÕES VISUAIS ---
+// --- TOASTS ---
 
 export function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -73,10 +95,10 @@ function renderAttachmentList(containerId, attachments) {
             const blobName = !isLocalFile && file.url ? decodeURIComponent(file.url.split('/').pop()) : '';
 
             const item = document.createElement('div');
-            item.className = 'flex items-center justify-between p-2 bg-white dark:bg-black/20 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
+            item.className = 'flex items-center justify-between p-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
             
             const downloadLink = !isLocalFile ? `
-                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Baixar">
+                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Baixar">
                     <i data-lucide="download-cloud" class="w-4 h-4"></i>
                 </a>
             ` : '';
@@ -105,29 +127,32 @@ export function renderModalAttachments(files) {
     renderAttachmentList('attachment-list', files);
 }
 
-// --- RENDERIZAÇÃO: CARD DE TAREFA ---
+// --- RENDERIZAÇÃO: CARD DE TAREFA (COM TARJA) ---
 
 export const createTaskElement = (task) => {
     const taskCard = document.createElement('div');
     const isOverdue = isTaskOverdue(task);
     
-    // Cor ajustada para dark mode: #27374d
-    let cardClasses = 'task-card bg-white dark:bg-[#27374d] p-5 rounded-[20px] shadow-sm hover:shadow-lg relative flex flex-col gap-3 group border border-transparent hover:border-custom-medium/20';
-    
-    if (isOverdue) {
-        cardClasses += ' border-l-[6px] border-l-red-500';
-    }
+    // Efeito Pop para Urgente/Done
+    const isPop = task.priority === 'Urgente' || task.status === 'done';
+
+    let cardClasses = 'task-card group'; 
+    if (isOverdue) cardClasses += ' border-l-[4px] border-l-red-500';
+    if (isPop) cardClasses += ' card-pop';
 
     taskCard.className = cardClasses;
     taskCard.dataset.taskId = task.id;
 
-    // Badge do Projeto
-    const projectColor = task.projectColor || '#9DB2BF';
-    const projectBadge = task.project 
-        ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white shadow-sm" style="background-color: ${projectColor}">${task.project}</span>`
-        : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-700">Geral</span>`;
+    // --- Lógica da Tarja Superior ---
+    const pColor = task.projectColor || '#94A3B8';
+    // Usamos uma opacidade alta (0.9) para a tarja ser bem visível
+    const bgRgba = hexToRgba(pColor, 0.50); 
+    
+    const projectStrip = task.project 
+        ? `<div class="project-strip" style="background-color: ${bgRgba};">${task.project}</div>`
+        : `<div class="project-strip" style="background-color: ${hexToRgba('#94A3B8', 0.5)};">Geral</div>`;
 
-    // Avatares
+    // --- Avatares ---
     let responsibleDisplay = '';
     if (task.responsible && task.responsible.length > 0) {
         const avatars = task.responsible.slice(0, 3).map(r => {
@@ -137,82 +162,140 @@ export const createTaskElement = (task) => {
             const finalPic = userState?.picture || pic;
 
             if (finalPic) {
-                return `<img src="${finalPic}" class="w-6 h-6 rounded-full border-2 border-white dark:border-[#1f2937] object-cover" title="${name}">`;
+                return `<img src="${finalPic}" class="w-6 h-6 rounded-full border border-white dark:border-[#334155] object-cover" title="${name}">`;
             }
-            return `<div class="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-[#1f2937] flex items-center justify-center text-[9px] font-bold text-gray-600 dark:text-gray-200" title="${name}">${name.charAt(0)}</div>`;
+            return `<div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 border border-white dark:border-[#334155] flex items-center justify-center text-[9px] font-bold text-gray-600 dark:text-gray-300" title="${name}">${name.charAt(0)}</div>`;
         }).join('');
         
-        const extra = task.responsible.length > 3 ? `<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-white dark:border-[#1f2937] flex items-center justify-center text-[9px] font-bold text-gray-500">+${task.responsible.length - 3}</div>` : '';
-        responsibleDisplay = `<div class="flex -space-x-2">${avatars}${extra}</div>`;
+        const extra = task.responsible.length > 3 ? `<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border border-white dark:border-[#334155] flex items-center justify-center text-[9px] font-bold text-gray-500">+${task.responsible.length - 3}</div>` : '';
+        responsibleDisplay = `<div class="flex -space-x-1.5">${avatars}${extra}</div>`;
     }
 
-    // Indicadores
+    // --- Rodapé (ID, Data, Anexos) ---
+    const dateText = task.dueDate ? formatDate(task.dueDate) : '';
+    const dateClass = isOverdue ? 'text-red-500 font-bold opacity-100' : 'ox-text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300';
+    
+    const dateBadge = dateText ? 
+        `<div class="flex items-center gap-1 ${dateClass} text-[10px]" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>` : '';
+
     const attachmentIcon = (task.attachments?.length > 0) 
-        ? `<div class="flex items-center gap-1 text-gray-400 text-xs"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
+        ? `<div class="flex items-center gap-1 ox-text-tertiary text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
         : '';
     
-    let dateBadge = '';
-    if(task.dueDate) {
-        const dateText = formatDate(task.dueDate);
-        const dateColorClass = isOverdue ? 'text-red-500 font-bold' : 'text-gray-400';
-        dateBadge = `<div class="flex items-center gap-1 ${dateColorClass} text-xs" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>`;
-    }
+    const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
+    // --- Ações Rápidas (Sobre a Tarja) ---
     const quickActions = `
-        <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="info-btn p-1.5 rounded-lg text-gray-400 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" title="Ver Detalhes" data-task-id="${task.id}">
-                <i data-lucide="maximize-2" class="w-4 h-4 pointer-events-none"></i>
+        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+            <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
             </button>
-            ${task.status === 'homologation' ? `<button class="approve-btn p-1.5 rounded-lg text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-4 h-4 pointer-events-none"></i></button>` : ''}
+
+            <button class="expand-btn p-1 rounded-md bg-white/20 hover:bg-white text-white hover:text-custom-dark backdrop-blur-sm transition-colors shadow-sm" title="Expandir Detalhes" data-task-id="${task.id}">
+                <i data-lucide="maximize-2" class="w-3.5 h-3.5 pointer-events-none"></i>
+            </button>
+
+            ${task.status === 'homologation' ? `<button class="p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-3.5 h-3.5 pointer-events-none"></i></button>` : ''}
         </div>
     `;
 
+    // Montagem do HTML com Tarja + Corpo
     taskCard.innerHTML = `
-        <div class="flex justify-between items-start pr-12">
-            ${projectBadge}
-        </div>
+        ${projectStrip}
         ${quickActions}
-        <h3 class="text-sm font-bold text-custom-darkest dark:text-gray-100 leading-snug break-words">${task.title}</h3>
-        <div class="mt-auto pt-3 flex items-end justify-between border-t border-gray-100 dark:border-gray-700/50">
-            <div class="flex flex-col gap-1.5">
-                <span class="text-[10px] font-mono font-bold text-gray-300 dark:text-gray-600">#${task.id}</span>
-                <div class="flex items-center gap-3">
+        
+        <div class="task-body">
+            <h3 class="text-sm ox-text-primary leading-snug break-words pr-1">${task.title}</h3>
+            
+            <div class="flex items-end justify-between mt-auto pt-2 border-t border-dashed border-gray-200 dark:border-white/5">
+                <div class="flex items-center gap-3 min-h-[24px]">
+                    ${idBadge}
                     ${dateBadge}
                     ${attachmentIcon}
                 </div>
+                ${responsibleDisplay}
             </div>
-            ${responsibleDisplay}
         </div>
     `;
+
+    // Event Listeners
+    const expandBtn = taskCard.querySelector('.expand-btn');
+    if(expandBtn) {
+        expandBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            renderTaskHistory(task.id);
+        });
+    }
+
+    const deleteBtn = taskCard.querySelector('.delete-task-btn');
+    if(deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showConfirmModal(
+                'Excluir Tarefa?', 
+                `Deseja realmente excluir a tarefa "${task.title}" (${task.id})?`, 
+                async () => {
+                    const api = await import('./api.js');
+                    await api.deleteTask(task.id);
+                    showToast('Tarefa excluída.', 'success');
+                }
+            );
+        });
+    }
 
     return taskCard;
 };
 
-// --- RENDERIZAÇÃO: KANBAN HORIZONTAL ---
+// --- LOGICA DE FILTRO (ROBUSTA) ---
 
 function filterTasks(tasks) {
+    if (!tasks || !Array.isArray(tasks)) return [];
+
     let filtered = tasks;
-    if (state.selectedProject !== 'all') {
-        filtered = filtered.filter(t => t.project === state.selectedProject);
+
+    // Filtro de Projeto (Case insensitive)
+    if (state.selectedProject && state.selectedProject !== 'all') {
+        const targetProj = String(state.selectedProject).trim().toLowerCase();
+        filtered = filtered.filter(t => {
+            const taskProj = t.project ? String(t.project).trim().toLowerCase() : '';
+            return taskProj === targetProj;
+        });
     }
-    if (state.selectedResponsible !== 'all') {
-        filtered = filtered.filter(t => Array.isArray(t.responsible) && t.responsible.map(r => (typeof r === 'object' ? r.name : r)).includes(state.selectedResponsible));
+
+    // Filtro de Responsável (Case insensitive)
+    if (state.selectedResponsible && state.selectedResponsible !== 'all') {
+        const targetResp = String(state.selectedResponsible).trim().toLowerCase();
+        filtered = filtered.filter(t => 
+            Array.isArray(t.responsible) && 
+            t.responsible.some(r => {
+                const name = typeof r === 'object' ? r.name : r;
+                return String(name).trim().toLowerCase() === targetResp;
+            })
+        );
     }
+
+    // Busca (Search Bar)
     if (state.searchQuery) {
         const q = state.searchQuery.toLowerCase();
-        filtered = filtered.filter(t => t.title.toLowerCase().includes(q) || t.id.toLowerCase().includes(q));
+        filtered = filtered.filter(t => 
+            (t.title && t.title.toLowerCase().includes(q)) || 
+            (t.id && t.id.toLowerCase().includes(q))
+        );
     }
     return filtered;
 }
 
+// --- RENDERIZAÇÃO: KANBAN ---
+
 export function renderKanbanView() {
     const kanbanViewEl = document.getElementById('kanbanView');
+    // Aplica o filtro
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
     const columns = [
-        { id: 'todo', name: 'Backlog', color: 'bg-gray-400' },
+        { id: 'todo', name: 'Fila', color: 'bg-gray-400' },
         { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
-        { id: 'inprogress', name: 'Em Progresso', color: 'bg-blue-500' },
+        { id: 'inprogress', name: 'Andamento', color: 'bg-blue-500' },
         { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' }
     ];
 
@@ -226,12 +309,12 @@ export function renderKanbanView() {
             columnEl.setAttribute('data-column-id', col.id);
 
             columnEl.innerHTML = `
-                <div class="column-header select-none">
+                <div class="column-header select-none group">
                     <div class="flex items-center gap-3">
-                        <span class="w-2.5 h-2.5 rounded-full ${col.color} shadow-sm"></span>
-                        <h2 class="font-extrabold text-lg text-custom-darkest dark:text-white tracking-tight">${col.name}</h2>
+                        <div class="w-2 h-2 rounded-full ${col.color} ring-4 ring-transparent group-hover:ring-white/10 transition-all"></div>
+                        <h2 class="font-bold text-sm uppercase tracking-wider ox-text-primary opacity-70 group-hover:opacity-100 transition-opacity">${col.name}</h2>
                     </div>
-                    <span class="column-count bg-custom-light dark:bg-white/10 text-custom-dark dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-lg">0</span>
+                    <span class="column-count text-[10px] font-bold ox-text-secondary bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">0</span>
                 </div>
                 <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}"></div>
             `;
@@ -253,6 +336,7 @@ export function renderKanbanView() {
 
 export function renderListView() {
     const container = document.getElementById('listView');
+    // Aplica o filtro
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     activeTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -266,19 +350,19 @@ export function renderListView() {
         const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
         
         return `
-        <div class="list-row group bg-white dark:bg-[#1f2937] p-4 rounded-2xl mb-3 shadow-sm hover:shadow-md border border-transparent hover:border-custom-medium/30 transition-all cursor-pointer flex items-center gap-4 fade-in" data-task-id="${task.id}">
+        <div class="list-row group bg-white dark:bg-[#1E293B] p-4 rounded-2xl mb-3 shadow-sm hover:shadow-md border border-transparent hover:border-custom-medium/30 transition-all cursor-pointer flex items-center gap-4 fade-in" data-task-id="${task.id}">
             <div class="w-1 h-12 rounded-full bg-${task.status === 'stopped' ? 'red-500' : (task.status === 'homologation' ? 'orange-500' : 'gray-300')} shrink-0"></div>
             <div class="flex-grow min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
-                    <span class="text-[10px] font-mono text-gray-400">#${task.id}</span>
+                    <span class="text-[10px] font-mono ox-text-secondary font-bold">${task.id}</span>
                 </div>
-                <h3 class="font-bold text-custom-darkest dark:text-white truncate">${task.title}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">${respNames || 'Sem responsável'}</p>
+                <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
+                <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
             </div>
             <div class="hidden md:flex items-center gap-6 shrink-0">
-                ${task.dueDate ? `<div class="text-xs text-gray-500 flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
-                ${task.attachments?.length ? `<div class="text-xs text-gray-400"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
+                ${task.dueDate ? `<div class="text-xs ox-text-secondary flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
+                ${task.attachments?.length ? `<div class="text-xs ox-text-tertiary"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
             </div>
             <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0" data-task-id="${task.id}">
                 <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
@@ -318,9 +402,9 @@ export async function renderArchivedTasks() {
         }
 
         const rows = tasks.map(task => `
-            <div class="bg-white dark:bg-[#1f2937] p-5 rounded-2xl mb-3 border border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-75 hover:opacity-100 transition-opacity">
+            <div class="bg-white dark:bg-[#1E293B] p-5 rounded-2xl mb-3 border border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-75 hover:opacity-100 transition-opacity">
                 <div>
-                    <h3 class="font-bold text-gray-600 dark:text-gray-300 line-through decoration-gray-400">${task.title}</h3>
+                    <h3 class="font-bold ox-text-secondary line-through decoration-gray-400">${task.title}</h3>
                     <p class="text-xs text-gray-400 mt-1">Concluída em ${formatDate(task.updatedAt || new Date())} • ${task.project}</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -350,12 +434,12 @@ export function renderUserManagementView() {
     const allUsers = state.users.filter(u => u.name !== 'DEFINIR');
 
     const rows = allUsers.map(user => `
-        <div class="flex items-center justify-between p-4 bg-white dark:bg-[#1f2937] border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+        <div class="flex items-center justify-between p-4 bg-white dark:bg-[#1E293B] border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
             <div class="flex items-center gap-4">
                 <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600">
                 <div>
-                    <p class="font-bold text-custom-darkest dark:text-white">${user.name}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">${user.email}</p>
+                    <p class="font-bold ox-text-primary">${user.name}</p>
+                    <p class="text-xs ox-text-secondary">${user.email}</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
@@ -371,13 +455,13 @@ export function renderUserManagementView() {
         <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="md:col-span-2">
                 <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Equipa</h2>
-                <div class="bg-white dark:bg-[#1f2937] rounded-3xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+                <div class="bg-white dark:bg-[#1E293B] rounded-3xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
                     ${rows}
                 </div>
             </div>
             <div>
                 <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Novo Membro</h2>
-                <form id="addUserForm" class="bg-white dark:bg-[#1f2937] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
+                <form id="addUserForm" class="bg-white dark:bg-[#1E293B] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Nome</label>
                         <input type="text" id="newUserName" required class="w-full bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:ring-custom-dark focus:border-custom-dark">
@@ -398,7 +482,7 @@ export function renderUserManagementView() {
     lucide.createIcons();
 }
 
-// --- GERENCIADOR DE VISUALIZAÇÕES (ROTEADOR UI) ---
+// --- ROTEADOR UI ---
 
 export function updateActiveView() {
     const kanban = document.getElementById('kanbanView');
@@ -453,38 +537,116 @@ export function updateActiveView() {
     }
 }
 
-// --- FILTROS NO ORB ---
+// --- FILTROS NO ORB + BADGE ---
+
+function updateFilterBadge() {
+    const filterOrb = document.getElementById('orb-filter');
+    if (!filterOrb) return;
+
+    let badge = filterOrb.querySelector('.filter-badge');
+    if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'filter-badge hidden';
+        filterOrb.appendChild(badge);
+    }
+
+    let activeCount = 0;
+    // Verifica filtros válidos (não nulos e não 'all')
+    if (state.selectedProject && state.selectedProject !== 'all') activeCount++;
+    if (state.selectedResponsible && state.selectedResponsible !== 'all') activeCount++;
+
+    if (activeCount > 0) {
+        badge.textContent = activeCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
 
 export function populateProjectFilter() {
     const container = document.getElementById('orb-project-filters');
+    if (!container) return; 
+
+    // Garante que só temos strings válidas
     const projects = [...new Set(state.tasks.map(t => t.project).filter(Boolean))].sort();
 
-    container.innerHTML = `<div class="filter-chip ${state.selectedProject === 'all' ? 'active' : ''}" data-value="all">Todos</div>`;
+    container.innerHTML = '';
+
+    // Opção "Todos"
+    const allChip = document.createElement('div');
+    const isAllActive = !state.selectedProject || state.selectedProject === 'all';
+    allChip.className = `filter-chip ${isAllActive ? 'active' : ''}`;
+    allChip.textContent = 'Todos';
     
+    // IMPORTANTE: stopPropagation para não fechar o menu ao clicar
+    allChip.onclick = (e) => {
+        e.stopPropagation();
+        state.selectedProject = 'all';
+        populateProjectFilter(); 
+        updateActiveView();      
+        updateFilterBadge();     
+    };
+    container.appendChild(allChip);
+    
+    // Opções de Projeto
     projects.forEach(p => {
-        const isActive = state.selectedProject === p ? 'active' : '';
         const chip = document.createElement('div');
-        chip.className = `filter-chip ${isActive}`;
-        chip.dataset.value = p;
+        const isActive = state.selectedProject === p;
+        chip.className = `filter-chip ${isActive ? 'active' : ''}`;
         chip.textContent = p;
+        
+        chip.onclick = (e) => {
+            e.stopPropagation();
+            state.selectedProject = isActive ? 'all' : p;
+            populateProjectFilter(); 
+            updateActiveView();
+            updateFilterBadge();
+        };
         container.appendChild(chip);
     });
+    
+    updateFilterBadge();
 }
 
 export function populateResponsibleFilter() {
     const container = document.getElementById('orb-responsible-filters');
+    if (!container) return;
+
     const responsibles = [...new Set(state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).filter(Boolean))].sort();
     
-    container.innerHTML = `<div class="filter-chip ${state.selectedResponsible === 'all' ? 'active' : ''}" data-value="all">Todos</div>`;
+    container.innerHTML = '';
+    
+    const allChip = document.createElement('div');
+    const isAllActive = !state.selectedResponsible || state.selectedResponsible === 'all';
+    allChip.className = `filter-chip ${isAllActive ? 'active' : ''}`;
+    allChip.textContent = 'Todos';
+    
+    allChip.onclick = (e) => {
+        e.stopPropagation();
+        state.selectedResponsible = 'all';
+        populateResponsibleFilter();
+        updateActiveView();
+        updateFilterBadge();
+    };
+    container.appendChild(allChip);
     
     responsibles.forEach(r => {
-        const isActive = state.selectedResponsible === r ? 'active' : '';
         const chip = document.createElement('div');
-        chip.className = `filter-chip ${isActive}`;
-        chip.dataset.value = r;
+        const isActive = state.selectedResponsible === r;
+        chip.className = `filter-chip ${isActive ? 'active' : ''}`;
         chip.textContent = r;
+        
+        chip.onclick = (e) => {
+            e.stopPropagation();
+            state.selectedResponsible = isActive ? 'all' : r;
+            populateResponsibleFilter();
+            updateActiveView();
+            updateFilterBadge();
+        };
         container.appendChild(chip);
     });
+
+    updateFilterBadge();
 }
 
 // --- MODAL: DETALHES ---

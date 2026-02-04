@@ -44,7 +44,7 @@
     
     <div id="app">
         
-        <div class="corner-orb bg-custom-darkest text-white dark:bg-custom-header dark:text-white shadow-2xl" id="orb-nav">
+        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-nav">
             <div class="orb-icon-wrapper">
                 <i data-lucide="layout-grid" class="w-8 h-8 cycling-icon active" data-idx="0"></i>
                 <i data-lucide="list" class="w-8 h-8 cycling-icon" data-idx="1"></i>
@@ -55,26 +55,26 @@
                 <button class="close-btn absolute top-6 right-6 opacity-70 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
-                <h4 class="text-2xl font-bold mb-8 tracking-tight">Navegação</h4>
+                <h4 class="text-2xl font-bold mb-8 tracking-tight text-custom-darkest dark:text-white">Navegação</h4>
                 <div id="view-switcher-orb" class="space-y-3">
-                    <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10">
+                    <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10 text-custom-darkest dark:text-white">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
                         <span class="font-semibold">Quadro</span>
                     </button>
-                    <button data-view="list" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10">
+                    <button data-view="list" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 text-custom-darkest dark:text-white">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="list" class="w-5 h-5"></i></div>
                         <span class="font-semibold">Lista</span>
                     </button>
-                    <button data-view="archived" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10">
+                    <button data-view="archived" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 text-custom-darkest dark:text-white">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="archive" class="w-5 h-5"></i></div>
                         <span class="font-semibold">Arquivados</span>
                     </button>
-                    <button data-view="users" id="user-management-btn" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 hidden">
+                    <button data-view="users" id="user-management-btn" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 hidden text-custom-darkest dark:text-white">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="users" class="w-5 h-5"></i></div>
                         <span class="font-semibold">Utilizadores</span>
                     </button>
                 </div>
-                <div class="mt-auto pt-6 border-t border-white/10 flex items-center gap-3 opacity-60">
+                <div class="mt-auto pt-6 border-t border-black/10 dark:border-white/10 flex items-center gap-3 opacity-60 text-custom-darkest dark:text-white">
                     <i data-lucide="command" class="w-4 h-4"></i>
                     <span class="text-xs font-mono tracking-widest uppercase">SyncBoard Orbital</span>
                 </div>
@@ -92,11 +92,11 @@
             </svg>
         </div>
 
-        <div class="corner-orb bg-white text-custom-darkest border border-custom-light dark:bg-custom-light dark:text-custom-darkest dark:border-custom-medium shadow-xl" id="orb-filter">
+        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-filter">
             <div class="orb-icon-wrapper">
                 <i data-lucide="filter" class="w-6 h-6"></i>
             </div>
-            <div class="menu-content text-custom-darkest">
+            <div class="menu-content text-custom-darkest dark:text-white">
                 <button class="close-btn absolute top-6 right-6 opacity-50 hover:opacity-100 transition-opacity">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -106,23 +106,23 @@
                 <div class="mb-6">
                     <div class="relative w-full group">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="w-4 h-4 text-custom-dark group-focus-within:text-custom-darkest transition-colors"></i>
+                            <i data-lucide="search" class="w-4 h-4 text-custom-dark group-focus-within:text-custom-darkest dark:group-focus-within:text-white transition-colors"></i>
                         </div>
-                        <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-darkest/5 border border-custom-darkest/10 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all placeholder-custom-dark/50">
+                        <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-darkest/5 border border-custom-darkest/10 dark:bg-white/10 dark:border-white/10 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all placeholder-custom-dark/50 dark:text-white">
                     </div>
                 </div>
                 <div class="filter-group mb-6">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Projetos</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 dark:text-custom-medium mb-3">Projetos</div>
                     <div id="orb-project-filters" class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto scrollbar-hide"></div>
                 </div>
                 <div class="filter-group flex-grow">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 mb-3">Responsáveis</div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 dark:text-custom-medium mb-3">Responsáveis</div>
                     <div id="orb-responsible-filters" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-hide"></div>
                 </div>
             </div>
         </div>
 
-        <div class="corner-orb bg-white text-custom-darkest dark:bg-custom-header dark:text-white shadow-xl border border-transparent dark:border-white/5" id="orb-tools">
+        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-tools">
             <div class="orb-icon-wrapper relative">
                 <div id="orb-avatar-container" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex items-center justify-center bg-white/10">
                     <i data-lucide="user" class="w-6 h-6"></i>

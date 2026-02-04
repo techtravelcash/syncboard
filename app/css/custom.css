@@ -1,12 +1,10 @@
 /* --- Variáveis Globais e Configurações --- */
 :root {
-    --card-radius: 20px;
+    --card-radius: 12px;
     --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --orb-bg-dark: #27374D;
-    --orb-bg-light: #FFFFFF;
 }
 
-/* --- Scrollbar Customizada (Fina e Discreta) --- */
+/* --- Scrollbar Global Customizada --- */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -15,408 +13,473 @@
     background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(157, 178, 191, 0.5);
+    background: rgba(148, 163, 184, 0.3);
     border-radius: 3px;
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(82, 109, 130, 0.5);
+    background: rgba(51, 65, 85, 0.5);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(82, 109, 130, 0.8);
+    background: rgba(71, 85, 105, 0.8);
 }
 
-/* Esconde scrollbar da área principal (Immersive Canvas) */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.immersive-canvas::-webkit-scrollbar {
-    display: none;
-}
-.immersive-canvas {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+/* Esconde scrollbar da área principal (Canvas) para limpeza visual */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.immersive-canvas::-webkit-scrollbar { display: none; }
+.immersive-canvas { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* --- BACKGROUNDS & ATMOSPHERE --- */
+
+/* Camada de Ruído (Noise Texture) - 3.5% Opacidade */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* --- CANVAS IMERSIVO (Layout Horizontal) --- */
+/* Light Mode */
+body {
+    background-color: #F1F5F9;
+    background-image: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+    background-attachment: fixed;
+    background-size: cover;
+    color: #334155;
+    min-height: 100vh;
+}
+
+/* DARK MODE: THE "OXFORD BLUE" WORKSPACE */
+.dark body {
+    background-color: #1E293B; 
+    background-image: 
+        /* Glows Ativos nos Cantos */
+        radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.12) 0%, transparent 50%), 
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 50%), 
+        /* Gradiente Atmosférico Principal */
+        linear-gradient(135deg, #334155 0%, #0F172A 100%);
+    
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover; 
+    color: #F8FAFC;
+}
+
+/* --- HIERARQUIA DE TEXTO --- */
+.dark .ox-text-primary { color: #F1F5F9; font-weight: 600; } 
+.dark .ox-text-secondary { color: #94A3B8; font-weight: 400; } 
+.dark .ox-text-tertiary { color: #475569; } 
+
+.ox-text-primary { color: #1E293B; font-weight: 600; }
+.ox-text-secondary { color: #64748B; font-weight: 500; }
+.ox-text-tertiary { color: #94A3B8; }
+
+/* --- CANVAS IMERSIVO --- */
 .immersive-canvas {
     width: 100%;
     height: 100vh;
-    padding: 110px 40px 40px 40px; 
-    overflow-x: auto;
+    /* 90px de padding lateral para livrar os botões */
+    padding: 110px 90px 40px 90px; 
+    overflow-x: hidden;
     overflow-y: hidden;
     display: flex;
     align-items: flex-start;
-    gap: 32px;
+    justify-content: stretch; 
+    gap: 32px; 
     scroll-behavior: smooth;
 }
 
-/* Coluna do Quadro (Board Column) */
+/* --- THE "GLOWING LANE" (Colunas) --- */
 .board-column {
-    min-width: 360px;
-    max-width: 360px;
+    flex: 1;
+    min-width: 0;
+    max-height: calc(100vh - 160px); 
+    height: auto;
+    overflow-y: auto; 
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding-bottom: 20px; 
-    transition: opacity 0.3s ease;
+    
+    /* Light Mode Blend */
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Lista de tarefas dentro da coluna */
+/* DARK MODE LANE: "Neon Outline" */
+.dark .board-column {
+    background: rgba(255, 255, 255, 0.015);
+    backdrop-filter: blur(6px); 
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.06), inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
+/* Scrollbar da Coluna */
+.board-column::-webkit-scrollbar { width: 5px; }
+.board-column::-webkit-scrollbar-track { background: transparent; }
+.board-column::-webkit-scrollbar-thumb { 
+    background: transparent; 
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+.board-column:hover::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); }
+.dark .board-column:hover::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); }
+.board-column::-webkit-scrollbar-thumb:active { background: rgba(148, 163, 184, 0.5); }
+
+/* --- STICKY GLASS HEADER --- */
+.column-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin-bottom: 0;
+    padding: 20px 16px 16px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    background: rgba(241, 245, 249, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 20px 20px 0 0;
+}
+
+.dark .column-header {
+    background: rgba(30, 41, 59, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.column-header h2 {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.column-count {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    color: #64748B;
+    flex-shrink: 0;
+}
+.dark .column-count {
+    background: rgba(255, 255, 255, 0.1);
+    color: #94A3B8;
+}
+
 .kanban-task-list {
     flex-grow: 1;
-    overflow-y: auto;
-    padding-right: 4px;
-    padding-left: 4px;
-    padding-bottom: 100px; 
+    overflow: visible; 
+    padding: 12px 12px 100px 12px;
+    min-height: 150px;
 }
 
-/* --- SISTEMA ORBITAL (Menus Flutuantes) --- */
-.corner-orb {
-    position: fixed;
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    z-index: 1000;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 
-        width 0.5s var(--transition-bounce),
-        height 0.5s var(--transition-bounce),
-        border-radius 0.5s var(--transition-bounce),
-        top 0.5s ease, left 0.5s ease, right 0.5s ease, bottom 0.5s ease,
-        background-color 0.3s ease,
-        box-shadow 0.3s ease;
-    overflow: hidden;
-}
-
-/* Ícone central do Orb */
-.orb-icon-wrapper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s, transform 0.2s;
-    pointer-events: none;
-}
-
-.corner-orb.expanded .orb-icon-wrapper {
-    opacity: 0;
-    transform: scale(0.5);
-}
-
-/* Conteúdo interno do menu */
-.menu-content {
-    width: 100%;
-    height: 100%;
-    padding: 24px;
-    opacity: 0;
-    pointer-events: none;
+/* --- KANBAN CARDS (NOVO LAYOUT COM TARJA) --- */
+.task-card {
+    background: #FFFFFF;
+    border: 1px solid rgba(40, 52, 76, 0.1);
+    border-radius: var(--card-radius);
+    
+    /* Importante: Sem padding no pai para a tarja encostar nas bordas */
+    padding: 0; 
+    
+    margin-bottom: 16px;
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+    
+    cursor: grab;
+    position: relative;
+    overflow: visible; /* Permite sombras e badges */
+    
     display: flex;
     flex-direction: column;
-    transition: opacity 0.3s ease 0.15s; 
+    
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, border-color 0.2s, background-color 0.2s;
 }
 
-.corner-orb.expanded .menu-content {
-    opacity: 1;
-    pointer-events: all;
-}
-
-/* --- Posicionamento e Expansão dos Orbs Específicos --- */
-
-/* 1. NAV (Canto Inferior Esquerdo) */
-#orb-nav {
-    bottom: -100px;
-    left: -100px;
-    /* Efeito de glowing pulsante */
-    animation: orbGlow 3s infinite ease-in-out;
-}
-#orb-nav .orb-icon-wrapper { 
-    position: absolute;
-    top: 28%;    
-    right: 28%;
-    transform: translate(50%, -50%);
-}
-#orb-nav.expanded {
-    width: 320px;
-    height: 500px;
-    bottom: 30px;
-    left: 30px;
-    border-radius: 32px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-    /* Remove a animação ao abrir */
-    animation: none;
-}
-
-/* Animação de Glowing para o Nav */
-@keyframes orbGlow {
-    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
-    50% { box-shadow: 0 0 20px 5px rgba(39, 55, 77, 0.5); }
-    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
-}
-
-/* Ícones Cíclicos */
-.cycling-icon {
-    position: absolute;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.cycling-icon.active {
-    opacity: 1;
-    transform: scale(1);
-}
-
-/* 2. FILTER (Canto Superior Esquerdo) */
-#orb-filter {
-    top: -100px;
-    left: -100px;
-}
-#orb-filter .orb-icon-wrapper { 
-    position: absolute;
-    bottom: 28%; 
-    right: 28%;
-    transform: translate(50%, 50%);
-}
-#orb-filter.expanded {
-    width: 350px;
-    height: auto;
-    min-height: 500px;
-    top: 30px;
-    left: 30px;
-    border-radius: 32px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* 3. TOOLS (Canto Superior Direito) */
-#orb-tools {
-    top: -100px;
-    right: -100px;
-}
-#orb-tools .orb-icon-wrapper { 
-    position: absolute;
-    bottom: 28%; 
-    left: 28%;
-    transform: translate(-50%, 50%);
-}
-#orb-tools.expanded {
-    width: 320px;
-    height: auto;
-    min-height: 400px;
-    top: 30px;
-    right: 30px;
-    border-radius: 32px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Avatar Container no Botão */
-#orb-avatar-container {
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#orb-avatar-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* 4. FAB CREATE */
-.orb-fab {
-    position: fixed;
-    bottom: 40px;
-    right: 40px;
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    animation: pulse-border-soft 3s infinite;
-}
-
-@keyframes pulse-border-soft {
-    0% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0.3); }
-    70% { box-shadow: 0 0 0 15px rgba(39, 55, 77, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(39, 55, 77, 0); }
-}
-
-/* --- Elementos de Interface --- */
-.filter-chip {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 9999px;
-    background-color: rgba(221, 230, 237, 0.5);
-    color: #526D82;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-.dark .filter-chip {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #9DB2BF;
-}
-.filter-chip:hover { background-color: rgba(221, 230, 237, 0.8); }
-.dark .filter-chip:hover { background-color: rgba(255, 255, 255, 0.15); }
-.filter-chip.active {
-    background-color: #27374D;
-    color: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-.dark .filter-chip.active {
-    background-color: #DDE6ED;
-    color: #27374D;
-}
-
-/* Task Card */
-.task-card {
-    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s;
-    cursor: grab;
-    overflow: hidden; 
-}
 .task-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+    border-color: rgba(56, 189, 248, 0.4);
     z-index: 10;
 }
-.task-card:active {
-    cursor: grabbing;
-    transform: scale(0.98);
+
+.dark .task-card {
+    background: rgba(30, 41, 59, 0.65);
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08); 
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .task-card:hover {
+    background: rgba(30, 41, 59, 0.85);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.dark .task-card.card-pop {
+    background: rgba(51, 65, 85, 0.75) !important;
+    border: 1px solid rgba(148, 163, 184, 0.4) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.1) !important;
+}
+
+/* Nova Classe: A Tarja Superior do Projeto */
+.project-strip {
+    width: 100%;
+    /* Altura reduzida para ser apenas um detalhe */
+    height: 20px; 
+    padding: 2px 8px;
+    
+    /* Acompanha a curvatura superior do card */
+    border-top-left-radius: var(--card-radius);
+    border-top-right-radius: var(--card-radius);
+    
+    /* Tipografia ajustada para o espaço menor */
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #FFF;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Sombra de texto mais suave */
+    
+    display: flex;
+    align-items: center;
+    
+    /* EFEITO GLASSMORPHISM */
+    /* A cor de fundo (background-color) é aplicada inline via JS com baixa opacidade */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    /* Uma borda inferior muito sutil para separar do corpo do card */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dark .project-strip {
+     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Nova Classe: Corpo do Card */
+.task-body {
+    padding: 12px 14px 14px 14px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Dragging & Ghost */
+.sortable-drag {
+    opacity: 1 !important;
+    background: #FFFFFF !important;
+    transform: rotate(2deg) scale(1.02) !important; 
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.15) !important;
+    cursor: grabbing !important;
+    z-index: 100 !important;
+}
+.dark .sortable-drag { background: #334155 !important; border-color: #64748B; }
+.sortable-ghost { opacity: 0.4; background: #E2E8F0; border: 2px dashed #CBD5E1; box-shadow: none; transform: none !important; }
+.dark .sortable-ghost { background: rgba(30, 41, 59, 0.3); border-color: #334155; }
+
+/* Glass Pills (Ainda usado em lista) */
+.project-pill {
+    padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    display: inline-flex; align-items: center; line-height: 1; backdrop-filter: blur(4px);
+}
+
+/* --- ORBITAL MENUS SYSTEM --- */
+
+/* Base Style (Glass) para TODOS os Orbs */
+.corner-orb {
+    position: fixed; width: 64px; height: 64px; border-radius: 50%; z-index: 1000; cursor: pointer; overflow: hidden;
+    
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), height 0.5s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.5s ease, transform 0.3s ease;
+}
+
+.dark .corner-orb {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.corner-orb:not(.expanded):hover { 
+    transform: scale(1.1); 
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); 
+}
+
+/* --- FILTER CHIPS (Botões de Filtro) --- */
+.filter-chip {
+    font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 12px;
+    /* Inativo: Transparente suave */
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #64748B; border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+    display: flex; align-items: center; justify-content: center;
+}
+.filter-chip:hover { background-color: rgba(255, 255, 255, 0.15); color: #94A3B8; }
+
+/* Ativo: Branco Brilhante (Alto Contraste) */
+.filter-chip.active {
+    background-color: #FFFFFF; 
+    color: #0F172A;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+    border-color: #FFFFFF;
+    font-weight: 800;
+}
+
+/* Dark Mode Chips */
+.dark .filter-chip { background-color: rgba(30, 41, 59, 0.4); color: #94A3B8; border-color: rgba(255, 255, 255, 0.05); }
+.dark .filter-chip.active { 
+    background-color: #F8FAFC; 
+    color: #0F172A; 
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); 
+}
+
+/* Badge Contador (Flutuando para fora) */
+.filter-badge {
+    position: absolute; 
+    top: -4px; 
+    right: -4px;
+    background-color: #38BDF8; 
+    color: #0F172A;
+    font-size: 10px; font-weight: 800; width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    z-index: 50; 
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+}
+#orb-filter.expanded .filter-badge { transform: scale(0); opacity: 0; }
+
+/* --- POSICIONAMENTO DOS ORBS --- */
+
+/* 1. FILTER ORB (Acima do FAB + Glass) */
+#orb-filter {
+    position: fixed;
+    top: auto; left: auto;
+    bottom: 132px; right: 44px; /* Empilhado acima do FAB */
+    width: 64px; height: 64px; border-radius: 50%; z-index: 1000; cursor: pointer; 
+    
+    /* IMPORTANTE: Overflow visible para badge sair */
+    overflow: visible; 
+    
+    transform-origin: bottom right; 
+    
+    /* Glass Effect */
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    
+    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), height 0.5s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.5s ease, transform 0.3s ease;
+}
+
+/* Estado Expandido: Esconde Overflow para respeitar borda */
+#orb-filter.expanded {
+    bottom: 30px; right: 30px;
+    width: 380px; height: auto; min-height: 500px; border-radius: 40px;
+    
+    /* Corta conteúdo interno, mas badge some via transform */
+    overflow: hidden; 
+    
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+.dark #orb-filter.expanded {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 2. NAVIGATION (Bottom Left) */
+#orb-nav { bottom: 30px; left: 30px; transform-origin: bottom left; }
+#orb-nav.expanded { width: 340px; height: 520px; border-radius: 40px; }
+
+/* 3. TOOLS (Top Right) */
+#orb-tools { top: 30px; right: 30px; transform-origin: top right; }
+#orb-tools.expanded { width: 340px; height: auto; min-height: 450px; border-radius: 40px; }
+
+/* Internos Comuns */
+.orb-icon-wrapper { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 10; }
+.corner-orb.expanded .orb-icon-wrapper { opacity: 0; transform: scale(0.5); }
+
+.menu-content {
+    width: 100%; height: 100%; padding: 32px; opacity: 0; pointer-events: none;
+    display: flex; flex-direction: column; visibility: hidden; 
+    transition: opacity 0.3s ease 0.2s, visibility 0s 0.2s; 
+}
+.corner-orb.expanded .menu-content { opacity: 1; pointer-events: all; visibility: visible; }
+
+/* Animações de Conteúdo */
+@keyframes orbContentSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.corner-orb.expanded .nav-item, .corner-orb.expanded .filter-group, .corner-orb.expanded .filter-chip, .corner-orb.expanded h4, .corner-orb.expanded h5, .corner-orb.expanded input {
+    animation: orbContentSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; 
+}
+.corner-orb.expanded :nth-child(1) { animation-delay: 0.1s; }
+.corner-orb.expanded :nth-child(2) { animation-delay: 0.15s; }
+.corner-orb.expanded :nth-child(3) { animation-delay: 0.2s; }
+.corner-orb.expanded :nth-child(4) { animation-delay: 0.25s; }
+.corner-orb.expanded :nth-child(5) { animation-delay: 0.3s; }
+
+.cycling-icon { position: absolute; opacity: 0; transform: scale(0.5); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.cycling-icon.active { opacity: 1; transform: scale(1); }
+#orb-avatar-container { overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#orb-avatar-container img { width: 100%; height: 100%; object-fit: cover; }
+
+/* FAB (Botão Nova Tarefa - Sólido) */
+.orb-fab {
+    position: fixed; bottom: 40px; right: 40px; width: 72px; height: 72px; border-radius: 50%; z-index: 1000;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; animation: pulse-border-soft 3s infinite;
+    background-color: #1E293B; color: white;
+}
+.dark .orb-fab { background-color: #F8FAFC; color: #1E293B; }
+
+@keyframes pulse-border-soft {
+    0% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0.3); } 70% { box-shadow: 0 0 0 15px rgba(129, 140, 248, 0); } 100% { box-shadow: 0 0 0 0 rgba(129, 140, 248, 0); }
 }
 
 @keyframes highlightPulse {
-    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); border-color: #3b82f6; }
-    100% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); border-color: transparent; }
+    0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); border-color: #38BDF8; } 100% { box-shadow: 0 0 0 20px rgba(56, 189, 248, 0); border-color: transparent; }
 }
-.highlight {
-    animation: highlightPulse 1.5s ease-out;
-    position: relative;
-    z-index: 50;
-}
+.highlight { animation: highlightPulse 1.5s ease-out; position: relative; z-index: 50; }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.fade-in { animation: fadeIn 0.4s ease-out forwards; }
-
-@keyframes fadeInDelayed {
-    0% { opacity: 0; transform: translateY(-10px); }
-    50% { opacity: 0; transform: translateY(-10px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-.fade-in-delayed { animation: fadeInDelayed 0.8s ease-out forwards; }
-
-@keyframes modalBackdropFade {
-    from { opacity: 0; backdrop-filter: blur(0); }
-    to { opacity: 1; backdrop-filter: blur(12px); }
-}
-.modal-backdrop { animation: modalBackdropFade 0.3s ease-out forwards; }
-
-@keyframes modalContentPop {
-    from { opacity: 0; transform: scale(0.9) translateY(20px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-}
-.modal-content { animation: modalContentPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-@keyframes toastSlideUp {
-    from { transform: translate(-50%, 100%); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
-}
-.toast-enter { animation: toastSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-@keyframes borderPulseAlert {
-    0% { border-color: #FACC15; }
-    50% { border-color: #EF4444; }
-    100% { border-color: #FACC15; }
-}
-.animate-pulse-border { animation: borderPulseAlert 2s infinite; }
-
-/* --- Label Curvado (Navegação) --- */
 #orb-nav-label {
-    position: fixed;
-    /* Tamanho maior que o botão para o texto ficar em volta */
-    width: 320px; 
-    height: 320px;
-    
-    /* Centralizado no canto (metade do tamanho para fora) */
-    bottom: -160px; 
-    left: -160px;
-    
-    z-index: 900; /* Menor que o z-index do botão (1000) para ficar atrás */
-    pointer-events: none; /* Não interfere no clique */
-    
-    /* Estado Inicial: Invisível, menor e levemente rodado */
-    opacity: 0;
-    transform: scale(0.8) rotate(-15deg);
-    transform-origin: center;
-    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: fixed; width: 320px; height: 320px; bottom: -160px; left: -160px; z-index: 900; pointer-events: none; opacity: 0;
+    transform: scale(0.8) rotate(-15deg); transform-origin: center; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+#orb-nav:hover + #orb-nav-label { opacity: 1; transform: scale(1) rotate(0deg); }
+#orb-nav.expanded + #orb-nav-label { opacity: 0 !important; transform: scale(0.8); }
 
-/* Quando passar o mouse no botão (#orb-nav), o rótulo vizinho aparece */
-#orb-nav:hover + #orb-nav-label {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-}
-
-/* Se o menu estiver expandido, esconde o rótulo forçadamente */
-#orb-nav.expanded + #orb-nav-label {
-    opacity: 0 !important;
-    transform: scale(0.8);
-}
-
-/* Esconde em dispositivos móveis para não atrapalhar */
 @media (max-width: 768px) {
-    .immersive-canvas {
-        flex-direction: column;
-        overflow-x: hidden;
-        overflow-y: auto;
-        padding: 90px 20px 100px 20px;
-        align-items: center;
-    }
-    .board-column {
-        min-width: 100%;
-        max-width: 100%;
-        height: auto;
-        padding-bottom: 0;
-        margin-bottom: 40px;
-    }
-    .kanban-task-list {
-        min-height: 150px; 
-        padding-bottom: 20px;
-    }
-    
-    .corner-orb { width: 120px; height: 120px; }
-
-    #orb-nav { bottom: -60px; left: -60px; }
-    #orb-filter { top: -60px; left: -60px; }
-    #orb-tools { top: -60px; right: -60px; }
-    
-    #orb-nav .orb-icon-wrapper { top: 22%; right: 22%; }
-    #orb-filter .orb-icon-wrapper { bottom: 22%; right: 22%; }
-    #orb-tools .orb-icon-wrapper { bottom: 22%; left: 22%; }
-
+    .immersive-canvas { flex-direction: column; overflow-x: hidden; overflow-y: auto; padding: 90px 20px 100px 20px; align-items: center; }
+    .board-column { min-width: 100%; max-width: 100%; height: auto; max-height: none; padding-bottom: 0; margin-bottom: 40px; flex: none; }
+    .kanban-task-list { min-height: 150px; padding-bottom: 20px; }
+    .corner-orb { width: 56px; height: 56px; } 
+    #orb-nav { bottom: 20px; left: 20px; } 
+    /* No mobile, o filtro volta para a esquerda para não atrapalhar o toque no FAB */
+    #orb-filter { bottom: 20px; left: 20px; right: auto; top: auto; transform-origin: bottom left; }
+    #orb-tools { top: 20px; right: 20px; }
+    #orb-nav .orb-icon-wrapper { top: 22%; right: 22%; } #orb-filter .orb-icon-wrapper { bottom: 22%; right: 22%; } #orb-tools .orb-icon-wrapper { bottom: 22%; left: 22%; }
     .orb-fab { width: 56px; height: 56px; bottom: 20px; right: 20px; }
-
-    #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded {
-        width: 90vw;
-        height: auto;
-        left: 5vw;
-        right: 5vw;
-        top: 15%;
-        bottom: auto;
-        border-radius: 24px;
-    }
-    
-    /* Esconde o label no mobile */
+    #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded { width: 90vw; height: auto; left: 5vw; right: 5vw; top: 15%; border-radius: 24px; }
     #orb-nav-label { display: none; }
 }
