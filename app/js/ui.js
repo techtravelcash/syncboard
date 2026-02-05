@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
+
 // --- HELPERS E FORMATAÇÃO ---
 
 function hexToRgba(hex, alpha) {
@@ -363,7 +364,7 @@ export function renderListView() {
         const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
         
         return `
-        <div class="list-row group bg-white dark:bg-[#1E293B] p-4 rounded-2xl mb-3 shadow-sm hover:shadow-md border border-transparent hover:border-custom-medium/30 transition-all cursor-pointer flex items-center gap-4 fade-in" data-task-id="${task.id}">
+        <div class="task-list-row list-row group fade-in" data-task-id="${task.id}">
             <div class="w-1 h-12 rounded-full bg-${task.status === 'stopped' ? 'red-500' : (task.status === 'homologation' ? 'orange-500' : 'gray-300')} shrink-0"></div>
             <div class="flex-grow min-w-0">
                 <div class="flex items-center gap-2 mb-1">
@@ -526,7 +527,7 @@ export function updateActiveView() {
         
         main.classList.add('immersive-canvas');
         main.classList.remove('block'); 
-        label.textContent = "Quadro Geral";
+        label.textContent = "Quadro Kanban";
     } else {
         kanban.classList.add('w-full');
         kanban.classList.remove('flex', 'gap-8', 'w-fit', 'mx-auto');
