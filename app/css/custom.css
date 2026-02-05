@@ -44,13 +44,13 @@ body::before {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* Light Mode */
+/* TEMA: SLATE BLUE "WORKBOARD" */
 body {
-    background-color: #F1F5F9;
-    background-image: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+    background-color: #526D82;
+    background-image: linear-gradient(to bottom, #526D82, #3D5262);
     background-attachment: fixed;
     background-size: cover;
-    color: #334155;
+    color: #F8FAFC; 
     min-height: 100vh;
 }
 
@@ -58,12 +58,9 @@ body {
 .dark body {
     background-color: #1E293B; 
     background-image: 
-        /* Glows Ativos nos Cantos */
         radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.12) 0%, transparent 50%), 
         radial-gradient(circle at 100% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 50%), 
-        /* Gradiente Atmosférico Principal */
         linear-gradient(135deg, #334155 0%, #0F172A 100%);
-    
     background-repeat: no-repeat;
     background-attachment: fixed;
     background-size: cover; 
@@ -83,7 +80,6 @@ body {
 .immersive-canvas {
     width: 100%;
     height: 100vh;
-    /* 90px de padding lateral para livrar os botões */
     padding: 110px 90px 40px 90px; 
     overflow-x: hidden;
     overflow-y: hidden;
@@ -105,17 +101,16 @@ body {
     display: flex;
     flex-direction: column;
     
-    /* Light Mode Blend */
-    background: rgba(255, 255, 255, 0.15); 
+    /* THE "WELL" LOOK */
+    background: rgba(30, 41, 59, 0.2); 
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     
     transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* DARK MODE LANE: "Neon Outline" */
 .dark .board-column {
     background: rgba(255, 255, 255, 0.015);
     backdrop-filter: blur(6px); 
@@ -124,7 +119,6 @@ body {
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.06), inset 0 0 20px rgba(255, 255, 255, 0.02);
 }
 
-/* Scrollbar da Coluna */
 .board-column::-webkit-scrollbar { width: 5px; }
 .board-column::-webkit-scrollbar-track { background: transparent; }
 .board-column::-webkit-scrollbar-thumb { 
@@ -147,16 +141,21 @@ body {
     align-items: center;
     justify-content: space-between;
     
-    background: rgba(241, 245, 249, 0.3);
+    /* AJUSTE: Opacidade aumentada para 0.9 (Menos Transparente) */
+    background: rgba(255, 255, 255, 0.9);
+    
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 20px 20px 0 0;
+    color: #1E293B;
 }
 
 .dark .column-header {
-    background: rgba(30, 41, 59, 0.1);
+    /* No Dark Mode também aumentei levemente para consistência */
+    background: rgba(30, 41, 59, 0.4); 
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #F8FAFC;
 }
 
 .column-header h2 {
@@ -174,7 +173,7 @@ body {
     padding: 2px 8px;
     border-radius: 12px;
     background: rgba(0, 0, 0, 0.05);
-    color: #64748B;
+    color: #1E293B;
     flex-shrink: 0;
 }
 .dark .column-count {
@@ -189,31 +188,26 @@ body {
     min-height: 150px;
 }
 
-/* --- KANBAN CARDS (NOVO LAYOUT COM TARJA) --- */
+/* --- KANBAN CARDS --- */
 .task-card {
     background: #FFFFFF;
     border: 1px solid rgba(40, 52, 76, 0.1);
     border-radius: var(--card-radius);
-    
-    /* Importante: Sem padding no pai para a tarja encostar nas bordas */
     padding: 0; 
-    
     margin-bottom: 16px;
-    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
-    
+    box-shadow: 0 10px 25px -5px rgba(30, 41, 59, 0.2);
+    color: #334155;
     cursor: grab;
     position: relative;
-    overflow: visible; /* Permite sombras e badges */
-    
+    overflow: visible;
     display: flex;
     flex-direction: column;
-    
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, border-color 0.2s, background-color 0.2s;
 }
 
 .task-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 15px 30px -5px rgba(30, 41, 59, 0.25);
     border-color: rgba(56, 189, 248, 0.4);
     z-index: 10;
 }
@@ -224,6 +218,7 @@ body {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08); 
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    color: #F8FAFC;
 }
 
 .dark .task-card:hover {
@@ -238,33 +233,22 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(56, 189, 248, 0.1) !important;
 }
 
-/* Nova Classe: A Tarja Superior do Projeto */
 .project-strip {
     width: 100%;
-    /* Altura reduzida para ser apenas um detalhe */
     height: 20px; 
     padding: 2px 8px;
-    
-    /* Acompanha a curvatura superior do card */
     border-top-left-radius: var(--card-radius);
     border-top-right-radius: var(--card-radius);
-    
-    /* Tipografia ajustada para o espaço menor */
     font-size: 9px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #FFF;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Sombra de texto mais suave */
-    
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
     display: flex;
     align-items: center;
-    
-    /* EFEITO GLASSMORPHISM */
-    /* A cor de fundo (background-color) é aplicada inline via JS com baixa opacidade */
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    /* Uma borda inferior muito sutil para separar do corpo do card */
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -272,7 +256,6 @@ body {
      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Nova Classe: Corpo do Card */
 .task-body {
     padding: 12px 14px 14px 14px;
     flex-grow: 1;
@@ -281,7 +264,6 @@ body {
     gap: 8px;
 }
 
-/* Dragging & Ghost */
 .sortable-drag {
     opacity: 1 !important;
     background: #FFFFFF !important;
@@ -294,7 +276,6 @@ body {
 .sortable-ghost { opacity: 0.4; background: #E2E8F0; border: 2px dashed #CBD5E1; box-shadow: none; transform: none !important; }
 .dark .sortable-ghost { background: rgba(30, 41, 59, 0.3); border-color: #334155; }
 
-/* Glass Pills (Ainda usado em lista) */
 .project-pill {
     padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.05em;
@@ -303,33 +284,63 @@ body {
 
 /* --- ORBITAL MENUS SYSTEM --- */
 
-/* Base Style (Glass) para TODOS os Orbs */
+/* Base Style (Glass) */
 .corner-orb {
-    position: fixed; width: 64px; height: 64px; border-radius: 50%; z-index: 1000; cursor: pointer; overflow: hidden;
+    position: fixed; 
+    width: 64px; 
+    height: 64px; 
+    border-radius: 50%; 
+    z-index: 1000; 
+    cursor: pointer; 
+    overflow: hidden;
     
     background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
-    
-    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), height 0.5s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.5s ease, transform 0.3s ease;
+    color: #1E293B;
+
+    /* CORREÇÃO DE GPU */
+    transform: translate3d(0, 0, 0); 
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    will-change: transform, width, height, box-shadow, bottom, left, top, right;
+
+    transition: 
+        width 0.5s cubic-bezier(0.25, 1, 0.5, 1), 
+        height 0.5s cubic-bezier(0.25, 1, 0.5, 1), 
+        border-radius 0.5s ease, 
+        transform 0.3s ease,
+        box-shadow 0.3s ease, 
+        background-color 0.3s ease,
+        bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1), 
+        left 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+        top 0.5s cubic-bezier(0.25, 1, 0.5, 1),
+        right 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .dark .corner-orb {
     background: rgba(15, 23, 42, 0.6);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    color: #FFF;
 }
 
 .corner-orb:not(.expanded):hover { 
-    transform: scale(1.1); 
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); 
+    transform: scale(1.05) translate3d(0, 0, 0); 
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.75); 
 }
 
-/* --- FILTER CHIPS (Botões de Filtro) --- */
+.dark .corner-orb:not(.expanded):hover {
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    background-color: rgba(30, 41, 59, 0.8);
+}
+
+/* --- FILTER CHIPS --- */
 .filter-chip {
     font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 12px;
-    /* Inativo: Transparente suave */
     background-color: rgba(255, 255, 255, 0.05);
     color: #64748B; border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
@@ -337,7 +348,6 @@ body {
 }
 .filter-chip:hover { background-color: rgba(255, 255, 255, 0.15); color: #94A3B8; }
 
-/* Ativo: Branco Brilhante (Alto Contraste) */
 .filter-chip.active {
     background-color: #FFFFFF; 
     color: #0F172A;
@@ -346,7 +356,6 @@ body {
     font-weight: 800;
 }
 
-/* Dark Mode Chips */
 .dark .filter-chip { background-color: rgba(30, 41, 59, 0.4); color: #94A3B8; border-color: rgba(255, 255, 255, 0.05); }
 .dark .filter-chip.active { 
     background-color: #F8FAFC; 
@@ -354,7 +363,7 @@ body {
     box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); 
 }
 
-/* Badge Contador (Flutuando para fora) */
+/* Badge */
 .filter-badge {
     position: absolute; 
     top: -4px; 
@@ -372,54 +381,99 @@ body {
 
 /* --- POSICIONAMENTO DOS ORBS --- */
 
-/* 1. FILTER ORB (Acima do FAB + Glass) */
 #orb-filter {
-    position: fixed;
     top: auto; left: auto;
-    bottom: 132px; right: 44px; /* Empilhado acima do FAB */
-    width: 64px; height: 64px; border-radius: 50%; z-index: 1000; cursor: pointer; 
-    
-    /* IMPORTANTE: Overflow visible para badge sair */
-    overflow: visible; 
-    
+    bottom: 132px; right: 44px;
     transform-origin: bottom right; 
-    
-    /* Glass Effect */
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
-    
-    transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1), height 0.5s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.5s ease, transform 0.3s ease;
+    width: 64px; height: 64px; 
 }
 
-/* Estado Expandido: Esconde Overflow para respeitar borda */
 #orb-filter.expanded {
     bottom: 30px; right: 30px;
     width: 380px; height: auto; min-height: 500px; border-radius: 40px;
-    
-    /* Corta conteúdo interno, mas badge some via transform */
-    overflow: hidden; 
-    
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(20px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-.dark #orb-filter.expanded {
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 2. NAVIGATION (Bottom Left) */
-#orb-nav { bottom: 30px; left: 30px; transform-origin: bottom left; }
-#orb-nav.expanded { width: 340px; height: 520px; border-radius: 40px; }
+/* AJUSTE DO ÍCONE DO FILTRO */
+/* Garante que o ícone do filtro fique exatamente no centro, sem padding estranho */
+#orb-filter .orb-icon-wrapper {
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
 
-/* 3. TOOLS (Top Right) */
-#orb-tools { top: 30px; right: 30px; transform-origin: top right; }
-#orb-tools.expanded { width: 340px; height: auto; min-height: 450px; border-radius: 40px; }
+/* === NAVIGATION ORB (Bottom Left) === */
+#orb-nav {
+    width: 220px; 
+    height: 220px;
+    bottom: -110px; 
+    left: -110px;
+    transform-origin: bottom left;
+}
+
+#orb-nav.expanded { 
+    bottom: 30px; 
+    left: 30px; 
+    width: 340px; 
+    height: 520px; 
+    border-radius: 40px; 
+}
+
+#orb-nav .orb-icon-wrapper {
+    justify-content: flex-end; 
+    align-items: flex-start;
+    padding-top: 48px; 
+    padding-right: 48px;
+}
+
+#orb-nav .cycling-icon {
+    width: 32px;
+    height: 32px;
+}
+
+/* === TOOLS / AVATAR ORB (Top Right) === */
+#orb-tools { 
+    width: 220px;
+    height: 220px;
+    top: -110px; 
+    right: -110px; 
+    transform-origin: top right;
+}
+
+#orb-tools.expanded { 
+    width: 340px; 
+    height: auto; 
+    min-height: 450px; 
+    border-radius: 40px; 
+    top: 30px;
+    right: 30px;
+}
+
+#orb-tools .orb-icon-wrapper {
+    justify-content: flex-start;
+    align-items: flex-end;    
+    padding-bottom: 48px;
+    padding-left: 48px;
+}
+
+#orb-tools .orb-icon-wrapper #orb-avatar-container {
+    width: 58px;  
+    height: 58px;
+    border: none;
+    box-shadow: none;
+    -webkit-mask-image: radial-gradient(circle at center, black 25%, transparent 75%);
+    mask-image: radial-gradient(circle at center, black 25%, transparent 75%);
+}
+
+#orb-tools #notification-orb-badge {
+    top: auto; 
+    right: auto;
+    bottom: 78px; 
+    left: 78px;
+}
+/* =================================================== */
 
 /* Internos Comuns */
-.orb-icon-wrapper { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 10; }
+.orb-icon-wrapper { position: absolute; width: 100%; height: 100%; display: flex; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 10; }
 .corner-orb.expanded .orb-icon-wrapper { opacity: 0; transform: scale(0.5); }
 
 .menu-content {
@@ -429,7 +483,6 @@ body {
 }
 .corner-orb.expanded .menu-content { opacity: 1; pointer-events: all; visibility: visible; }
 
-/* Animações de Conteúdo */
 @keyframes orbContentSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .corner-orb.expanded .nav-item, .corner-orb.expanded .filter-group, .corner-orb.expanded .filter-chip, .corner-orb.expanded h4, .corner-orb.expanded h5, .corner-orb.expanded input {
     animation: orbContentSlide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; 
@@ -445,7 +498,7 @@ body {
 #orb-avatar-container { overflow: hidden; display: flex; align-items: center; justify-content: center; }
 #orb-avatar-container img { width: 100%; height: 100%; object-fit: cover; }
 
-/* FAB (Botão Nova Tarefa - Sólido) */
+/* FAB (Botão Nova Tarefa) */
 .orb-fab {
     position: fixed; bottom: 40px; right: 40px; width: 72px; height: 72px; border-radius: 50%; z-index: 1000;
     display: flex; align-items: center; justify-content: center; cursor: pointer; animation: pulse-border-soft 3s infinite;
@@ -474,12 +527,76 @@ body {
     .board-column { min-width: 100%; max-width: 100%; height: auto; max-height: none; padding-bottom: 0; margin-bottom: 40px; flex: none; }
     .kanban-task-list { min-height: 150px; padding-bottom: 20px; }
     .corner-orb { width: 56px; height: 56px; } 
-    #orb-nav { bottom: 20px; left: 20px; } 
-    /* No mobile, o filtro volta para a esquerda para não atrapalhar o toque no FAB */
+    
+    /* Mobile: 160px (Raio 80px) */
+    #orb-nav { width: 160px; height: 160px; bottom: -80px; left: -80px; } 
+    #orb-nav.expanded { bottom: 20px; left: 20px; }
+    #orb-nav .orb-icon-wrapper { padding-top: 30px; padding-right: 30px; } 
+    #orb-nav .cycling-icon { width: 28px; height: 28px; } 
+
+    #orb-tools { width: 160px; height: 160px; top: -80px; right: -80px; }
+    #orb-tools.expanded { top: 20px; right: 20px; }
+    #orb-tools .orb-icon-wrapper { padding-bottom: 30px; padding-left: 30px; } 
+    #orb-tools .orb-icon-wrapper #orb-avatar-container { width: 44px; height: 44px; } 
+    #orb-tools #notification-orb-badge { bottom: 52px; left: 52px; }
+
     #orb-filter { bottom: 20px; left: 20px; right: auto; top: auto; transform-origin: bottom left; }
-    #orb-tools { top: 20px; right: 20px; }
-    #orb-nav .orb-icon-wrapper { top: 22%; right: 22%; } #orb-filter .orb-icon-wrapper { bottom: 22%; right: 22%; } #orb-tools .orb-icon-wrapper { bottom: 22%; left: 22%; }
+    /* Mobile Filter Fix: Reset position for icon */
+    #orb-filter .orb-icon-wrapper { bottom: 0; right: 0; padding: 0; } 
+    
     .orb-fab { width: 56px; height: 56px; bottom: 20px; right: 20px; }
     #orb-nav.expanded, #orb-filter.expanded, #orb-tools.expanded { width: 90vw; height: auto; left: 5vw; right: 5vw; top: 15%; border-radius: 24px; }
     #orb-nav-label { display: none; }
+}
+
+/* --- TOOLTIPS (APENAS TEXTO) --- */
+
+/* Permitir que o texto apareça fora do botão de filtro */
+#orb-filter:not(.expanded) {
+    overflow: visible;
+}
+
+/* Estilo Base do Texto Flutuante */
+#orb-filter::after,
+.orb-fab::after {
+    position: absolute;
+    top: 50%;
+    right: 100%; /* Posiciona à esquerda do botão */
+    margin-right: 16px; /* Distância um pouco maior para "respirar" */
+    
+    /* Estado Inicial: Invisível e deslocado para a direita */
+    transform: translateY(-50%) translateX(10px); 
+    opacity: 0;
+    pointer-events: none;
+    
+    /* Visual: Apenas Texto */
+    background: transparent;
+    color: #FFFFFF;
+    font-size: 0.9rem; /* Um pouco maior para leitura rápida */
+    font-weight: 800;  /* Bem negrito para destacar */
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    
+    /* Sombra no texto para garantir leitura em qualquer fundo */
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    
+    /* Animação Suave */
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2000;
+}
+
+/* Definição dos Textos */
+#orb-filter::after {
+    content: "Filtro";
+}
+
+.orb-fab::after {
+    content: "Nova tarefa";
+}
+
+/* Estado Hover: O texto desliza para a posição final */
+#orb-filter:not(.expanded):hover::after,
+.orb-fab:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
 }

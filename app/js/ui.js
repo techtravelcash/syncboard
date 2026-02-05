@@ -145,14 +145,13 @@ export const createTaskElement = (task) => {
 
     // --- Lógica da Tarja Superior ---
     const pColor = task.projectColor || '#94A3B8';
-    // Usamos uma opacidade alta (0.9) para a tarja ser bem visível
     const bgRgba = hexToRgba(pColor, 0.50); 
     
     const projectStrip = task.project 
         ? `<div class="project-strip" style="background-color: ${bgRgba};">${task.project}</div>`
         : `<div class="project-strip" style="background-color: ${hexToRgba('#94A3B8', 0.5)};">Geral</div>`;
 
-    // --- Avatares ---
+    // --- Avatares (Mantido igual) ---
     let responsibleDisplay = '';
     if (task.responsible && task.responsible.length > 0) {
         const avatars = task.responsible.slice(0, 3).map(r => {
@@ -171,7 +170,7 @@ export const createTaskElement = (task) => {
         responsibleDisplay = `<div class="flex -space-x-1.5">${avatars}${extra}</div>`;
     }
 
-    // --- Rodapé (ID, Data, Anexos) ---
+    // --- Rodapé (ID, Data, Anexos, Comentários) ---
     const dateText = task.dueDate ? formatDate(task.dueDate) : '';
     const dateClass = isOverdue ? 'text-red-500 font-bold opacity-100' : 'ox-text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300';
     
@@ -179,12 +178,25 @@ export const createTaskElement = (task) => {
         `<div class="flex items-center gap-1 ${dateClass} text-[10px]" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>` : '';
 
     const attachmentIcon = (task.attachments?.length > 0) 
-        ? `<div class="flex items-center gap-1 ox-text-tertiary text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
+        ? `<div class="flex items-center gap-1 ox-text-tertiary text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Anexos"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
+        : '';
+
+    // --- CORREÇÃO DO ÍCONE DE COMENTÁRIOS ---
+    // Garante que comments seja um array, mesmo que undefined
+    const commentsList = Array.isArray(task.comments) ? task.comments : [];
+    const commentCount = commentsList.length;
+    
+    // Se tiver comentários (> 0), exibe o ícone
+    const commentIcon = (commentCount > 0) 
+        ? `<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Comentários">
+             <i data-lucide="message-circle" class="w-3 h-3"></i>
+             <span class="font-semibold">${commentCount}</span>
+           </div>` 
         : '';
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
-    // --- Ações Rápidas (Sobre a Tarja) ---
+    // --- Ações Rápidas (Com correção do botão Aprovar) ---
     const quickActions = `
         <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
             <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
@@ -195,11 +207,11 @@ export const createTaskElement = (task) => {
                 <i data-lucide="maximize-2" class="w-3.5 h-3.5 pointer-events-none"></i>
             </button>
 
-            ${task.status === 'homologation' ? `<button class="p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-3.5 h-3.5 pointer-events-none"></i></button>` : ''}
+            ${task.status === 'homologation' ? `<button class="approve-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-3.5 h-3.5 pointer-events-none"></i></button>` : ''}
         </div>
     `;
 
-    // Montagem do HTML com Tarja + Corpo
+    // Montagem do HTML
     taskCard.innerHTML = `
         ${projectStrip}
         ${quickActions}
@@ -212,6 +224,7 @@ export const createTaskElement = (task) => {
                     ${idBadge}
                     ${dateBadge}
                     ${attachmentIcon}
+                    ${commentIcon}
                 </div>
                 ${responsibleDisplay}
             </div>
