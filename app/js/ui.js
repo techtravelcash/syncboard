@@ -376,7 +376,7 @@ export function renderKanbanView() {
     lucide.createIcons();
 }
 
-// --- RENDERIZAÇÃO: LISTA (ATUALIZADO COM ORDENAÇÃO) ---
+// --- RENDERIZAÇÃO: LISTA (MODIFICADO PARA ORB LATERAL E ANIMAÇÃO) ---
 
 export function renderListView() {
     const container = document.getElementById('listView');
@@ -385,7 +385,6 @@ export function renderListView() {
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
     // 2. Lógica de Ordenação
-    // Se não tiver ordenação definida, usa o padrão: Data Criação DESC
     const sortBy = state.sortBy || 'createdAt'; 
     const sortDir = state.sortDirection || 'desc';
 
@@ -416,6 +415,79 @@ export function renderListView() {
         return 0;
     });
 
+    // POPULAR O ORB DE ORDENAÇÃO (RADIAL)
+    const orbOptions = document.getElementById('orb-sort-options');
+    if (orbOptions) {
+        orbOptions.innerHTML = ''; 
+
+        const sortOptions = [
+            { key: 'createdAt', label: 'Criação', icon: 'clock' },
+            { key: 'dueDate', label: 'Prazo', icon: 'calendar' },
+            { key: 'title', label: 'Título', icon: 'type' },
+            { key: 'status', label: 'Status', icon: 'activity' }
+        ];
+
+        // CONFIGURAÇÃO DO ARCO (Efeito Vertical Stretched)
+        const startAngle = 145; 
+        const endAngle = 215;
+        
+        const total = sortOptions.length;
+        const step = total > 1 ? (endAngle - startAngle) / (total - 1) : 0;
+
+        sortOptions.forEach((opt, index) => {
+            const isActive = state.sortBy === opt.key;
+            
+            let arrowIcon = '';
+            if (isActive) {
+                arrowIcon = state.sortDirection === 'asc' 
+                    ? '<i data-lucide="arrow-up" class="w-2.5 h-2.5 stroke-[3]"></i>' 
+                    : '<i data-lucide="arrow-down" class="w-2.5 h-2.5 stroke-[3]"></i>';
+            }
+
+            const activeClass = isActive ? 'active' : '';
+            const angle = startAngle + (index * step);
+            
+            const btnWrapper = document.createElement('div');
+            btnWrapper.className = 'radial-btn';
+            
+            // Define a rotação (com pivô deslocado no CSS)
+            btnWrapper.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+            btnWrapper.style.transitionDelay = `${index * 0.03}s`; 
+
+            btnWrapper.innerHTML = `
+                <div class="radial-content ${activeClass}" 
+                     style="transform: rotate(-${angle}deg)" 
+                     data-sort="${opt.key}"
+                     data-label="${opt.label}">
+                     
+                    <i data-lucide="${opt.icon}" class="w-5 h-5"></i>
+                    
+                    <div class="sort-indicator">
+                        ${arrowIcon}
+                    </div>
+                </div>
+            `;
+
+            const actualBtn = btnWrapper.querySelector('.radial-content');
+            actualBtn.onclick = (e) => {
+                e.stopPropagation();
+                const key = actualBtn.dataset.sort;
+                if (state.sortBy === key) {
+                    state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    state.sortBy = key;
+                    state.sortDirection = (key === 'title' || key === 'status') ? 'asc' : 'desc';
+                }
+                renderListView();
+            };
+
+            orbOptions.appendChild(btnWrapper);
+        });
+        
+        lucide.createIcons();
+    }
+
+    // Se não houver tarefas
     if (activeTasks.length === 0) {
         container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="clipboard-list" class="w-16 h-16 mb-4"></i><p>Nenhuma tarefa encontrada.</p></div>`;
         lucide.createIcons();
@@ -478,30 +550,9 @@ export function renderListView() {
         `;
     }).join('');
 
-    // 4. Barra de Ordenação (Topo)
-    const renderSortButton = (key, label) => {
-        const isActive = state.sortBy === key;
-        const arrow = isActive ? (state.sortDirection === 'asc' ? '↑' : '↓') : '';
-        const activeClass = isActive ? 'bg-custom-dark text-white border-transparent' : 'bg-white dark:bg-white/5 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50';
-        
-        return `<button class="sort-btn px-3 py-1.5 rounded-lg text-xs font-bold border ${activeClass} transition-all flex items-center gap-1" data-sort="${key}">
-            ${label} ${arrow}
-        </button>`;
-    };
-
-    const sortBar = `
-        <div class="max-w-4xl mx-auto mb-4 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide pl-1">
-            <span class="text-xs font-bold text-gray-400 uppercase mr-1">Ordenar:</span>
-            ${renderSortButton('createdAt', 'Criação')}
-            ${renderSortButton('dueDate', 'Prazo')}
-            ${renderSortButton('title', 'Título')}
-            ${renderSortButton('status', 'Estado')}
-        </div>
-    `;
-
+    // Renderiza APENAS a lista
     container.innerHTML = `
         <div class="pt-6 pb-32">
-            ${sortBar}
             <div class="max-w-4xl mx-auto space-y-1">
                 ${rows}
             </div>
@@ -515,24 +566,6 @@ export function renderListView() {
     }, 100);
 
     // --- EVENTOS ---
-
-    // Ordenação
-    container.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key = btn.dataset.sort;
-            if (state.sortBy === key) {
-                // Inverte direção se clicar no mesmo
-                state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                // Novo critério
-                state.sortBy = key;
-                // Prazo e Data geralmente queremos Asc (mais próximo primeiro) ou Desc (mais novo primeiro)
-                // Vamos padronizar: Titulo ASC, Datas DESC (recente primeiro)
-                state.sortDirection = (key === 'title' || key === 'status') ? 'asc' : 'desc';
-            }
-            renderListView();
-        });
-    });
 
     // Clique na linha
     container.querySelectorAll('.list-row').forEach(row => {
@@ -663,7 +696,7 @@ export function renderUserManagementView() {
     lucide.createIcons();
 }
 
-// --- ROTEADOR UI ---
+// --- ROTEADOR UI (ATUALIZADO COM ANIMAÇÃO DE ENTRADA E SAÍDA) ---
 
 export function updateActiveView() {
     const kanban = document.getElementById('kanbanView');
@@ -672,9 +705,12 @@ export function updateActiveView() {
     const users = document.getElementById('userManagementView');
     const main = document.getElementById('main-content');
     const label = document.getElementById('current-view-label');
+    const sortOrb = document.getElementById('orb-sort'); 
     
+    // Esconde views de conteúdo imediatamente
     [kanban, list, archived, users].forEach(el => el.classList.add('hidden'));
 
+    // Atualiza botões do menu inferior
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
         const isActive = btn.dataset.view === state.currentView;
         if (isActive) {
@@ -686,6 +722,43 @@ export function updateActiveView() {
         }
     });
 
+    // --- LÓGICA DE ANIMAÇÃO DO ORB ---
+    if (state.currentView === 'list') {
+        // ENTRADA: Se não estiver visível ou estiver saindo, anima a entrada
+        if (sortOrb) {
+            // Garante que está visível para animar
+            sortOrb.classList.remove('hidden');
+            sortOrb.classList.remove('orb-slide-out');
+            sortOrb.classList.remove('expanded'); 
+            
+            // Força reflow para reiniciar animação se necessário
+            void sortOrb.offsetWidth; 
+            
+            sortOrb.classList.add('orb-slide-in');
+        }
+    } else {
+        // SAÍDA: Se estiver visível, anima a saída
+        if (sortOrb && !sortOrb.classList.contains('hidden')) {
+            sortOrb.classList.remove('orb-slide-in');
+            sortOrb.classList.remove('expanded');
+            sortOrb.classList.add('orb-slide-out');
+
+            // Aguarda o fim da animação para esconder de fato
+            setTimeout(() => {
+                // Checa se ainda não voltamos para list (navegação rápida)
+                if (state.currentView !== 'list') {
+                    sortOrb.classList.add('hidden');
+                    sortOrb.classList.remove('orb-slide-out');
+                }
+            }, 500); // 500ms bate com a duração do CSS
+        } else if (sortOrb && state.currentView !== 'list' && !sortOrb.classList.contains('orb-slide-out')) {
+             // Caso inicial ou troca rápida sem animação
+             sortOrb.classList.add('hidden');
+        }
+    }
+    // --------------------------------
+
+    // Renderização das Views
     if (state.currentView === 'kanban') {
         renderKanbanView();
         
@@ -693,15 +766,13 @@ export function updateActiveView() {
         kanban.classList.add('flex', 'gap-8', 'w-fit', 'mx-auto'); 
         
         main.classList.add('immersive-canvas');
-        main.classList.remove('block', 'h-screen', 'overflow-hidden', 'relative'); // Remove estilos de lista
+        main.classList.remove('block', 'h-screen', 'overflow-hidden', 'relative'); 
         label.textContent = "Quadro Kanban";
     } else {
         kanban.classList.add('w-full');
         kanban.classList.remove('flex', 'gap-8', 'w-fit', 'mx-auto');
         
         main.classList.remove('immersive-canvas');
-        
-        // CORREÇÃO: Força altura de tela inteira (h-screen) para a rolagem funcionar
         main.classList.add('block', 'h-screen', 'overflow-hidden', 'relative'); 
 
         if (state.currentView === 'list') {
@@ -1235,5 +1306,38 @@ export function setupCustomColorPicker() {
     
     document.addEventListener('click', (e) => {
         if (!btn.contains(e.target) && !palette.contains(e.target)) palette.classList.add('hidden');
+    });
+}
+
+// --- CONFIGURAÇÃO DE EVENTOS DO NOVO ORB DE ORDENAÇÃO ---
+
+export function setupSortOrbEvents() {
+    const orb = document.getElementById('orb-sort');
+    if(!orb) return;
+
+    // Expandir ao clicar no orb
+    orb.addEventListener('click', (e) => {
+        // Se clicar no botão de fechar, não faz nada (o listener do close cuida disso)
+        if(e.target.closest('.close-btn')) return;
+        
+        if (!orb.classList.contains('expanded')) {
+            orb.classList.add('expanded');
+        }
+    });
+
+    // Fechar ao clicar no X
+    const closeBtn = orb.querySelector('.close-btn');
+    if(closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            orb.classList.remove('expanded');
+        });
+    }
+
+    // Fechar ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (orb.classList.contains('expanded') && !orb.contains(e.target)) {
+            orb.classList.remove('expanded');
+        }
     });
 }

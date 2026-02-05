@@ -2,6 +2,20 @@
 :root {
     --card-radius: 12px;
     --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* CORES DO ORB */
+    --orb-bg-default: rgba(255, 255, 255, 0.65);
+    --orb-bg-peak: rgba(255, 255, 255, 0.95);
+    --orb-bg-expanded: rgba(255, 255, 255, 0.85);
+    --orb-border-color: rgba(255, 255, 255, 0.6);
+}
+
+.dark {
+    /* CORES DO ORB (Dark Mode) */
+    --orb-bg-default: rgba(15, 23, 42, 0.6);
+    --orb-bg-peak: rgba(30, 41, 59, 0.95);
+    --orb-bg-expanded: rgba(15, 23, 42, 0.85);
+    --orb-border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* --- Scrollbar Global Customizada --- */
@@ -140,10 +154,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
-    /* AJUSTE: Opacidade aumentada para 0.9 (Menos Transparente) */
     background: rgba(255, 255, 255, 0.9);
-    
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -152,7 +163,6 @@ body {
 }
 
 .dark .column-header {
-    /* No Dark Mode também aumentei levemente para consistência */
     background: rgba(30, 41, 59, 0.4); 
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: #F8FAFC;
@@ -394,7 +404,6 @@ body {
 }
 
 /* AJUSTE DO ÍCONE DO FILTRO */
-/* Garante que o ícone do filtro fique exatamente no centro, sem padding estranho */
 #orb-filter .orb-icon-wrapper {
     justify-content: center;
     align-items: center;
@@ -561,69 +570,48 @@ body {
 .orb-fab::after {
     position: absolute;
     top: 50%;
-    right: 100%; /* Posiciona à esquerda do botão */
-    margin-right: 16px; /* Distância um pouco maior para "respirar" */
-    
-    /* Estado Inicial: Invisível e deslocado para a direita */
+    right: 100%; 
+    margin-right: 16px; 
     transform: translateY(-50%) translateX(10px); 
     opacity: 0;
     pointer-events: none;
-    
-    /* Visual: Apenas Texto */
     background: transparent;
     color: #FFFFFF;
-    font-size: 0.9rem; /* Um pouco maior para leitura rápida */
-    font-weight: 800;  /* Bem negrito para destacar */
+    font-size: 0.9rem;
+    font-weight: 800;  
     letter-spacing: 0.05em;
     white-space: nowrap;
-    
-    /* Sombra no texto para garantir leitura em qualquer fundo */
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    
-    /* Animação Suave */
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     z-index: 2000;
 }
 
-/* Definição dos Textos */
-#orb-filter::after {
-    content: "Filtro";
-}
+#orb-filter::after { content: "Filtro"; }
+.orb-fab::after { content: "Nova tarefa"; }
 
-.orb-fab::after {
-    content: "Nova tarefa";
-}
-
-/* Estado Hover: O texto desliza para a posição final */
 #orb-filter:not(.expanded):hover::after,
 .orb-fab:hover::after {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }
 
-/* --- LIST VIEW ROW (Glassmorphism Match) --- */
+/* --- LIST VIEW ROW --- */
 .task-list-row {
-    /* Base Visual (Idêntico ao .task-card) */
     background: #FFFFFF;
     border: 1px solid rgba(40, 52, 76, 0.1);
-    border-radius: var(--card-radius); /* 12px */
+    border-radius: var(--card-radius); 
     padding: 16px;
     margin-bottom: 12px;
-    
-    /* Layout Flexbox */
     display: flex;
     align-items: center;
     gap: 16px;
     cursor: pointer;
-    
-    /* Sombras e Transições */
     box-shadow: 0 4px 6px -1px rgba(30, 41, 59, 0.1);
     transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s ease, border-color 0.2s, background-color 0.2s;
     color: #334155;
     position: relative;
 }
 
-/* Hover Effect (Levitar) */
 .task-list-row:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px -5px rgba(30, 41, 59, 0.2);
@@ -631,7 +619,6 @@ body {
     z-index: 10;
 }
 
-/* Dark Mode (Vidro Fosco) */
 .dark .task-list-row {
     background: rgba(30, 41, 59, 0.65);
     backdrop-filter: blur(12px);
@@ -647,63 +634,333 @@ body {
     box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
-/* Adicione isto ao final do arquivo custom.css */
+/* --- ANIMAÇÕES DE ENTRADA --- */
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-100px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInTop { from { opacity: 0; transform: translateY(-100px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInBottom { from { opacity: 0; transform: translateY(100px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- ANIMAÇÕES DE ENTRADA DO KANBAN --- */
+.animate-slide-left { animation: slideInLeft 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-slide-right { animation: slideInRight 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-slide-top { animation: slideInTop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-slide-bottom { animation: slideInBottom 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-/* Esquerda para Direita (Extremidade Esquerda) */
-@keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-100px); }
-    to { opacity: 1; transform: translateX(0); }
+@keyframes slideUpEnter { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-up-enter { animation: slideUpEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+
+
+/* --- ORB DE ORDENAÇÃO (Label + Glow Fix) --- */
+
+#orb-sort {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+    
+    width: 80px;
+    height: 80px;
+    
+    border-radius: 50%; 
+    z-index: 950;
+    
+    overflow: visible !important; 
+    
+    background-color: var(--orb-bg-default);
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--orb-border-color);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+    transition: 
+        width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+        height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.4s ease,
+        border-color 0.4s ease,
+        box-shadow 0.4s ease,
+        transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Direita para Esquerda (Extremidade Direita) */
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(100px); }
-    to { opacity: 1; transform: translateX(0); }
+/* HOVER: GLOW FORÇADO COM !IMPORTANT */
+#orb-sort:not(.expanded):hover {
+    transform: translate(50%, -50%) scale(1.1) !important;
+    /* Glow forte Azul Cyan */
+    box-shadow: 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.5) !important;
+    border-color: rgba(56, 189, 248, 0.8);
+    background-color: var(--orb-bg-peak);
+    cursor: pointer;
 }
 
-/* Cima para Baixo (Meio 1) */
-@keyframes slideInTop {
-    from { opacity: 0; transform: translateY(-100px); }
-    to { opacity: 1; transform: translateY(0); }
+.dark #orb-sort:not(.expanded):hover {
+    /* Glow forte Dark */
+    box-shadow: 0 0 30px 5px rgba(56, 189, 248, 0.5) !important;
+    background-color: rgba(30, 41, 59, 0.9);
 }
 
-/* Baixo para Cima (Meio 2) */
-@keyframes slideInBottom {
-    from { opacity: 0; transform: translateY(100px); }
-    to { opacity: 1; transform: translateY(0); }
+#orb-sort .orb-icon-wrapper {
+    width: 50%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding-left: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden; 
+    border-radius: 50px 0 0 50px;
+    transition: opacity 0.2s;
 }
 
-.animate-slide-left {
-    animation: slideInLeft 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+/* --- ESTADO EXPANDIDO --- */
+#orb-sort.expanded {
+    width: 240px; 
+    height: 240px;
+    transform: translate(50%, -50%);
+    
+    background: rgba(255, 255, 255, 0.3); 
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
 }
 
-.animate-slide-right {
-    animation: slideInRight 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+.dark #orb-sort.expanded {
+    background: rgba(15, 23, 42, 0.3); 
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
-.animate-slide-top {
-    animation: slideInTop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+#orb-sort.expanded .orb-icon-wrapper {
+    opacity: 0;
+    pointer-events: none;
 }
 
-.animate-slide-bottom {
-    animation: slideInBottom 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+/* --- RÓTULO "ORDENAR LISTA" (Com Animação em Arco/Curva) --- */
+#orb-sort-label {
+    position: fixed;
+    top: 50%;
+    /* Posicionado à esquerda do botão.
+       Botão tem 40px de raio (80px width). 
+       Colocamos o label a 55px da borda direita da tela (right:0 do container do botão) */
+    right: 55px; 
+    
+    /* Tipografia Estilo "Técnico" */
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.65rem; /* Pequeno e elegante */
+    font-weight: 800; 
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 0.2em; /* Espaçamento largo ajuda na ilusão de curva */
+    white-space: nowrap;
+    
+    /* Configuração Vertical */
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    
+    /* Inicialmente invisível e atrás */
+    pointer-events: none;
+    z-index: 900; 
+    opacity: 0;
+    
+    /* A MÁGICA DO ARCO PERFEITO: */
+    /* Define o ponto de giro 45px à direita do próprio texto.
+       Isso alinha o eixo de rotação com o CENTRO do botão circular. */
+    transform-origin: calc(100% + 45px) center;
+    
+    /* Estado Inicial: Escondido na parte inferior da órbita (atrás do botão) */
+    transform: translateY(-50%) rotate(180deg) rotateZ(-45deg);
+    
+    /* Animação elástica suave */
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* Sombra para destacar do fundo */
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
-/* --- ANIMAÇÃO DE ENTRADA DA LISTA (SCROLL UP) --- */
-@keyframes slideUpEnter {
-    from {
+/* Animação: O texto orbita para cima até ficar vertical */
+#orb-sort:not(.expanded):hover + #orb-sort-label {
+    opacity: 1;
+    /* Posição Final: Vertical (0 graus de offset na órbita) */
+    transform: translateY(-50%) rotate(180deg) rotateZ(0deg);
+}
+
+/* Esconder imediatamente quando expandido */
+#orb-sort.expanded + #orb-sort-label {
+    opacity: 0 !important;
+    visibility: hidden;
+    transition: none;
+}
+
+/* --- BRAÇOS DE POSICIONAMENTO --- */
+
+.radial-btn {
+    position: absolute;
+    top: 50%;
+    left: 85%;
+    
+    /* Começa no centro (0px) e cresce */
+    width: 0px; 
+    height: 40px;
+    
+    transform-origin: left center;
+    pointer-events: auto;
+    
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Ícone na ponta */
+    
+    opacity: 0;
+    
+    transition: 
+        width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
+        opacity 0.3s ease;
+    
+    z-index: 20;
+    overflow: visible;
+}
+
+#orb-sort.expanded .radial-btn {
+    width: 133px; /* FIXADO EM 133px conforme solicitado */
+    opacity: 1;
+}
+
+/* --- CÍRCULO / CONTAINER DO ÍCONE --- */
+.radial-content {
+    position: relative;
+    padding: 8px;
+    border-radius: 12px;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background: transparent;
+    color: #475569;
+    cursor: pointer;
+    flex-shrink: 0;
+    
+    transition: color 0.2s, filter 0.2s;
+}
+
+/* Hover no container afeta o ícone */
+.radial-content:hover {
+    color: #0F172A;
+    background: transparent;
+    z-index: 100;
+}
+
+.dark .radial-content { color: #94A3B8; }
+.dark .radial-content:hover {
+    color: #FFFFFF;
+}
+
+/* --- ÍCONE SVG --- */
+.radial-content svg {
+    width: 28px !important; 
+    height: 28px !important;
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.radial-content:hover svg {
+    transform: scale(1.2);
+}
+
+.radial-content.active {
+    color: #0F172A;
+    font-weight: bold;
+}
+.dark .radial-content.active { color: #38BDF8; }
+
+/* --- TOOLTIP FLUTUANTE --- */
+.radial-content::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 50px; 
+    top: 50%;
+    transform: translateY(-50%) translateX(10px);
+    
+    background: transparent;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 200; 
+}
+
+.radial-content:hover::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* --- INDICADOR DE DIREÇÃO --- */
+.sort-indicator {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #0F172A; color: #FFF;
+    border: 1px solid #FFF;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    transform: scale(0);
+    transition: transform 0.2s;
+}
+.dark .sort-indicator { background: #38BDF8; color: #0F172A; border-color: #1E293B; }
+.radial-content.active .sort-indicator { transform: scale(1); }
+
+/* --- ANIMAÇÕES DE ENTRADA/SAÍDA --- */
+
+@keyframes slideInWithGlow {
+    0% {
+        transform: translate(150%, -50%);
         opacity: 0;
-        transform: translateY(60px); /* Começa 60px abaixo */
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+        background-color: var(--orb-bg-default); 
     }
-    to {
+    60% {
+        transform: translate(50%, -50%);
         opacity: 1;
-        transform: translateY(0); /* Termina na posição original */
+        
+        box-shadow: 
+            -10px 0 40px 5px rgba(56, 189, 248, 0.7), 
+            inset 0 0 20px rgba(255, 255, 255, 0.6);
+            
+        border-color: rgba(56, 189, 248, 0.9);
+        background-color: var(--orb-bg-peak); 
+    }
+    100% {
+        transform: translate(50%, -50%);
+        opacity: 1;
+        
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        border-color: var(--orb-border-color);
+        background-color: var(--orb-bg-default);
     }
 }
 
-.animate-slide-up-enter {
-    /* backwards garante que o elemento comece invisível antes do delay */
-    animation: slideUpEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+@keyframes slideOutRightOrb {
+    0% {
+        transform: translate(50%, -50%);
+        opacity: 1;
+        background-color: var(--orb-bg-default);
+    }
+    100% {
+        transform: translate(150%, -50%);
+        opacity: 0;
+    }
+}
+
+.orb-slide-in {
+    animation: slideInWithGlow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.orb-slide-out {
+    animation: slideOutRightOrb 0.5s ease-in forwards;
+    pointer-events: none;
 }

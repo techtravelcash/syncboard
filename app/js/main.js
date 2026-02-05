@@ -72,6 +72,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Exemplo de código para adicionar no DOMContentLoaded ou no script principal
+const setupSortOrbEvents = () => {
+    const orb = document.getElementById('orb-sort');
+    if(!orb) return;
+
+    // Expandir ao clicar no orb
+    orb.addEventListener('click', (e) => {
+        // Se clicar no botão de fechar, não faz nada (o listener do close cuida disso)
+        if(e.target.closest('.close-btn')) return;
+        
+        if (!orb.classList.contains('expanded')) {
+            orb.classList.add('expanded');
+        }
+    });
+
+    // Fechar ao clicar no X
+    const closeBtn = orb.querySelector('.close-btn');
+    if(closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            orb.classList.remove('expanded');
+        });
+    }
+
+    // Fechar ao clicar fora (opcional, mas recomendado)
+    document.addEventListener('click', (e) => {
+        if (orb.classList.contains('expanded') && !orb.contains(e.target)) {
+            orb.classList.remove('expanded');
+        }
+    });
+};
+
+// Chame isso uma vez ao carregar a página
+document.addEventListener('DOMContentLoaded', setupSortOrbEvents);
+
 // --- ATUALIZA PERFIL NO ORB (Botão e Menu) ---
 function updateUserProfileUI() {
     const nameDisplay = document.getElementById('user-name-display');
