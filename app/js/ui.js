@@ -48,6 +48,39 @@ export const isTaskOverdue = (task) => {
     return dueDate < todayUTC;
 };
 
+// --- EFEITO VISUAL DE ROLAGEM (LISTA) ---
+function updateListScrollEffect() {
+    const container = document.getElementById('listView');
+    if (!container) return;
+
+    // Selecionamos apenas os elementos internos que sofrem o efeito GoPro
+    const rows = container.querySelectorAll('.list-row');
+    const containerRect = container.getBoundingClientRect();
+    
+    if (containerRect.height < 50) return;
+
+    const containerCenterY = containerRect.top + (containerRect.height / 2);
+    const maxDist = (containerRect.height / 2); 
+
+    rows.forEach(row => {
+        const rowRect = row.getBoundingClientRect();
+        const rowCenterY = rowRect.top + (rowRect.height / 2);
+        const dist = Math.abs(containerCenterY - rowCenterY);
+        
+        let percent = dist / maxDist;
+        if (percent > 1) percent = 1;
+
+        const curve = Math.pow(percent, 6); 
+
+        const scale = 1 - (curve * 0.05);   
+        const opacity = 1 - (curve * 0.4);  
+
+        row.style.transition = 'transform 0s, opacity 0.15s ease-out'; 
+        row.style.transform = `scale(${scale})`;
+        row.style.opacity = opacity;
+    });
+}
+
 // --- TOASTS ---
 
 export function showToast(message, type = 'success') {
@@ -128,13 +161,11 @@ export function renderModalAttachments(files) {
     renderAttachmentList('attachment-list', files);
 }
 
-// --- RENDERIZAÇÃO: CARD DE TAREFA (COM TARJA) ---
+// --- RENDERIZAÇÃO: CARD DE TAREFA ---
 
 export const createTaskElement = (task) => {
     const taskCard = document.createElement('div');
     const isOverdue = isTaskOverdue(task);
-    
-    // Efeito Pop para Urgente/Done
     const isPop = task.priority === 'Urgente' || task.status === 'done';
 
     let cardClasses = 'task-card group'; 
@@ -144,7 +175,6 @@ export const createTaskElement = (task) => {
     taskCard.className = cardClasses;
     taskCard.dataset.taskId = task.id;
 
-    // --- Lógica da Tarja Superior ---
     const pColor = task.projectColor || '#94A3B8';
     const bgRgba = hexToRgba(pColor, 0.50); 
     
@@ -152,7 +182,6 @@ export const createTaskElement = (task) => {
         ? `<div class="project-strip" style="background-color: ${bgRgba};">${task.project}</div>`
         : `<div class="project-strip" style="background-color: ${hexToRgba('#94A3B8', 0.5)};">Geral</div>`;
 
-    // --- Avatares (Mantido igual) ---
     let responsibleDisplay = '';
     if (task.responsible && task.responsible.length > 0) {
         const avatars = task.responsible.slice(0, 3).map(r => {
@@ -171,7 +200,6 @@ export const createTaskElement = (task) => {
         responsibleDisplay = `<div class="flex -space-x-1.5">${avatars}${extra}</div>`;
     }
 
-    // --- Rodapé (ID, Data, Anexos, Comentários) ---
     const dateText = task.dueDate ? formatDate(task.dueDate) : '';
     const dateClass = isOverdue ? 'text-red-500 font-bold opacity-100' : 'ox-text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300';
     
@@ -182,12 +210,9 @@ export const createTaskElement = (task) => {
         ? `<div class="flex items-center gap-1 ox-text-tertiary text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Anexos"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
         : '';
 
-    // --- CORREÇÃO DO ÍCONE DE COMENTÁRIOS ---
-    // Garante que comments seja um array, mesmo que undefined
     const commentsList = Array.isArray(task.comments) ? task.comments : [];
     const commentCount = commentsList.length;
     
-    // Se tiver comentários (> 0), exibe o ícone
     const commentIcon = (commentCount > 0) 
         ? `<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Comentários">
              <i data-lucide="message-circle" class="w-3 h-3"></i>
@@ -197,7 +222,6 @@ export const createTaskElement = (task) => {
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
-    // --- Ações Rápidas (Com correção do botão Aprovar) ---
     const quickActions = `
         <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
             <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
@@ -212,7 +236,6 @@ export const createTaskElement = (task) => {
         </div>
     `;
 
-    // Montagem do HTML
     taskCard.innerHTML = `
         ${projectStrip}
         ${quickActions}
@@ -232,7 +255,6 @@ export const createTaskElement = (task) => {
         </div>
     `;
 
-    // Event Listeners
     const expandBtn = taskCard.querySelector('.expand-btn');
     if(expandBtn) {
         expandBtn.addEventListener('click', (e) => {
@@ -260,14 +282,13 @@ export const createTaskElement = (task) => {
     return taskCard;
 };
 
-// --- LOGICA DE FILTRO (ROBUSTA) ---
+// --- LOGICA DE FILTRO ---
 
 function filterTasks(tasks) {
     if (!tasks || !Array.isArray(tasks)) return [];
 
     let filtered = tasks;
 
-    // Filtro de Projeto (Case insensitive)
     if (state.selectedProject && state.selectedProject !== 'all') {
         const targetProj = String(state.selectedProject).trim().toLowerCase();
         filtered = filtered.filter(t => {
@@ -276,7 +297,6 @@ function filterTasks(tasks) {
         });
     }
 
-    // Filtro de Responsável (Case insensitive)
     if (state.selectedResponsible && state.selectedResponsible !== 'all') {
         const targetResp = String(state.selectedResponsible).trim().toLowerCase();
         filtered = filtered.filter(t => 
@@ -288,7 +308,6 @@ function filterTasks(tasks) {
         );
     }
 
-    // Busca (Search Bar)
     if (state.searchQuery) {
         const q = state.searchQuery.toLowerCase();
         filtered = filtered.filter(t => 
@@ -313,13 +332,19 @@ export function renderKanbanView() {
         { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' }
     ];
 
-    columns.forEach(col => {
+    columns.forEach((col, index) => {
         let columnEl = kanbanViewEl.querySelector(`.board-column[data-column-id="${col.id}"]`);
         const tasksForColumn = activeTasks.filter(t => t.status === col.id).sort((a, b) => (a.order || 0) - (b.order || 0));
 
+        let animClass = '';
+        if (index === 0) animClass = 'animate-slide-left'; 
+        else if (index === columns.length - 1) animClass = 'animate-slide-right'; 
+        else if (index % 2 !== 0) animClass = 'animate-slide-top';
+        else animClass = 'animate-slide-bottom';
+
         if (!columnEl) {
             columnEl = document.createElement('div');
-            columnEl.className = 'board-column fade-in';
+            columnEl.className = `board-column ${animClass}`;
             columnEl.setAttribute('data-column-id', col.id);
 
             columnEl.innerHTML = `
@@ -333,6 +358,11 @@ export function renderKanbanView() {
                 <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}"></div>
             `;
             kanbanViewEl.appendChild(columnEl);
+        } else {
+            columnEl.classList.remove('fade-in');
+            if(!columnEl.classList.contains(animClass)) {
+                columnEl.classList.add(animClass);
+            }
         }
 
         const countBadge = columnEl.querySelector('.column-count');
@@ -346,47 +376,165 @@ export function renderKanbanView() {
     lucide.createIcons();
 }
 
-// --- RENDERIZAÇÃO: LISTA ---
+// --- RENDERIZAÇÃO: LISTA (ATUALIZADO COM ORDENAÇÃO) ---
 
 export function renderListView() {
     const container = document.getElementById('listView');
-    // Aplica o filtro
+    
+    // 1. Filtragem Inicial
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
-    activeTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+    
+    // 2. Lógica de Ordenação
+    // Se não tiver ordenação definida, usa o padrão: Data Criação DESC
+    const sortBy = state.sortBy || 'createdAt'; 
+    const sortDir = state.sortDirection || 'desc';
+
+    activeTasks.sort((a, b) => {
+        let valA, valB;
+
+        if (sortBy === 'createdAt') {
+            valA = new Date(a.createdAt || 0);
+            valB = new Date(b.createdAt || 0);
+        } else if (sortBy === 'dueDate') {
+            // Tarefas sem prazo vão para o final
+            valA = a.dueDate ? new Date(a.dueDate) : new Date(8640000000000000); 
+            valB = b.dueDate ? new Date(b.dueDate) : new Date(8640000000000000);
+        } else if (sortBy === 'title') {
+            valA = (a.title || '').toLowerCase();
+            valB = (b.title || '').toLowerCase();
+        } else if (sortBy === 'status') {
+            valA = (a.status || '').toLowerCase();
+            valB = (b.status || '').toLowerCase();
+        } else {
+            // Fallback (Ordem do Kanban)
+            valA = a.order || 0;
+            valB = b.order || 0;
+        }
+
+        if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+    });
 
     if (activeTasks.length === 0) {
         container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="clipboard-list" class="w-16 h-16 mb-4"></i><p>Nenhuma tarefa encontrada.</p></div>`;
         lucide.createIcons();
+        container.onscroll = null; // Limpa evento
         return;
     }
 
-    const rows = activeTasks.map(task => {
+    const statusMap = {
+        'todo': 'Fila',
+        'stopped': 'Parado',
+        'inprogress': 'Em Andamento',
+        'homologation': 'Homologação',
+        'done': 'Concluído'
+    };
+
+    // 3. Gerar HTML das Linhas
+    const rows = activeTasks.map((task, index) => {
         const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
         
+        const statusColor = task.status === 'stopped' ? 'red-500' : 
+                          task.status === 'homologation' ? 'orange-500' : 
+                          task.status === 'inprogress' ? 'blue-500' : 'gray-300';
+        
+        const statusLabel = statusMap[task.status] || 'Desconhecido';
+
         return `
-        <div class="task-list-row list-row group fade-in" data-task-id="${task.id}">
-            <div class="w-1 h-12 rounded-full bg-${task.status === 'stopped' ? 'red-500' : (task.status === 'homologation' ? 'orange-500' : 'gray-300')} shrink-0"></div>
-            <div class="flex-grow min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
-                    <span class="text-[10px] font-mono ox-text-secondary font-bold">${task.id}</span>
+        <div class="animate-slide-up-enter" style="animation-delay: ${index * 0.05}s">
+            <div class="task-list-row list-row group" data-task-id="${task.id}">
+                <div class="w-1 h-12 rounded-full bg-${statusColor} shrink-0"></div>
+                
+                <div class="flex-grow min-w-0 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
+                        <span class="text-sm font-mono ox-text-secondary font-bold">${task.id}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">${statusLabel}</span>
+                    </div>
+                    <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
+                    <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
                 </div>
-                <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
-                <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
+                
+                <div class="hidden md:flex items-center gap-4 shrink-0 mr-4">
+                    <div class="text-xs ox-text-secondary flex items-center gap-1" title="Criado em">
+                        <i data-lucide="clock" class="w-3 h-3"></i> ${formatDate(task.createdAt)}
+                    </div>
+
+                    ${task.dueDate ? `<div class="text-xs ox-text-secondary flex items-center gap-1" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
+                    ${task.attachments?.length ? `<div class="text-xs ox-text-tertiary"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
+                </div>
+                
+                <div class="flex items-center gap-1 shrink-0">
+                    <button class="delete-list-btn p-2 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-task-id="${task.id}" title="Excluir">
+                        <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                    <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" data-task-id="${task.id}">
+                        <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                </div>
             </div>
-            <div class="hidden md:flex items-center gap-6 shrink-0">
-                ${task.dueDate ? `<div class="text-xs ox-text-secondary flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
-                ${task.attachments?.length ? `<div class="text-xs ox-text-tertiary"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
-            </div>
-            <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors shrink-0" data-task-id="${task.id}">
-                <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
-            </button>
         </div>
         `;
     }).join('');
 
-    container.innerHTML = `<div class="max-w-4xl mx-auto space-y-1">${rows}</div>`;
+    // 4. Barra de Ordenação (Topo)
+    const renderSortButton = (key, label) => {
+        const isActive = state.sortBy === key;
+        const arrow = isActive ? (state.sortDirection === 'asc' ? '↑' : '↓') : '';
+        const activeClass = isActive ? 'bg-custom-dark text-white border-transparent' : 'bg-white dark:bg-white/5 text-gray-500 border-gray-200 dark:border-gray-700 hover:bg-gray-50';
+        
+        return `<button class="sort-btn px-3 py-1.5 rounded-lg text-xs font-bold border ${activeClass} transition-all flex items-center gap-1" data-sort="${key}">
+            ${label} ${arrow}
+        </button>`;
+    };
+
+    const sortBar = `
+        <div class="max-w-4xl mx-auto mb-4 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide pl-1">
+            <span class="text-xs font-bold text-gray-400 uppercase mr-1">Ordenar:</span>
+            ${renderSortButton('createdAt', 'Criação')}
+            ${renderSortButton('dueDate', 'Prazo')}
+            ${renderSortButton('title', 'Título')}
+            ${renderSortButton('status', 'Estado')}
+        </div>
+    `;
+
+    container.innerHTML = `
+        <div class="pt-6 pb-32">
+            ${sortBar}
+            <div class="max-w-4xl mx-auto space-y-1">
+                ${rows}
+            </div>
+        </div>
+    `;
     
+    // Liga os efeitos
+    setTimeout(() => {
+        requestAnimationFrame(updateListScrollEffect);
+        container.onscroll = () => requestAnimationFrame(updateListScrollEffect);
+    }, 100);
+
+    // --- EVENTOS ---
+
+    // Ordenação
+    container.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.sort;
+            if (state.sortBy === key) {
+                // Inverte direção se clicar no mesmo
+                state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                // Novo critério
+                state.sortBy = key;
+                // Prazo e Data geralmente queremos Asc (mais próximo primeiro) ou Desc (mais novo primeiro)
+                // Vamos padronizar: Titulo ASC, Datas DESC (recente primeiro)
+                state.sortDirection = (key === 'title' || key === 'status') ? 'asc' : 'desc';
+            }
+            renderListView();
+        });
+    });
+
+    // Clique na linha
     container.querySelectorAll('.list-row').forEach(row => {
         row.addEventListener('click', (e) => {
             if (!e.target.closest('button, a')) {
@@ -394,6 +542,25 @@ export function renderListView() {
                 highlightTask(taskId, false);
                 renderTaskHistory(taskId);
             }
+        });
+    });
+
+    // Excluir
+    container.querySelectorAll('.delete-list-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            const taskId = btn.dataset.taskId;
+            const taskTitle = state.tasks.find(t => t.id === taskId)?.title || taskId;
+            
+            showConfirmModal(
+                'Excluir Tarefa?',
+                `Deseja realmente excluir a tarefa "${taskTitle}" (${taskId})?`,
+                async () => {
+                    const api = await import('./api.js');
+                    await api.deleteTask(taskId);
+                    showToast('Tarefa excluída.', 'success');
+                }
+            );
         });
     });
 
@@ -526,14 +693,16 @@ export function updateActiveView() {
         kanban.classList.add('flex', 'gap-8', 'w-fit', 'mx-auto'); 
         
         main.classList.add('immersive-canvas');
-        main.classList.remove('block'); 
+        main.classList.remove('block', 'h-screen', 'overflow-hidden', 'relative'); // Remove estilos de lista
         label.textContent = "Quadro Kanban";
     } else {
         kanban.classList.add('w-full');
         kanban.classList.remove('flex', 'gap-8', 'w-fit', 'mx-auto');
         
         main.classList.remove('immersive-canvas');
-        main.classList.add('block'); 
+        
+        // CORREÇÃO: Força altura de tela inteira (h-screen) para a rolagem funcionar
+        main.classList.add('block', 'h-screen', 'overflow-hidden', 'relative'); 
 
         if (state.currentView === 'list') {
             renderListView();
@@ -565,7 +734,6 @@ function updateFilterBadge() {
     }
 
     let activeCount = 0;
-    // Verifica filtros válidos (não nulos e não 'all')
     if (state.selectedProject && state.selectedProject !== 'all') activeCount++;
     if (state.selectedResponsible && state.selectedResponsible !== 'all') activeCount++;
 
@@ -581,18 +749,15 @@ export function populateProjectFilter() {
     const container = document.getElementById('orb-project-filters');
     if (!container) return; 
 
-    // Garante que só temos strings válidas
     const projects = [...new Set(state.tasks.map(t => t.project).filter(Boolean))].sort();
 
     container.innerHTML = '';
 
-    // Opção "Todos"
     const allChip = document.createElement('div');
     const isAllActive = !state.selectedProject || state.selectedProject === 'all';
     allChip.className = `filter-chip ${isAllActive ? 'active' : ''}`;
     allChip.textContent = 'Todos';
     
-    // IMPORTANTE: stopPropagation para não fechar o menu ao clicar
     allChip.onclick = (e) => {
         e.stopPropagation();
         state.selectedProject = 'all';
@@ -602,7 +767,6 @@ export function populateProjectFilter() {
     };
     container.appendChild(allChip);
     
-    // Opções de Projeto
     projects.forEach(p => {
         const chip = document.createElement('div');
         const isActive = state.selectedProject === p;

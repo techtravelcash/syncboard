@@ -646,3 +646,64 @@ body {
     border-color: rgba(255, 255, 255, 0.15);
     box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
+
+/* Adicione isto ao final do arquivo custom.css */
+
+/* --- ANIMAÇÕES DE ENTRADA DO KANBAN --- */
+
+/* Esquerda para Direita (Extremidade Esquerda) */
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Direita para Esquerda (Extremidade Direita) */
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Cima para Baixo (Meio 1) */
+@keyframes slideInTop {
+    from { opacity: 0; transform: translateY(-100px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Baixo para Cima (Meio 2) */
+@keyframes slideInBottom {
+    from { opacity: 0; transform: translateY(100px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-left {
+    animation: slideInLeft 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-right {
+    animation: slideInRight 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-top {
+    animation: slideInTop 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-bottom {
+    animation: slideInBottom 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* --- ANIMAÇÃO DE ENTRADA DA LISTA (SCROLL UP) --- */
+@keyframes slideUpEnter {
+    from {
+        opacity: 0;
+        transform: translateY(60px); /* Começa 60px abaixo */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Termina na posição original */
+    }
+}
+
+.animate-slide-up-enter {
+    /* backwards garante que o elemento comece invisível antes do delay */
+    animation: slideUpEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
