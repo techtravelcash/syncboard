@@ -205,95 +205,124 @@
     </div>
 
     <div id="taskModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/40 backdrop-blur-[2px] z-[1500] hidden flex items-center justify-center p-4 modal-backdrop">
-        <div class="glass-panel rounded-3xl w-full max-w-lg modal-content flex flex-col max-h-[90vh] overflow-hidden">
+        <div class="glass-panel rounded-3xl w-full max-w-6xl mx-4 modal-content flex flex-col max-h-[90vh] overflow-hidden">
             <form id="taskForm" class="flex flex-col flex-grow min-h-0">
                 <div class="p-6 border-b glass-separator flex-shrink-0">
                     <h2 id="modalTitle" class="text-xl font-bold text-custom-darkest dark:text-white">Nova Tarefa</h2>
                     <p class="text-sm text-custom-dark dark:text-gray-400">Preencha os detalhes para criar um novo card.</p>
                 </div>
-                <div class="p-6 space-y-5 overflow-y-auto flex-grow custom-scrollbar">
-                    <div>
-                        <label for="taskTitle" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Título</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="taskTitle" class="form-input focus:ring-custom-dark w-full rounded-xl" required placeholder="O que precisa ser feito?">
-                            <button type="button" id="openAiModalBtn" class="bg-purple-600 hover:bg-purple-700 text-white p-2.5 rounded-xl transition-colors shadow-lg shadow-purple-500/20"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="taskDescription" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Descrição</label>
-                        <textarea id="taskDescription" rows="3" class="form-input focus:ring-custom-dark w-full rounded-xl resize-none" required placeholder="Detalhes da tarefa..."></textarea>
-                    </div>
-                    <div class="relative">
-                        <label for="taskResponsible" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Responsáveis</label>
-                        <div id="responsible-input-container" class="form-input flex items-center flex-wrap gap-2 p-2 rounded-xl w-full min-h-[46px]">
-                            <input type="text" id="taskResponsible" class="flex-grow bg-transparent focus:outline-none text-sm px-2 text-custom-darkest dark:text-white placeholder-gray-400" placeholder="Digite para buscar..." autocomplete="off">
-                        </div>
-                        <div id="responsible-suggestions" class="absolute z-20 w-full bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar"></div>
-                    </div>
-                    <div id="status-container" class="hidden"> 
-                        <label for="taskStatus" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Status</label>
-                        <select id="taskStatus" class="form-select focus:ring-custom-dark w-full rounded-xl">
-                            <option value="todo">Fila</option>
-                            <option value="stopped">Parado</option>
-                            <option value="inprogress">Em Andamento</option>
-                            <option value="homologation">Homologação</option>
-                            <option value="done">Concluída</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="taskPriority" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Prioridade</label>
-                            <select id="taskPriority" class="form-select focus:ring-custom-dark w-full rounded-xl">
-                                <option value="Baixa">Baixa</option>
-                                <option value="Média" selected>Média</option>
-                                <option value="Alta">Alta</option>
-                                <option value="Urgente">Urgente</option>
-                            </select>
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label for="taskDueDate" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400">Prazo</label>
-                                <div class="flex items-center gap-1.5">
-                                    <input type="checkbox" id="no-due-date-checkbox" class="rounded border-gray-300 text-custom-dark focus:ring-custom-dark w-3.5 h-3.5">
-                                    <label for="no-due-date-checkbox" class="text-[10px] text-custom-dark/70 dark:text-gray-400">Sem data</label>
+                <div class="p-8 overflow-y-auto flex-grow custom-scrollbar">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                        <div class="lg:col-span-2 space-y-6">
+                            
+                            <div>
+                                <label for="taskTitle" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Título</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="taskTitle" class="form-input focus:ring-custom-dark w-full rounded-xl text-lg font-bold" required placeholder="O que precisa ser feito?">
+                                    <button type="button" id="openAiModalBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-xl transition-colors shadow-lg shadow-purple-500/20" title="Melhorar com IA"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
                                 </div>
                             </div>
-                            <input type="date" id="taskDueDate" class="form-input focus:ring-custom-dark w-full rounded-xl">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="relative">
-                            <label for="taskProject" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Projeto</label>
-                            <input type="text" id="taskProject" class="form-input focus:ring-custom-dark w-full rounded-xl" placeholder="Nome do projeto" autocomplete="off">
-                            <div id="project-suggestions" class="absolute z-10 w-full bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar"></div>
-                        </div>
-                        <div class="relative">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400">Cor</label>
-                                <button type="button" id="native-color-picker-trigger" class="text-custom-dark hover:text-custom-darkest transition-colors"><i data-lucide="palette" class="w-4 h-4"></i></button>
+
+                            <div class="flex-grow flex flex-col">
+                                <label for="taskDescription" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Descrição</label>
+                                <textarea id="taskDescription" rows="8" class="form-input focus:ring-custom-dark w-full rounded-xl resize-none leading-relaxed" required placeholder="Detalhes da tarefa..."></textarea>
                             </div>
-                            <button type="button" id="color-picker-button" class="w-full h-[42px] rounded-xl border border-custom-medium/30 shadow-sm transition-transform active:scale-95"></button>
-                            <input type="color" id="taskProjectColor" value="#526D82" class="absolute top-0 left-0 w-0 h-0 opacity-0">
-                            <div id="color-palette" class="absolute z-30 mt-2 w-full p-3 bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl hidden grid grid-cols-6 gap-2"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="taskAzureLink" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Link Externo (DevOps)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i data-lucide="link" class="w-4 h-4 text-custom-medium"></i>
+
+                            <div>
+                                <label for="taskAzureLink" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Link Externo / DevOps</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i data-lucide="link" class="w-4 h-4 text-custom-medium"></i>
+                                    </div>
+                                    <input type="url" id="taskAzureLink" placeholder="https://..." class="form-input pl-10 focus:ring-custom-dark w-full text-sm rounded-xl">
+                                </div>
                             </div>
-                            <input type="url" id="taskAzureLink" placeholder="https://dev.azure.com/..." class="form-input pl-10 focus:ring-custom-dark w-full text-sm rounded-xl">
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Anexos</label>
+                                <div id="attachment-list" class="grid grid-cols-2 gap-2 mb-3"></div>
+                                <label for="task-attachment-input" class="w-full flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-custom-medium/40 hover:border-custom-dark/60 hover:bg-custom-light/20 dark:hover:bg-white/5 rounded-xl cursor-pointer transition-all text-custom-dark text-sm font-medium group">
+                                    <i data-lucide="paperclip" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                    <span>Clique para adicionar arquivos</span>
+                                </label>
+                                <input type="file" id="task-attachment-input" multiple class="hidden">
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Anexos</label>
-                        <div id="attachment-list" class="space-y-2 mb-3"></div>
-                        <label for="task-attachment-input" class="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-custom-medium/40 hover:border-custom-dark/60 hover:bg-custom-light/20 dark:hover:bg-white/5 rounded-xl cursor-pointer transition-all text-custom-dark text-sm font-medium group">
-                            <i data-lucide="paperclip" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
-                            <span>Adicionar arquivos</span>
-                        </label>
-                        <input type="file" id="task-attachment-input" multiple class="hidden">
+
+                        <div class="space-y-5">
+                            <div class="bg-gray-50 dark:bg-white/5 p-5 rounded-2xl border border-custom-light/50 dark:border-white/5 space-y-5">
+                                
+                                <div class="relative">
+                                    <label for="taskResponsible" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Responsáveis</label>
+                                    <div id="responsible-input-container" class="form-input flex items-center flex-wrap gap-2 p-2 rounded-xl w-full min-h-[46px] bg-white dark:bg-black/20">
+                                        <input type="text" id="taskResponsible" class="flex-grow bg-transparent focus:outline-none text-sm px-2 text-custom-darkest dark:text-white placeholder-gray-400 min-w-[80px]" placeholder="Buscar..." autocomplete="off">
+                                    </div>
+                                    <div id="responsible-suggestions" class="absolute z-20 w-full bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar"></div>
+                                </div>
+
+                                <div id="status-container" class="hidden"> 
+                                    <label for="taskStatus" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Status</label>
+                                    <select id="taskStatus" class="form-select focus:ring-custom-dark w-full rounded-xl bg-white dark:bg-black/20">
+                                        <option value="todo">Fila</option>
+                                        <option value="stopped">Parado</option>
+                                        <option value="inprogress">Em Andamento</option>
+                                        <option value="homologation">Homologação</option>
+                                        <option value="done">Concluída</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="taskProject" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Projeto</label>
+                                    <div class="flex gap-2">
+                                        <div class="relative flex-grow">
+                                            <input type="text" id="taskProject" class="form-input focus:ring-custom-dark w-full rounded-xl bg-white dark:bg-black/20" placeholder="Nome do projeto..." autocomplete="off">
+                                            <div id="project-suggestions" class="absolute z-10 w-full bg-white dark:bg-[#2d3748] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar"></div>
+                                        </div>
+                                        
+                                        <div class="relative flex-shrink-0">
+                                            <button type="button" id="color-picker-button" class="w-10 h-6 rounded-xl border border-custom-medium/30 shadow-sm hover:scale-105 transition-all duration-300 active:scale-95 flex items-center justify-center bg-white dark:bg-black/20 group relative overflow-hidden">
+        
+                                                <div id="current-color-bg" class="absolute inset-0 transition-colors duration-500 bg-gray-400"></div>
+                                                
+                                            </button>
+                                            
+                                            <input type="color" id="taskProjectColor" value="#526D82" class="absolute top-0 left-0 opacity-0 pointer-events-none w-0 h-0">
+                                            
+                                            <div id="color-palette" class="absolute z-50 mt-3 -right-2 w-[240px] p-4 bg-white/90 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl hidden transform transition-all duration-300 origin-top-right scale-95 opacity-0">
+                                                <div class="flex justify-between items-center mb-3">
+                                                    <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Tons</span>
+                                                    <span id="hex-display" class="text-[10px] font-mono text-gray-500 dark:text-gray-300">#526D82</span>
+                                                </div>
+                                                <div id="palette-grid" class="grid grid-cols-5 gap-3 place-items-center"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label for="taskPriority" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400 mb-2">Prioridade</label>
+                                    <select id="taskPriority" class="form-select focus:ring-custom-dark w-full rounded-xl bg-white dark:bg-black/20">
+                                        <option value="Baixa">Baixa</option>
+                                        <option value="Média" selected>Média</option>
+                                        <option value="Alta">Alta</option>
+                                        <option value="Urgente">Urgente</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label for="taskDueDate" class="block text-xs font-bold uppercase tracking-wider text-custom-dark dark:text-gray-400">Prazo</label>
+                                        <div class="flex items-center gap-1.5 bg-white dark:bg-black/20 px-2 py-1 rounded-lg">
+                                            <input type="checkbox" id="no-due-date-checkbox" class="rounded border-gray-300 text-custom-dark focus:ring-custom-dark w-3.5 h-3.5">
+                                            <label for="no-due-date-checkbox" class="text-[10px] text-custom-dark/70 dark:text-gray-400 cursor-pointer select-none">Sem data</label>
+                                        </div>
+                                    </div>
+                                    <input type="date" id="taskDueDate" class="form-input focus:ring-custom-dark w-full rounded-xl bg-white dark:bg-black/20">
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="p-4 border-t glass-separator flex items-center justify-end gap-3 flex-shrink-0">
@@ -363,7 +392,7 @@
 
                 <div class="md:col-span-2 glass-sub-panel p-6 flex flex-col border-l glass-separator h-full overflow-hidden">
                     <h3 class="font-bold text-lg text-custom-darkest dark:text-white mb-6 flex items-center gap-2 opacity-90">
-                        <i data-lucide="messages-square" class="w-5 h-5"></i> Discussão
+                        <i data-lucide="messages-square" class="w-5 h-5"></i> Comentários
                     </h3>
                     
                     <div id="comments-feed" class="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar mb-4"></div>
