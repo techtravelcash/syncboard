@@ -964,3 +964,57 @@ body {
     animation: slideOutRightOrb 0.5s ease-in forwards;
     pointer-events: none;
 }
+
+/* ... (conteúdo existente) ... */
+
+/* --- GLASSMORPHISM MODAL (Estilo Unificado com Orbs) --- */
+.glass-panel {
+    /* Base igual ao .corner-orb */
+    background: var(--orb-bg-default); 
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--orb-border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    color: #1E293B;
+}
+
+.dark .glass-panel {
+    background: var(--orb-bg-default); /* Usa a variável dark definida no :root */
+    border: 1px solid var(--orb-border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    color: #F8FAFC;
+}
+
+/* Divisórias internas mais sutis para o vidro */
+.glass-separator {
+    border-color: rgba(0, 0, 0, 0.06);
+}
+.dark .glass-separator {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Fundo sutil para a sidebar (comentários) para separar visualmente sem perder a transparência */
+.glass-sub-panel {
+    background: rgba(255, 255, 255, 0.3);
+}
+.dark .glass-sub-panel {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Input de comentários flutuante */
+.glass-input {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+}
+.dark .glass-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.glass-input:focus-within {
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+}
+.dark .glass-input:focus-within {
+    background: rgba(0, 0, 0, 0.5);
+}
