@@ -42,9 +42,9 @@
 .immersive-canvas::-webkit-scrollbar { display: none; }
 .immersive-canvas { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* --- BACKGROUNDS & ATMOSPHERE --- */
+/* --- BACKGROUNDS & ATMOSPHERE (SLATE BLUE - ORIGINAL) --- */
 
-/* Camada de Ruído (Noise Texture) - 3.5% Opacidade */
+/* Camada de Ruído (Noise Texture) */
 body::before {
     content: "";
     position: fixed;
@@ -58,7 +58,7 @@ body::before {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
 }
 
-/* TEMA: SLATE BLUE "WORKBOARD" */
+/* TEMA: SLATE BLUE "WORKBOARD" (Fundo Padrão) */
 body {
     background-color: #526D82;
     background-image: linear-gradient(to bottom, #526D82, #3D5262);
@@ -82,13 +82,13 @@ body {
 }
 
 /* --- HIERARQUIA DE TEXTO --- */
-.dark .ox-text-primary { color: #F1F5F9; font-weight: 600; } 
-.dark .ox-text-secondary { color: #94A3B8; font-weight: 400; } 
-.dark .ox-text-tertiary { color: #475569; } 
-
 .ox-text-primary { color: #1E293B; font-weight: 600; }
 .ox-text-secondary { color: #64748B; font-weight: 500; }
 .ox-text-tertiary { color: #94A3B8; }
+
+.dark .ox-text-primary { color: #F1F5F9; font-weight: 600; } 
+.dark .ox-text-secondary { color: #94A3B8; font-weight: 400; } 
+.dark .ox-text-tertiary { color: #475569; } 
 
 /* --- CANVAS IMERSIVO --- */
 .immersive-canvas {
@@ -115,7 +115,6 @@ body {
     display: flex;
     flex-direction: column;
     
-    /* THE "WELL" LOOK */
     background: rgba(30, 41, 59, 0.2); 
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -311,7 +310,6 @@ body {
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
     color: #1E293B;
 
-    /* CORREÇÃO DE GPU */
     transform: translate3d(0, 0, 0); 
     backface-visibility: hidden;
     -webkit-font-smoothing: antialiased;
@@ -403,7 +401,6 @@ body {
     width: 380px; height: auto; min-height: 500px; border-radius: 40px;
 }
 
-/* AJUSTE DO ÍCONE DO FILTRO */
 #orb-filter .orb-icon-wrapper {
     justify-content: center;
     align-items: center;
@@ -479,7 +476,6 @@ body {
     bottom: 78px; 
     left: 78px;
 }
-/* =================================================== */
 
 /* Internos Comuns */
 .orb-icon-wrapper { position: absolute; width: 100%; height: 100%; display: flex; transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 10; }
@@ -537,7 +533,6 @@ body {
     .kanban-task-list { min-height: 150px; padding-bottom: 20px; }
     .corner-orb { width: 56px; height: 56px; } 
     
-    /* Mobile: 160px (Raio 80px) */
     #orb-nav { width: 160px; height: 160px; bottom: -80px; left: -80px; } 
     #orb-nav.expanded { bottom: 20px; left: 20px; }
     #orb-nav .orb-icon-wrapper { padding-top: 30px; padding-right: 30px; } 
@@ -550,7 +545,6 @@ body {
     #orb-tools #notification-orb-badge { bottom: 52px; left: 52px; }
 
     #orb-filter { bottom: 20px; left: 20px; right: auto; top: auto; transform-origin: bottom left; }
-    /* Mobile Filter Fix: Reset position for icon */
     #orb-filter .orb-icon-wrapper { bottom: 0; right: 0; padding: 0; } 
     
     .orb-fab { width: 56px; height: 56px; bottom: 20px; right: 20px; }
@@ -559,13 +553,10 @@ body {
 }
 
 /* --- TOOLTIPS (APENAS TEXTO) --- */
-
-/* Permitir que o texto apareça fora do botão de filtro */
 #orb-filter:not(.expanded) {
     overflow: visible;
 }
 
-/* Estilo Base do Texto Flutuante */
 #orb-filter::after,
 .orb-fab::after {
     position: absolute;
@@ -595,7 +586,7 @@ body {
     transform: translateY(-50%) translateX(0);
 }
 
-/* --- LIST VIEW ROW --- */
+/* --- LIST VIEW ROW (REVERTIDO) --- */
 .task-list-row {
     background: #FFFFFF;
     border: 1px solid rgba(40, 52, 76, 0.1);
@@ -649,20 +640,16 @@ body {
 .animate-slide-up-enter { animation: slideUpEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 
 
-/* --- ORB DE ORDENAÇÃO (Label + Glow Fix) --- */
-
+/* --- ORB DE ORDENAÇÃO --- */
 #orb-sort {
     position: fixed;
     top: 50%;
     right: 0;
     transform: translate(50%, -50%);
-    
     width: 80px;
     height: 80px;
-    
     border-radius: 50%; 
     z-index: 950;
-    
     overflow: visible !important; 
     
     background-color: var(--orb-bg-default);
@@ -680,10 +667,8 @@ body {
         transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* HOVER: GLOW FORÇADO COM !IMPORTANT */
 #orb-sort:not(.expanded):hover {
     transform: translate(50%, -50%) scale(1.1) !important;
-    /* Glow forte Azul Cyan */
     box-shadow: 0 0 20px 5px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.5) !important;
     border-color: rgba(56, 189, 248, 0.8);
     background-color: var(--orb-bg-peak);
@@ -691,7 +676,6 @@ body {
 }
 
 .dark #orb-sort:not(.expanded):hover {
-    /* Glow forte Dark */
     box-shadow: 0 0 30px 5px rgba(56, 189, 248, 0.5) !important;
     background-color: rgba(30, 41, 59, 0.9);
 }
@@ -711,7 +695,6 @@ body {
     transition: opacity 0.2s;
 }
 
-/* --- ESTADO EXPANDIDO --- */
 #orb-sort.expanded {
     width: 240px; 
     height: 240px;
@@ -735,114 +718,75 @@ body {
     pointer-events: none;
 }
 
-/* --- RÓTULO "ORDENAR LISTA" (Com Animação em Arco/Curva) --- */
 #orb-sort-label {
     position: fixed;
     top: 50%;
-    /* Posicionado à esquerda do botão.
-       Botão tem 40px de raio (80px width). 
-       Colocamos o label a 55px da borda direita da tela (right:0 do container do botão) */
     right: 55px; 
-    
-    /* Tipografia Estilo "Técnico" */
     font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 0.65rem; /* Pequeno e elegante */
+    font-size: 0.65rem; 
     font-weight: 800; 
     color: #FFFFFF;
     text-transform: uppercase;
-    letter-spacing: 0.2em; /* Espaçamento largo ajuda na ilusão de curva */
+    letter-spacing: 0.2em; 
     white-space: nowrap;
-    
-    /* Configuração Vertical */
     writing-mode: vertical-rl;
     text-orientation: mixed;
-    
-    /* Inicialmente invisível e atrás */
     pointer-events: none;
     z-index: 900; 
     opacity: 0;
-    
-    /* A MÁGICA DO ARCO PERFEITO: */
-    /* Define o ponto de giro 45px à direita do próprio texto.
-       Isso alinha o eixo de rotação com o CENTRO do botão circular. */
     transform-origin: calc(100% + 45px) center;
-    
-    /* Estado Inicial: Escondido na parte inferior da órbita (atrás do botão) */
     transform: translateY(-50%) rotate(180deg) rotateZ(-45deg);
-    
-    /* Animação elástica suave */
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    
-    /* Sombra para destacar do fundo */
     text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
-/* Animação: O texto orbita para cima até ficar vertical */
 #orb-sort:not(.expanded):hover + #orb-sort-label {
     opacity: 1;
-    /* Posição Final: Vertical (0 graus de offset na órbita) */
     transform: translateY(-50%) rotate(180deg) rotateZ(0deg);
 }
 
-/* Esconder imediatamente quando expandido */
 #orb-sort.expanded + #orb-sort-label {
     opacity: 0 !important;
     visibility: hidden;
     transition: none;
 }
 
-/* --- BRAÇOS DE POSICIONAMENTO --- */
-
 .radial-btn {
     position: absolute;
     top: 50%;
     left: 85%;
-    
-    /* Começa no centro (0px) e cresce */
     width: 0px; 
     height: 40px;
-    
     transform-origin: left center;
     pointer-events: auto;
-    
     display: flex;
     align-items: center;
-    justify-content: flex-end; /* Ícone na ponta */
-    
+    justify-content: flex-end; 
     opacity: 0;
-    
-    transition: 
-        width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
-        opacity 0.3s ease;
-    
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
     z-index: 20;
     overflow: visible;
 }
 
 #orb-sort.expanded .radial-btn {
-    width: 133px; /* FIXADO EM 133px conforme solicitado */
+    width: 133px; 
     opacity: 1;
 }
 
-/* --- CÍRCULO / CONTAINER DO ÍCONE --- */
 .radial-content {
     position: relative;
     padding: 8px;
     border-radius: 12px;
-    
     display: flex;
     align-items: center;
     justify-content: center;
-    
     background: transparent;
     color: #475569;
     cursor: pointer;
     flex-shrink: 0;
-    
     transition: color 0.2s, filter 0.2s;
 }
 
-/* Hover no container afeta o ícone */
 .radial-content:hover {
     color: #0F172A;
     background: transparent;
@@ -850,35 +794,24 @@ body {
 }
 
 .dark .radial-content { color: #94A3B8; }
-.dark .radial-content:hover {
-    color: #FFFFFF;
-}
+.dark .radial-content:hover { color: #FFFFFF; }
 
-/* --- ÍCONE SVG --- */
 .radial-content svg {
     width: 28px !important; 
     height: 28px !important;
     transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.radial-content:hover svg {
-    transform: scale(1.2);
-}
-
-.radial-content.active {
-    color: #0F172A;
-    font-weight: bold;
-}
+.radial-content:hover svg { transform: scale(1.2); }
+.radial-content.active { color: #0F172A; font-weight: bold; }
 .dark .radial-content.active { color: #38BDF8; }
 
-/* --- TOOLTIP FLUTUANTE --- */
 .radial-content::after {
     content: attr(data-label);
     position: absolute;
     right: 50px; 
     top: 50%;
     transform: translateY(-50%) translateX(10px);
-    
     background: transparent;
     color: #FFFFFF;
     font-size: 0.9rem;
@@ -886,7 +819,6 @@ body {
     letter-spacing: 0.05em;
     white-space: nowrap;
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -898,7 +830,6 @@ body {
     transform: translateY(-50%) translateX(0);
 }
 
-/* --- INDICADOR DE DIREÇÃO --- */
 .sort-indicator {
     position: absolute;
     bottom: 0; right: 0;
@@ -914,107 +845,114 @@ body {
 .dark .sort-indicator { background: #38BDF8; color: #0F172A; border-color: #1E293B; }
 .radial-content.active .sort-indicator { transform: scale(1); }
 
-/* --- ANIMAÇÕES DE ENTRADA/SAÍDA --- */
-
-@keyframes slideInWithGlow {
-    0% {
-        transform: translate(150%, -50%);
-        opacity: 0;
-        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
-        background-color: var(--orb-bg-default); 
-    }
-    60% {
-        transform: translate(50%, -50%);
-        opacity: 1;
-        
-        box-shadow: 
-            -10px 0 40px 5px rgba(56, 189, 248, 0.7), 
-            inset 0 0 20px rgba(255, 255, 255, 0.6);
-            
-        border-color: rgba(56, 189, 248, 0.9);
-        background-color: var(--orb-bg-peak); 
-    }
-    100% {
-        transform: translate(50%, -50%);
-        opacity: 1;
-        
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        border-color: var(--orb-border-color);
-        background-color: var(--orb-bg-default);
-    }
-}
-
-@keyframes slideOutRightOrb {
-    0% {
-        transform: translate(50%, -50%);
-        opacity: 1;
-        background-color: var(--orb-bg-default);
-    }
-    100% {
-        transform: translate(150%, -50%);
-        opacity: 0;
-    }
-}
-
-.orb-slide-in {
-    animation: slideInWithGlow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-.orb-slide-out {
-    animation: slideOutRightOrb 0.5s ease-in forwards;
-    pointer-events: none;
-}
-
-/* ... (conteúdo existente) ... */
-
-/* --- GLASSMORPHISM MODAL (Estilo Unificado com Orbs) --- */
+/* --- GLASSMORPHISM MODAL (ESTILO MANTIDO - REFINADO) --- */
 .glass-panel {
-    /* Base igual ao .corner-orb */
-    background: var(--orb-bg-default); 
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--orb-border-color);
+    /* Lógica do Gradiente (Light Mode): Centro Sólido, Bordas Vidro */
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(255, 255, 255, 0.85) 45%,
+        rgba(255, 255, 255, 0.60) 100%
+    );
+    
+    backdrop-filter: blur(25px); 
+    -webkit-backdrop-filter: blur(25px);
+    
+    border: 1px solid rgba(255, 255, 255, 0.5); 
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     color: #1E293B;
 }
 
 .dark .glass-panel {
-    background: var(--orb-bg-default); /* Usa a variável dark definida no :root */
-    border: 1px solid var(--orb-border-color);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    /* Lógica do Gradiente (Dark Mode) */
+    background: radial-gradient(
+        circle at center,
+        rgba(30, 41, 59, 0.98) 0%, 
+        rgba(30, 41, 59, 0.85) 50%,
+        rgba(15, 23, 42, 0.60) 100%
+    );
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); 
     color: #F8FAFC;
 }
 
 /* Divisórias internas mais sutis para o vidro */
 .glass-separator {
-    border-color: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.08);
 }
 .dark .glass-separator {
-    border-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Fundo sutil para a sidebar (comentários) para separar visualmente sem perder a transparência */
+/* Fundo sutil para a sidebar (comentários) */
 .glass-sub-panel {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.4); 
+    border-radius: 8px;
 }
 .dark .glass-sub-panel {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 /* Input de comentários flutuante */
 .glass-input {
-    background: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 }
 .dark .glass-input {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .glass-input:focus-within {
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.5);
 }
 .dark .glass-input:focus-within {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* --- FORMULÁRIOS NO ESTILO GLASS --- */
+.glass-panel .form-input, 
+.glass-panel .form-select,
+.glass-panel textarea {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+    color: #1E293B; 
+}
+
+.dark .glass-panel .form-input, 
+.dark .glass-panel .form-select,
+.dark .glass-panel textarea {
+    background: rgba(15, 23, 42, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #F8FAFC;
+}
+
+.glass-panel .form-input:focus, 
+.glass-panel .form-select:focus,
+.glass-panel textarea:focus {
+    background: rgba(255, 255, 255, 0.9); 
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.dark .glass-panel .form-input:focus, 
+.dark .glass-panel .form-select:focus,
+.dark .glass-panel textarea:focus {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* Removemos os fundos sólidos do rodapé e cabeçalho para o gradiente passar livre */
+.glass-panel .modal-header,
+.glass-panel .modal-footer {
+    background: transparent !important;
 }
