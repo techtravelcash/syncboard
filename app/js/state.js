@@ -1,15 +1,12 @@
 export const state = {
+    currentUser: null,
+    users: [],
     tasks: [],
-    isRendering: false,
-    taskToHighlightTemporarily: null,
+    notifications: [],
+    currentView: 'kanban', 
     selectedProject: 'all',
     selectedResponsible: 'all',
-    sortColumn: 'createdAt',
-    sortDirection: 'desc',
-    currentView: 'list',
-    lastInteractedTaskId: null,
-    editingTaskId: null,
-    taskBeingMoved: null,
-    currentUser: null,
     searchQuery: '',
+    sortBy: 'createdAt',      // Padrão: Data de criação
+    sortDirection: 'desc'     // Padrão: Do mais recente para o mais antigo
 };
