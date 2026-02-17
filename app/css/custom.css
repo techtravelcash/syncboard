@@ -1034,18 +1034,27 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* --- ORBITAL TASK HERO LAYOUT --- */
+/* --- ORBITAL TASK HERO LAYOUT (REFINADO) --- */
 
-/* O Card do Responsável Principal */
+/* Título da Tarefa Menor (Override do HTML) */
+#modal-info-title {
+    font-size: 1.5rem !important; /* Aproximadamente 24px */
+    line-height: 1.3 !important;
+    font-weight: 800;
+    margin-bottom: 4px !important;
+}
+
+/* O Card do Responsável Principal (Mais Compacto) */
 .responsible-hero-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 16px;
+    border-radius: 16px !important;
+    padding: 10px 14px !important; /* Padding reduzido */
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px !important; /* Gap reduzido */
     transition: all 0.3s ease;
+    min-height: auto !important;
 }
 
 .responsible-hero-card:hover {
@@ -1053,12 +1062,13 @@ body {
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* Avatar Grande do Principal */
+/* Avatar Grande do Principal (Reduzido) */
+.responsible-hero-card .avatar-main,
 .avatar-main {
-    width: 56px;
-    height: 56px;
+    width: 40px !important; /* Reduzido de 56px */
+    height: 40px !important;
     border-radius: 50%;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.1) !important;
     background-size: cover;
     background-position: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -1081,4 +1091,83 @@ body {
 .chat-column {
     background: rgba(0, 0, 0, 0.15); /* Ligeiramente mais escuro para diferenciar do content */
     border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Espaçamento Vertical Uniforme (Ritmo) */
+#modal-info-description,
+#modal-info-attachments-container,
+#modal-info-dueDate-container {
+    margin-bottom: 24px !important;
+}
+
+/* --- ADJUSTES DA SIDEBAR (FIT PERFEITO) --- */
+
+/* Reduz o espaçamento vertical entre os blocos da sidebar (Responsáveis, Agenda) */
+.glass-separator-v .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 16px !important; /* Reduz drasticamente de 32px para 16px */
+}
+
+/* Reduz a margem dos títulos (labels) */
+.glass-separator-v h3 {
+    margin-bottom: 8px !important; /* Reduz de 16px para 8px */
+    font-size: 0.65rem !important; /* Ajuste fino */
+}
+
+/* Ajuste no container de responsáveis (Sidebar) */
+#sidebar-responsibles-container {
+    margin-bottom: 0 !important;
+    gap: 8px !important; /* Aproxima os avatares */
+    padding-left: 0 !important;
+    min-height: auto !important;
+}
+
+/* Avatares levemente menores para o fit */
+#sidebar-responsibles-container > div {
+    width: 38px !important;
+    height: 38px !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+}
+
+/* --- CHAT E COMENTÁRIOS (Corrigido) --- */
+
+/* 1. Espaçamento Lateral da Coluna */
+#comments-feed {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+
+/* 2. Balão de Mensagem (Correção de Texto e Layout) */
+#comments-feed .break-words {
+    /* FORÇA O TEXTO A FICAR ALINHADO À ESQUERDA (Melhora leitura) */
+    text-align: left !important; 
+    
+    /* Quebra de linha inteligente (não quebra palavras normais) */
+    overflow-wrap: break-word !important; 
+    word-break: break-word !important;   
+    white-space: pre-wrap !important;    
+    
+    /* Ritmo de leitura */
+    line-height: 1.5;
+    
+    /* Espaço extra na direita para o botão de excluir não tapar o texto */
+    padding-right: 30px !important; 
+    position: relative;
+}
+
+/* 3. Botão de Excluir (Mover para a Direita) */
+/* Como o texto agora começa na esquerda, o botão vai para o fim da linha */
+#comments-feed .delete-comment-btn {
+    left: auto !important;   /* Anula o posicionamento original */
+    right: 8px !important;   /* Cola na direita */
+    top: 8px !important;
+}
+
+/* 4. Largura Máxima do Balão */
+#comments-feed > div > div.flex-col {
+    max-width: 90% !important;
+}
+
+/* Remove a margem inferior do prazo, pois agora está no grid */
+#modal-info-dueDate-container {
+    margin-bottom: 0 !important;
 }

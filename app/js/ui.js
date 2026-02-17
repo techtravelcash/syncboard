@@ -940,8 +940,12 @@ export function renderTaskHistory(taskId) {
                 
                 // Lógica Visual: Principal (index 0) vs Outros
                 const isMain = index === 0;
-                // Principal: Maior (w-14) | Outros: Menor (w-10)
-                const sizeClass = isMain ? 'w-14 h-14 ring-2 ring-white/20' : 'w-10 h-10 opacity-80 hover:opacity-100';
+                
+                // ALTERAÇÃO AQUI: Avatares menores (w-10 para principal e w-8 para outros)
+                const sizeClass = isMain 
+                    ? 'w-10 h-10 ring-2 ring-white/20' 
+                    : 'w-8 h-8 opacity-80 hover:opacity-100';
+
                 const zIndex = 10 - index; // Garante que o primeiro fique por cima no stack
 
                 const avatarEl = document.createElement('div');
@@ -962,8 +966,8 @@ export function renderTaskHistory(taskId) {
         } else {
             // Estado Vazio (Ninguém atribuído)
             sidebarRespContainer.innerHTML = `
-                <div class="w-14 h-14 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center text-white/20">
-                    <i data-lucide="user" class="w-6 h-6"></i>
+                <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center text-white/20">
+                    <i data-lucide="user" class="w-5 h-5"></i>
                 </div>
                 <span class="text-xs text-white/30 italic ml-2">Ninguém atribuído</span>
             `;
@@ -1063,37 +1067,12 @@ export function renderTaskHistory(taskId) {
             // LAYOUT TIPO WHATSAPP/MESSENGER
             if (isMe) {
                 // Minhas mensagens: Direita, Azul
-                return `
-                <div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2">
-                    <div class="flex flex-col items-end min-w-0 max-w-full">
-                        <div class="flex items-baseline gap-2 mb-1">
-                            <span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span>
-                            <span class="text-xs font-bold text-white/90 truncate">Você</span>
-                        </div>
-                        <div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words text-right">
-                            ${c.text}
-                            <button class="delete-comment-btn absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                            </button>
-                        </div>
-                    </div>
-                    ${avatarHtml}
-                </div>`;
+                // CORREÇÃO: Removemos text-right e limpamos espaços em branco do template literal
+                return `<div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="flex flex-col items-end min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span><span class="text-xs font-bold text-white/90 truncate">Você</span></div><div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}<button class="delete-comment-btn absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>${avatarHtml}</div>`;
             } else {
                 // Mensagens de Outros: Esquerda, Cinza
-                return `
-                <div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">
-                    ${avatarHtml}
-                    <div class="flex flex-col items-start min-w-0 max-w-full">
-                        <div class="flex items-baseline gap-2 mb-1">
-                            <span class="text-xs font-bold text-white/90 truncate">${authorName}</span>
-                            <span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span>
-                        </div>
-                        <div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">
-                            ${c.text}
-                        </div>
-                    </div>
-                </div>`;
+                // CORREÇÃO: Limpamos espaços em branco do template literal
+                return `<div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">${avatarHtml}<div class="flex flex-col items-start min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-xs font-bold text-white/90 truncate">${authorName}</span><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span></div><div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">${c.text}</div></div></div>`;
             }
         }).join('');
 
