@@ -904,80 +904,118 @@ export function renderTaskHistory(taskId) {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    state.lastInteractedTaskId = taskId;
+
+    // --- PREENCHIMENTO DOS CAMPOS ---
     document.getElementById('modal-info-title').textContent = task.title;
     document.getElementById('modal-info-project').textContent = task.project || 'Geral';
     document.getElementById('modal-info-project').style.color = task.projectColor || '#9DB2BF';
-    document.getElementById('modal-info-description').textContent = task.description;
+    document.getElementById('modal-info-description').textContent = task.description || '';
 
     const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
     document.getElementById('modal-info-responsible').textContent = respNames || 'Não atribuído';
 
+    // Agenda Google
     const calendarBtn = document.getElementById('modal-calendar-btn');
-    const respEmails = (task.responsible || []).map(r => r.email).filter(Boolean).join(',');
-    const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description)}&add=${respEmails}`;
-    calendarBtn.href = googleUrl;
+    if (calendarBtn) {
+        const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r.email : '')).filter(Boolean).join(',');
+        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
+        calendarBtn.href = googleUrl;
+    }
 
-    const dueDateEl = document.getElementById('modal-info-dueDate');
+    // Prazo
     const dueDateContainer = document.getElementById('modal-info-dueDate-container');
-    if (task.dueDate) {
-        dueDateEl.querySelector('span').textContent = formatDate(task.dueDate);
+    if (task.dueDate && dueDateContainer) {
+        document.getElementById('modal-info-dueDate').querySelector('span').textContent = formatDate(task.dueDate);
         dueDateContainer.classList.remove('hidden');
-    } else {
+    } else if (dueDateContainer) {
         dueDateContainer.classList.add('hidden');
     }
 
+    // Link Externo
     const linkContainer = document.getElementById('modal-info-azure-link-container');
-    const linkEl = document.getElementById('modal-info-azure-link');
-    if (task.azureLink) {
+    if (task.azureLink && linkContainer) {
+        const linkEl = document.getElementById('modal-info-azure-link');
         linkEl.href = task.azureLink;
         linkEl.querySelector('span').textContent = task.azureLink;
         linkContainer.classList.remove('hidden');
-    } else {
+    } else if (linkContainer) {
         linkContainer.classList.add('hidden');
     }
 
+    // Anexos
     const attachContainer = document.getElementById('modal-info-attachments-container');
-    if (task.attachments?.length > 0) {
+    if (task.attachments?.length > 0 && attachContainer) {
         renderAttachmentList('modal-info-attachments', task.attachments);
         attachContainer.classList.remove('hidden');
-    } else {
+    } else if (attachContainer) {
         attachContainer.classList.add('hidden');
     }
 
+    // Histórico
     const historyEl = document.getElementById('history-feed');
-    const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    
-    historyEl.innerHTML = historyItems.map(item => `
-        <div class="relative pl-4 pb-4 border-l border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
-            <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-            <p class="text-xs text-gray-600 dark:text-gray-300">Mudou para <span class="font-bold">${item.status}</span></p>
-            <p class="text-[10px] text-gray-400">${formatDateTime(item.timestamp)}</p>
-        </div>
-    `).join('');
+    if (historyEl) {
+        const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        historyEl.innerHTML = historyItems.map(item => `
+            <div class="relative pl-4 pb-4 border-l border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
+                <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                <p class="text-xs text-gray-600 dark:text-gray-300">Mudou para <span class="font-bold">${item.status}</span></p>
+                <p class="text-[10px] text-gray-400">${formatDateTime(item.timestamp)}</p>
+            </div>
+        `).join('');
+    }
 
+    // --- COMENTÁRIOS (LÓGICA BLINDADA COM BASE NO PAYLOAD) ---
     const commentsEl = document.getElementById('comments-feed');
     const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     if (comments.length === 0) {
-        commentsEl.innerHTML = '<div class="text-center text-gray-400 py-10 italic text-sm">Nenhum comentário ainda.<br>Inicie a discussão!</div>';
+        commentsEl.innerHTML = '<div class="text-center text-gray-400 py-10 italic text-sm">Nenhum comentário ainda.<br>Seja o primeiro a comentar!</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
-            const author = state.users.find(u => u.name === c.author) || { name: c.author, picture: null };
-            const avatar = author.picture 
-                ? `<img src="${author.picture}" class="w-8 h-8 rounded-full border border-gray-200">`
-                : `<div class="w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs">${author.name.charAt(0)}</div>`;
+            
+            // CORREÇÃO CRUCIAL AQUI:
+            // O payload mostra que c.author É O EMAIL (ex: "ariel@travelcash.me").
+            // Então buscamos quem tem esse email na lista de usuários.
+            
+            let user = state.users.find(u => u.email === c.author);
+            
+            // Fallback: Se não achar pelo email exato, tenta pelo nome (caso mude no futuro)
+            if (!user) {
+                user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
+            }
+
+            // Se achou o usuário, pega o Nome Bonito e a Foto. Se não, usa o email mesmo.
+            const authorName = user ? user.name : c.author;
+            const picUrl = user ? user.picture : null;
+            const initial = authorName.charAt(0).toUpperCase();
+
+            // Renderiza Avatar
+            const avatarHtml = picUrl 
+                ? `<div class="relative w-8 h-8 shrink-0">
+                     <img src="${picUrl}" 
+                          class="w-8 h-8 rounded-full border border-gray-200 object-cover bg-white absolute inset-0 z-10 block" 
+                          title="${authorName}" 
+                          alt="${authorName}"
+                          onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                     <div class="hidden w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs border border-white dark:border-gray-700 absolute inset-0 z-0" title="${authorName}">${initial}</div>
+                   </div>`
+                : `<div class="w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs border border-white dark:border-gray-700 shrink-0" title="${authorName}">${initial}</div>`;
 
             return `
-                <div class="flex gap-3 group">
-                    <div class="shrink-0">${avatar}</div>
-                    <div class="flex-grow">
+                <div class="flex gap-3 group items-start">
+                    <div class="pt-1 shrink-0">
+                        ${avatarHtml}
+                    </div>
+                    
+                    <div class="flex-grow min-w-0">
                         <div class="flex items-baseline justify-between">
-                            <span class="text-sm font-bold text-custom-darkest dark:text-white">${c.author}</span>
-                            <span class="text-[10px] text-gray-400">${formatDateTime(c.timestamp)}</span>
+                            <span class="text-sm font-bold text-custom-darkest dark:text-white truncate pr-2">${authorName}</span>
+                            <span class="text-[10px] text-gray-400 shrink-0">${formatDateTime(c.timestamp)}</span>
                         </div>
-                        <div class="bg-white dark:bg-white/5 p-3 rounded-tr-xl rounded-b-xl border border-gray-100 dark:border-gray-700 text-sm text-custom-darkest dark:text-gray-200 mt-1 shadow-sm relative">
+                        <div class="bg-white dark:bg-white/5 p-3 rounded-tr-xl rounded-b-xl border border-gray-100 dark:border-gray-700 text-sm text-custom-darkest dark:text-gray-200 mt-1 shadow-sm relative group-hover:border-custom-medium/30 transition-colors break-words">
                             ${c.text}
-                            <button class="delete-comment-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity" data-task-id="${taskId}" data-comment-index="${c.index}">
+                            <button class="delete-comment-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir">
                                 <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
@@ -987,6 +1025,7 @@ export function renderTaskHistory(taskId) {
         }).join('');
     }
 
+    // Botão Alerta
     const oldSignal = document.getElementById('signalBtn');
     if (oldSignal) oldSignal.remove();
 
@@ -997,23 +1036,23 @@ export function renderTaskHistory(taskId) {
     signalBtn.innerHTML = '<i data-lucide="siren" class="w-5 h-5"></i>';
     
     const closeBtn = document.getElementById('closeHistoryBtn');
-    closeBtn.parentNode.insertBefore(signalBtn, closeBtn);
-
-    signalBtn.onclick = () => {
-        showConfirmModal(
-            'Enviar Alerta', 
-            'Isto enviará um aviso sonoro/visual de tela cheia para o responsável. Usar apenas em emergências.', 
-            async () => {
-                const api = await import('./api.js');
-                await api.signalResponsible(taskId);
-                showToast('Alerta enviado!', 'success');
-            }, 
-            null
-        );
-    };
+    if (closeBtn) {
+        closeBtn.parentNode.insertBefore(signalBtn, closeBtn);
+        signalBtn.onclick = () => {
+            showConfirmModal(
+                'Enviar Alerta', 
+                'Isto enviará um aviso sonoro para o responsável. Usar apenas em emergências.', 
+                async () => {
+                    const api = await import('./api.js');
+                    await api.signalResponsible(taskId);
+                    showToast('Alerta enviado!', 'success');
+                }
+            );
+        };
+    }
 
     document.getElementById('taskHistoryModal').classList.remove('hidden');
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
     setTimeout(() => setupCommentAutocomplete(), 300);
 }
 
@@ -1178,7 +1217,7 @@ export function setupResponsibleInput(initialResponsibles = []) {
     const suggestions = document.getElementById('responsible-suggestions');
     let current = [...initialResponsibles];
 
-    const render = () => {
+    const renderTags = () => {
         Array.from(container.children).forEach(c => {
             if (c !== input) c.remove();
         });
@@ -1186,53 +1225,83 @@ export function setupResponsibleInput(initialResponsibles = []) {
         current.forEach(u => {
             const name = typeof u === 'object' ? u.name : u;
             const tag = document.createElement('div');
-            tag.className = 'flex items-center gap-1 bg-white dark:bg-white/10 px-2 py-1 rounded-lg text-xs font-bold text-custom-darkest dark:text-white shadow-sm';
-            tag.innerHTML = `<span>${name}</span><i data-lucide="x" class="w-3 h-3 cursor-pointer hover:text-red-500"></i>`;
-            tag.querySelector('i').onclick = () => {
+            tag.className = 'flex items-center gap-1 bg-white dark:bg-white/10 px-2 py-1 rounded-lg text-xs font-bold text-custom-darkest dark:text-white shadow-sm border border-gray-100 dark:border-gray-700 select-none';
+            
+            // Botão "X" corrigido (mantendo a correção anterior)
+            tag.innerHTML = `
+                <span>${name}</span>
+                <button type="button" class="ml-0.5 p-0.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors focus:outline-none" title="Remover">
+                    <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+            `;
+            
+            const btn = tag.querySelector('button');
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 current = current.filter(x => (typeof x === 'object' ? x.name : x) !== name);
-                render();
+                renderTags();
             };
+            
             container.insertBefore(tag, input);
         });
-        lucide.createIcons();
+        
+        if(window.lucide) lucide.createIcons();
     };
 
-    input.oninput = () => {
+    const showSuggestions = () => {
         const val = input.value.toLowerCase();
-        if (!val) { suggestions.classList.add('hidden'); return; }
-
-        const matches = state.users.filter(u => 
-            u.name.toLowerCase().includes(val) && 
-            !current.some(c => (typeof c === 'object' ? c.name : c) === u.name)
-        );
-
-        suggestions.innerHTML = matches.map(u => `
-            <div class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer flex items-center gap-2 text-sm text-custom-darkest dark:text-white">
-                <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-5 h-5 rounded-full">
-                ${u.name}
-            </div>
-        `).join('');
+        const source = state.users.filter(u => u.name !== 'DEFINIR');
+        
+        const matches = source.filter(u => {
+            const isSelected = current.some(c => (typeof c === 'object' ? c.name : c) === u.name);
+            if (isSelected) return false;
+            if (!val) return true; 
+            return u.name.toLowerCase().includes(val);
+        });
 
         if (matches.length > 0) {
+            suggestions.innerHTML = matches.map(u => `
+                <div class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer flex items-center gap-2 text-sm text-custom-darkest dark:text-white transition-colors">
+                    <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-5 h-5 rounded-full object-cover">
+                    ${u.name}
+                </div>
+            `).join('');
+
             suggestions.classList.remove('hidden');
+            
             Array.from(suggestions.children).forEach((el, i) => {
-                el.onclick = () => {
+                el.onclick = (e) => {
+                    e.stopPropagation();
                     current.push(matches[i]);
                     input.value = '';
                     suggestions.classList.add('hidden');
-                    render();
+                    renderTags();
+                    
+                    // CORREÇÃO AQUI: Removemos o input.focus()
+                    // Isso impede que o menu abra novamente sozinho.
+                    // O usuário terá que clicar no input para adicionar outro.
                 };
             });
         } else {
             suggestions.classList.add('hidden');
         }
     };
+
+    input.oninput = showSuggestions;
+    input.onfocus = showSuggestions;
+    input.onclick = (e) => { 
+        e.stopPropagation(); 
+        showSuggestions(); 
+    };
     
     document.addEventListener('click', (e) => {
-        if (!container.contains(e.target)) suggestions.classList.add('hidden');
+        if (!container.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.classList.add('hidden');
+        }
     });
 
-    render();
+    renderTags();
 }
 
 export function setupProjectSuggestions() {
@@ -1242,31 +1311,72 @@ export function setupProjectSuggestions() {
     const colorBtn = document.getElementById('color-picker-button');
 
     const projectMap = new Map();
-    state.tasks.forEach(t => { if(t.project) projectMap.set(t.project, t.projectColor); });
+    state.tasks.forEach(t => { 
+        if(t.project) projectMap.set(t.project, t.projectColor); 
+    });
 
-    input.oninput = () => {
-        const val = input.value.toLowerCase();
-        if (!val) { list.classList.add('hidden'); return; }
-
-        const matches = Array.from(projectMap.keys()).filter(p => p.toLowerCase().includes(val));
+    const setProjectLock = (locked, color = null) => {
+        if(!colorBtn) return;
+        // Tenta achar ícone, se não tiver (seu novo botão não tem), ignora
+        const icon = colorBtn.querySelector('i'); 
         
-        list.innerHTML = matches.map(p => `
-            <div class="p-2 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer text-sm text-custom-darkest dark:text-white flex justify-between">
-                <span>${p}</span>
-                <span class="w-3 h-3 rounded-full" style="background-color: ${projectMap.get(p)}"></span>
-            </div>
-        `).join('');
+        if (locked && color) {
+            colorBtn.disabled = true;
+            colorBtn.classList.add('cursor-not-allowed', 'opacity-80'); // Visual de bloqueado
+            colorBtn.title = "Cor definida pelo projeto existente";
+            if(icon) icon.setAttribute('data-lucide', 'lock');
+            
+            if(colorInput && colorInput.value !== color) {
+                colorInput.value = color;
+                colorInput.dispatchEvent(new Event('input')); 
+            }
+        } else {
+            colorBtn.disabled = false;
+            colorBtn.classList.remove('cursor-not-allowed', 'opacity-80');
+            colorBtn.title = "Escolher cor";
+            if(icon) icon.setAttribute('data-lucide', 'palette');
+        }
+        if(window.lucide) lucide.createIcons();
+    };
 
+    const checkLock = () => {
+        const val = input.value;
+        const lowerVal = val ? val.toLowerCase() : '';
+        const exactMatch = Array.from(projectMap.keys()).find(p => p.toLowerCase() === lowerVal);
+        
+        if (exactMatch) {
+            setProjectLock(true, projectMap.get(exactMatch));
+        } else {
+            setProjectLock(false);
+        }
+    };
+
+    const showSuggestions = () => {
+        checkLock();
+
+        const val = input.value.toLowerCase();
+        const allProjects = Array.from(projectMap.keys()).sort();
+        
+        // Filtra se tiver texto, senão mostra tudo
+        const matches = val 
+            ? allProjects.filter(p => p.toLowerCase().includes(val))
+            : allProjects;
+        
         if (matches.length > 0) {
+            list.innerHTML = matches.map(p => `
+                <div class="p-3 hover:bg-gray-100 dark:hover:bg-white/10 cursor-pointer text-sm text-custom-darkest dark:text-white flex justify-between items-center transition-colors">
+                    <span class="font-bold">${p}</span>
+                    <span class="w-4 h-4 rounded-full shadow-sm border border-black/10" style="background-color: ${projectMap.get(p)}"></span>
+                </div>
+            `).join('');
+
             list.classList.remove('hidden');
             Array.from(list.children).forEach((el, i) => {
-                el.onclick = () => {
-                    input.value = matches[i];
-                    const color = projectMap.get(matches[i]);
-                    if(color) {
-                        colorInput.value = color;
-                        colorBtn.style.backgroundColor = color;
-                    }
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    const selectedProject = matches[i];
+                    input.value = selectedProject;
+                    setProjectLock(true, projectMap.get(selectedProject));
                     list.classList.add('hidden');
                 };
             });
@@ -1274,38 +1384,119 @@ export function setupProjectSuggestions() {
             list.classList.add('hidden');
         }
     };
+
+    input.oninput = showSuggestions;
+    input.onfocus = showSuggestions; // Abre ao focar
+    input.onclick = (e) => { 
+        e.stopPropagation(); 
+        showSuggestions(); // Abre ao clicar
+    };
+    
+    checkLock();
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) list.classList.add('hidden');
+    });
 }
+
+// No arquivo app/js/ui.js
 
 export function setupCustomColorPicker() {
     const btn = document.getElementById('color-picker-button');
+    const bgPreview = document.getElementById('current-color-bg');
     const palette = document.getElementById('color-palette');
+    const grid = document.getElementById('palette-grid');
     const input = document.getElementById('taskProjectColor');
-    const nativeTrig = document.getElementById('native-color-picker-trigger');
+    const hexDisplay = document.getElementById('hex-display');
 
-    const colors = ['#526D82', '#9DB2BF', '#27374D', '#1D5B79', '#468B97', '#EF6262', '#F3AA60', '#F9D949', '#68B984', '#3D5656', '#A25B5B', '#635985'];
+    if (!btn || !palette || !grid || !input || !bgPreview) return;
 
-    palette.innerHTML = colors.map(c => `
-        <div class="w-full h-8 rounded-lg cursor-pointer hover:scale-110 transition-transform shadow-sm" style="background-color: ${c}" data-color="${c}"></div>
-    `).join('');
+    const presetColors = [
+        '#64748B', '#EF4444', '#F97316', '#EAB308', '#22C55E', '#14B8A6', '#06B6D4', 
+        '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF', '#F43F5E', '#526D82', '#27374D'
+    ];
 
-    btn.onclick = () => palette.classList.toggle('hidden');
+    const updateMainButton = (color) => {
+        // CORREÇÃO 1: Cor sólida (100% visível)
+        bgPreview.style.backgroundColor = color;
+        bgPreview.style.opacity = '1'; 
+        bgPreview.classList.remove('opacity-20'); 
+
+        input.value = color;
+        if(hexDisplay) hexDisplay.textContent = color.toUpperCase();
+        
+        // Ajusta contraste do ícone (Branco ou Escuro)
+        const icon = btn.querySelector('i');
+        if(icon) {
+            const c = color.substring(1);
+            const rgb = parseInt(c, 16);
+            const r = (rgb >> 16) & 0xff;
+            const g = (rgb >>  8) & 0xff;
+            const b = (rgb >>  0) & 0xff;
+            const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            icon.style.color = luma > 180 ? '#1e293b' : '#ffffff';
+        }
+    };
+
+    grid.innerHTML = '';
     
-    const updateBtn = () => btn.style.backgroundColor = input.value;
-    input.oninput = updateBtn;
-    updateBtn();
-
-    Array.from(palette.children).forEach(swatch => {
-        swatch.onclick = () => {
-            input.value = swatch.dataset.color;
-            updateBtn();
-            palette.classList.add('hidden');
+    presetColors.forEach(color => {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = 'w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform border-2 border-transparent focus:outline-none focus:border-gray-400 dark:focus:border-white relative';
+        swatch.style.backgroundColor = color;
+        swatch.onclick = (e) => {
+            e.stopPropagation();
+            updateMainButton(color);
+            togglePalette(false);
         };
+        grid.appendChild(swatch);
     });
 
-    nativeTrig.onclick = () => input.click();
+    // Botão Arco-íris (Custom)
+    const customBtn = document.createElement('button');
+    customBtn.type = 'button';
+    customBtn.className = 'w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform overflow-hidden flex items-center justify-center';
+    customBtn.style.background = 'conic-gradient(from 180deg at 50% 50%, #FF0000 0deg, #00FFE0 120deg, #0000FF 240deg, #FF0000 360deg)';
+    customBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 text-white drop-shadow-md"></i>';
+    customBtn.onclick = (e) => {
+        e.stopPropagation();
+        input.click();
+        togglePalette(false);
+    };
+    grid.appendChild(customBtn);
     
+    if(window.lucide) window.lucide.createIcons();
+
+    const togglePalette = (show) => {
+        if (show) {
+            palette.classList.remove('hidden');
+            setTimeout(() => {
+                palette.classList.remove('scale-95', 'opacity-0');
+                palette.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        } else {
+            palette.classList.remove('scale-100', 'opacity-100');
+            palette.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => palette.classList.add('hidden'), 300);
+        }
+    };
+
+    btn.onclick = (e) => {
+        e.stopPropagation();
+        if (btn.disabled) return; // Respeita o travamento
+        togglePalette(palette.classList.contains('hidden'));
+    };
+
+    input.oninput = (e) => updateMainButton(e.target.value);
+    
+    // Inicializa
+    updateMainButton(input.value || '#526D82');
+
     document.addEventListener('click', (e) => {
-        if (!btn.contains(e.target) && !palette.contains(e.target)) palette.classList.add('hidden');
+        if (!btn.contains(e.target) && !palette.contains(e.target)) {
+            togglePalette(false);
+        }
     });
 }
 

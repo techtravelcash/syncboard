@@ -429,7 +429,16 @@ function initializeEventListeners() {
         }
     });
 
-    document.getElementById('cancelBtn').addEventListener('click', () => taskModal.classList.add('hidden'));
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+    taskModal.classList.add('hidden'); // Fecha o modal de edição primeiro
+
+        // Verifica se estava editando para reabrir o histórico
+        if (state.editingTaskId) {
+            ui.renderTaskHistory(state.editingTaskId);
+            state.editingTaskId = null; 
+        }
+    });
+
     document.getElementById('closeHistoryBtn').addEventListener('click', () => document.getElementById('taskHistoryModal').classList.add('hidden'));
 
     document.getElementById('editTaskBtn').addEventListener('click', () => {
@@ -478,6 +487,43 @@ function initializeEventListeners() {
             await api.addComment(state.lastInteractedTaskId, { text });
             input.value = '';
         } catch (e) { ui.showToast('Erro ao comentar', 'error'); }
+    });
+
+    // Listener para EXCLUIR COMENTÁRIOS (Delegado no Modal de Histórico)
+    document.getElementById('taskHistoryModal').addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.delete-comment-btn');
+        if (deleteBtn) {
+            e.stopPropagation();
+            const taskId = deleteBtn.dataset.taskId;
+            const commentIndex = parseInt(deleteBtn.dataset.commentIndex);
+            
+            ui.showConfirmModal(
+                'Excluir Comentário?',
+                'Deseja realmente apagar este comentário permanentemente?',
+                async () => {
+                    try {
+                        // Chama a API para deletar
+                        await api.deleteComment(taskId, commentIndex);
+                        
+                        // Atualiza o estado local imediatamente para a UI reagir rápido
+                        const task = state.tasks.find(t => t.id === taskId);
+                        if (task && task.comments) {
+                            // Filtra o comentário removido localmente
+                            // Nota: Como o backend usa índice, o ideal é recarregar a tarefa, 
+                            // mas para feedback instantâneo, removemos do array local.
+                            task.comments.splice(commentIndex, 1);
+                        }
+                        
+                        // Re-renderiza o modal
+                        ui.renderTaskHistory(taskId);
+                        ui.showToast('Comentário removido.', 'success');
+                    } catch (error) {
+                        console.error(error);
+                        ui.showToast('Erro ao excluir comentário.', 'error');
+                    }
+                }
+            );
+        }
     });
 
     const aiModal = document.getElementById('aiTitleModal');
