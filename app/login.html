@@ -5,8 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SyncBoard</title>
     <link rel="icon" type="image/png" href="https://i.imgur.com/AoaA8WI.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .dark .glass-panel {
+            background: rgba(39, 55, 77, 0.6); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .pattern-grid {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+    </style>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -21,52 +53,110 @@
                         'base-white': '#FFFFFF',
                         'base-bg': '#F9FAFB',
                     },
-                    rotate: {
-                        '360': '360deg'
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-custom-dark text-white flex items-center justify-center min-h-screen p-4">
+<body class="antialiased bg-base-bg dark:bg-custom-darkest text-custom-darkest dark:text-custom-light h-screen w-full flex overflow-hidden font-sans transition-colors duration-300">
 
-    <div class="bg-custom-darkest p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-600/30 animate-fade-in">
+    <div class="hidden lg:flex lg:w-1/2 relative bg-custom-darkest dark:bg-[#1e2a3b] items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 pattern-grid opacity-30"></div>
         
-        <div class="flex justify-center mb-6 items-center">
-            <img src="https://i.imgur.com/AoaA8WI.png" alt="SyncBoard Logo" class="h-8 w-auto drop-shadow-lg">
-            <span class="text-2xl font-bold text-white ml-3 tracking-wide">SyncBoard</span>
+        <div class="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-custom-dark/30 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px]"></div>
+
+        <div class="relative z-10 flex flex-col items-center text-center p-12 animate-fade-in">
+            <div class="w-32 h-32 bg-white/10 backdrop-blur-md rounded-[30px] flex items-center justify-center mb-8 border border-white/10 shadow-2xl">
+                <img src="https://i.imgur.com/AoaA8WI.png" class="w-20 h-20 object-contain drop-shadow-lg" alt="SyncBoard Logo">
+            </div>
+            <h1 class="text-5xl font-extrabold text-white tracking-tight mb-4 drop-shadow-sm">SyncBoard</h1>
+            <p class="text-custom-medium text-lg max-w-md font-medium leading-relaxed">
+                Gerencie projetos, sincronize tarefas e colabore com sua equipe em tempo real.
+            </p>
         </div>
-
-        <p class="text-custom-medium mb-8 font-medium">Faça login para gerenciar suas tarefas.</p>
-
-        <a href="/.auth/login/google?post_login_redirect_uri=/" 
-           class="group relative flex items-center justify-center gap-3 w-full 
-                  bg-white text-custom-darkest 
-                  hover:bg-gray-100 hover:shadow-xl hover:-translate-y-0.5 hover:scale-[1.02]
-                  active:scale-[0.95] active:bg-gray-200
-                  focus:outline-none focus:ring-4 focus:ring-custom-medium/50
-                  font-bold py-3.5 px-4 rounded-xl 
-                  transition-all duration-300 ease-out shadow-lg shadow-black/20">
-            
-            <svg class="w-5 h-5 transition-transform duration-700 ease-in-out group-hover:rotate-360" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
-            </svg>
-            <span class="tracking-wide">Entrar com Google</span>
-        </a>
-
-        <p class="mt-8 text-xs text-custom-medium/60">Acesso restrito a usuários autorizados.</p>
+        
+        <div class="absolute bottom-8 text-custom-medium/30 text-xs font-mono tracking-widest uppercase">
+            v0.0.1 &bull; Build 2026
+        </div>
     </div>
 
+    <div class="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 relative bg-base-bg dark:bg-custom-darkest">
+        
+        <button id="theme-toggle" class="absolute top-6 right-6 p-3 rounded-xl hover:bg-custom-light/50 dark:hover:bg-white/10 transition-colors text-custom-dark dark:text-gray-400">
+            <i id="theme-icon" data-lucide="moon" class="w-6 h-6"></i>
+        </button>
+
+        <div class="w-full max-w-md animate-fade-in" style="animation-delay: 0.1s;">
+            
+            <div class="lg:hidden flex justify-center mb-8">
+                <img src="https://i.imgur.com/AoaA8WI.png" class="w-16 h-16 object-contain">
+            </div>
+
+            <div class="glass-panel p-8 md:p-10 rounded-[40px] shadow-xl dark:shadow-black/20 relative overflow-hidden text-center">
+                
+                <div class="mb-10 text-left">
+                    <h2 class="text-3xl font-bold text-custom-darkest dark:text-white mb-2">Bem-vindo!</h2>
+                    <p class="text-custom-dark dark:text-custom-medium text-sm">Acesse sua conta para entrar no workspace.</p>
+                </div>
+
+                <a href="/.auth/login/google?post_login_redirect_uri=/" 
+                   class="group relative flex items-center justify-center gap-3 w-full 
+                          bg-white text-custom-darkest 
+                          hover:bg-gray-50 hover:shadow-xl hover:-translate-y-0.5
+                          active:scale-[0.98]
+                          focus:outline-none focus:ring-4 focus:ring-custom-medium/30
+                          font-bold py-4 px-4 rounded-2xl 
+                          transition-all duration-300 shadow-lg shadow-black/10">
+                    
+                    <svg class="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    <span class="text-lg">Entrar com Google</span>
+                </a>
+
+                <div class="mt-10 pt-6 border-t border-custom-dark/10 dark:border-white/10 text-center">
+                    <p class="text-xs text-custom-dark dark:text-gray-400 font-medium uppercase tracking-widest">
+                        Acesso Restrito
+                    </p>
+                </div>
+            </div>
+            
+            <p class="text-center text-xs text-custom-dark/40 dark:text-white/20 mt-8 font-medium">
+                &copy; 2026 SyncBoard TravelCash.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+        } else {
+            html.classList.remove('dark');
+            themeIcon.setAttribute('data-lucide', 'moon');
+        }
+        lucide.createIcons();
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+        });
+    </script>
 </body>
 </html>
