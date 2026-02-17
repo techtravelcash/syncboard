@@ -906,44 +906,108 @@ export function renderTaskHistory(taskId) {
 
     state.lastInteractedTaskId = taskId;
 
-    // --- PREENCHIMENTO DOS CAMPOS ---
+    // 1. HEADER: DADOS BÁSICOS (ID, Título, Projeto)
+    const idDisplay = document.getElementById('modal-task-id-display');
+    if (idDisplay) idDisplay.textContent = task.id;
+
     document.getElementById('modal-info-title').textContent = task.title;
-    document.getElementById('modal-info-project').textContent = task.project || 'Geral';
-    document.getElementById('modal-info-project').style.color = task.projectColor || '#9DB2BF';
+    
+    const projectLabel = document.getElementById('modal-info-project');
+    if (projectLabel) {
+        projectLabel.textContent = task.project || 'Geral';
+        // Ajuste visual do badge do projeto
+        projectLabel.style.color = 'rgba(255, 255, 255, 0.9)'; 
+        projectLabel.style.backgroundColor = hexToRgba(task.projectColor || '#94A3B8', 0.2);
+        projectLabel.style.borderColor = hexToRgba(task.projectColor || '#94A3B8', 0.3);
+    }
+
+    // 2. CONTEÚDO PRINCIPAL (Descrição)
     document.getElementById('modal-info-description').textContent = task.description || '';
 
-    const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
-    document.getElementById('modal-info-responsible').textContent = respNames || 'Não atribuído';
+    // 3. RESPONSÁVEIS (SIDEBAR - APENAS FOTOS)
+    const sidebarRespContainer = document.getElementById('sidebar-responsibles-container');
+    
+    if (sidebarRespContainer) {
+        sidebarRespContainer.innerHTML = ''; // Limpa container
 
-    // Agenda Google
+        if (task.responsible && task.responsible.length > 0) {
+            task.responsible.forEach((resp, index) => {
+                const name = typeof resp === 'object' ? resp.name : resp;
+                
+                // Busca foto do usuário no estado global
+                const userObj = state.users.find(u => u.name === name);
+                const pic = userObj ? userObj.picture : (typeof resp === 'object' ? resp.picture : null);
+                
+                // Lógica Visual: Principal (index 0) vs Outros
+                const isMain = index === 0;
+                // Principal: Maior (w-14) | Outros: Menor (w-10)
+                const sizeClass = isMain ? 'w-14 h-14 ring-2 ring-white/20' : 'w-10 h-10 opacity-80 hover:opacity-100';
+                const zIndex = 10 - index; // Garante que o primeiro fique por cima no stack
+
+                const avatarEl = document.createElement('div');
+                avatarEl.className = `${sizeClass} rounded-full bg-cover bg-center bg-gray-700 border border-white/10 shadow-lg transition-all hover:scale-105 hover:ring-white/50 relative group cursor-help`;
+                avatarEl.style.zIndex = zIndex;
+                avatarEl.title = isMain ? `Responsável Principal: ${name}` : name; // Tooltip simples
+
+                if (pic) {
+                    avatarEl.style.backgroundImage = `url('${pic}')`;
+                } else {
+                    // Fallback se não tiver foto: Inicial do nome
+                    avatarEl.classList.add('flex', 'items-center', 'justify-center');
+                    avatarEl.innerHTML = `<span class="${isMain ? 'text-lg' : 'text-xs'} font-bold text-white">${name.charAt(0)}</span>`;
+                }
+
+                sidebarRespContainer.appendChild(avatarEl);
+            });
+        } else {
+            // Estado Vazio (Ninguém atribuído)
+            sidebarRespContainer.innerHTML = `
+                <div class="w-14 h-14 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center text-white/20">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs text-white/30 italic ml-2">Ninguém atribuído</span>
+            `;
+        }
+    }
+
+    // 4. AGENDA & PRAZO (SIDEBAR)
     const calendarBtn = document.getElementById('modal-calendar-btn');
     if (calendarBtn) {
+        // Gera link para criar evento no Google Calendar
         const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r.email : '')).filter(Boolean).join(',');
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
         calendarBtn.href = googleUrl;
     }
 
-    // Prazo
     const dueDateContainer = document.getElementById('modal-info-dueDate-container');
-    if (task.dueDate && dueDateContainer) {
-        document.getElementById('modal-info-dueDate').querySelector('span').textContent = formatDate(task.dueDate);
+    const dueDateText = document.getElementById('modal-info-dueDate');
+    
+    if (task.dueDate && dueDateContainer && dueDateText) {
         dueDateContainer.classList.remove('hidden');
+        
+        // Verifica se está atrasado para mudar a cor
+        if (isTaskOverdue(task)) {
+            dueDateText.innerHTML = `<span class="flex items-center gap-1 text-red-400"><i data-lucide="alert-circle" class="w-3 h-3"></i> ${formatDate(task.dueDate)} (Atrasado)</span>`;
+        } else {
+            dueDateText.textContent = formatDate(task.dueDate);
+            dueDateText.className = 'text-sm font-bold text-white';
+        }
     } else if (dueDateContainer) {
+        // Se não tem prazo, esconde o bloco inteiro para limpar a UI
         dueDateContainer.classList.add('hidden');
     }
 
-    // Link Externo
+    // 5. LINK EXTERNO / DEVOPS (HEADER)
     const linkContainer = document.getElementById('modal-info-azure-link-container');
     if (task.azureLink && linkContainer) {
         const linkEl = document.getElementById('modal-info-azure-link');
         linkEl.href = task.azureLink;
-        linkEl.querySelector('span').textContent = task.azureLink;
         linkContainer.classList.remove('hidden');
     } else if (linkContainer) {
         linkContainer.classList.add('hidden');
     }
 
-    // Anexos
+    // 6. ANEXOS (COLUNA ESQUERDA)
     const attachContainer = document.getElementById('modal-info-attachments-container');
     if (task.attachments?.length > 0 && attachContainer) {
         renderAttachmentList('modal-info-attachments', task.attachments);
@@ -952,107 +1016,98 @@ export function renderTaskHistory(taskId) {
         attachContainer.classList.add('hidden');
     }
 
-    // Histórico
+    // 7. HISTÓRICO DE ALTERAÇÕES (COLUNA ESQUERDA)
     const historyEl = document.getElementById('history-feed');
     if (historyEl) {
         const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        historyEl.innerHTML = historyItems.map(item => `
-            <div class="relative pl-4 pb-4 border-l border-gray-200 dark:border-gray-700 last:border-0 last:pb-0">
-                <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-                <p class="text-xs text-gray-600 dark:text-gray-300">Mudou para <span class="font-bold">${item.status}</span></p>
-                <p class="text-[10px] text-gray-400">${formatDateTime(item.timestamp)}</p>
-            </div>
-        `).join('');
+        
+        if (historyItems.length === 0) {
+             historyEl.innerHTML = '<p class="text-xs text-white/30 italic">Nenhuma alteração registrada.</p>';
+        } else {
+            historyEl.innerHTML = historyItems.map(item => `
+                <div class="relative pl-4 pb-4 border-l border-white/10 last:border-0 last:pb-0">
+                    <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-white/20 border border-white/10"></div>
+                    <p class="text-xs text-white/70">Mudou para <span class="font-bold text-white">${item.status}</span></p>
+                    <p class="text-[10px] text-white/30">${formatDateTime(item.timestamp)}</p>
+                </div>
+            `).join('');
+        }
     }
 
-    // --- COMENTÁRIOS (LÓGICA BLINDADA COM BASE NO PAYLOAD) ---
+    // 8. COMENTÁRIOS / CHAT (SIDEBAR)
     const commentsEl = document.getElementById('comments-feed');
-    const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // ORDENAÇÃO: Mais antigo -> Mais novo (Estilo Chat)
+    const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     if (comments.length === 0) {
-        commentsEl.innerHTML = '<div class="text-center text-gray-400 py-10 italic text-sm">Nenhum comentário ainda.<br>Seja o primeiro a comentar!</div>';
+        commentsEl.innerHTML = '<div class="text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda.</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
-            
-            // CORREÇÃO CRUCIAL AQUI:
-            // O payload mostra que c.author É O EMAIL (ex: "ariel@travelcash.me").
-            // Então buscamos quem tem esse email na lista de usuários.
-            
+            // Tenta identificar o autor
             let user = state.users.find(u => u.email === c.author);
-            
-            // Fallback: Se não achar pelo email exato, tenta pelo nome (caso mude no futuro)
-            if (!user) {
-                user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
-            }
+            if (!user) user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
 
-            // Se achou o usuário, pega o Nome Bonito e a Foto. Se não, usa o email mesmo.
             const authorName = user ? user.name : c.author;
             const picUrl = user ? user.picture : null;
             const initial = authorName.charAt(0).toUpperCase();
 
-            // Renderiza Avatar
+            // HTML do Avatar
             const avatarHtml = picUrl 
-                ? `<div class="relative w-8 h-8 shrink-0">
-                     <img src="${picUrl}" 
-                          class="w-8 h-8 rounded-full border border-gray-200 object-cover bg-white absolute inset-0 z-10 block" 
-                          title="${authorName}" 
-                          alt="${authorName}"
-                          onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-                     <div class="hidden w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs border border-white dark:border-gray-700 absolute inset-0 z-0" title="${authorName}">${initial}</div>
-                   </div>`
-                : `<div class="w-8 h-8 rounded-full bg-custom-dark text-white flex items-center justify-center font-bold text-xs border border-white dark:border-gray-700 shrink-0" title="${authorName}">${initial}</div>`;
+                ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
+                : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
 
-            return `
-                <div class="flex gap-3 group items-start">
-                    <div class="pt-1 shrink-0">
-                        ${avatarHtml}
-                    </div>
-                    
-                    <div class="flex-grow min-w-0">
-                        <div class="flex items-baseline justify-between">
-                            <span class="text-sm font-bold text-custom-darkest dark:text-white truncate pr-2">${authorName}</span>
-                            <span class="text-[10px] text-gray-400 shrink-0">${formatDateTime(c.timestamp)}</span>
+            // Verifica se sou eu (para alinhar à direita)
+            const isMe = c.author === state.currentUser?.email; 
+
+            // LAYOUT TIPO WHATSAPP/MESSENGER
+            if (isMe) {
+                // Minhas mensagens: Direita, Azul
+                return `
+                <div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2">
+                    <div class="flex flex-col items-end min-w-0 max-w-full">
+                        <div class="flex items-baseline gap-2 mb-1">
+                            <span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span>
+                            <span class="text-xs font-bold text-white/90 truncate">Você</span>
                         </div>
-                        <div class="bg-white dark:bg-white/5 p-3 rounded-tr-xl rounded-b-xl border border-gray-100 dark:border-gray-700 text-sm text-custom-darkest dark:text-gray-200 mt-1 shadow-sm relative group-hover:border-custom-medium/30 transition-colors break-words">
+                        <div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words text-right">
                             ${c.text}
-                            <button class="delete-comment-btn absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 transition-opacity p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir">
+                            <button class="delete-comment-btn absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir">
                                 <i data-lucide="trash-2" class="w-3 h-3"></i>
                             </button>
                         </div>
                     </div>
-                </div>
-            `;
+                    ${avatarHtml}
+                </div>`;
+            } else {
+                // Mensagens de Outros: Esquerda, Cinza
+                return `
+                <div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">
+                    ${avatarHtml}
+                    <div class="flex flex-col items-start min-w-0 max-w-full">
+                        <div class="flex items-baseline gap-2 mb-1">
+                            <span class="text-xs font-bold text-white/90 truncate">${authorName}</span>
+                            <span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span>
+                        </div>
+                        <div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">
+                            ${c.text}
+                        </div>
+                    </div>
+                </div>`;
+            }
         }).join('');
+
+        // AUTO-SCROLL: Rola para o final para mostrar a mensagem mais recente
+        setTimeout(() => {
+            if(commentsEl) commentsEl.scrollTop = commentsEl.scrollHeight;
+        }, 100);
     }
 
-    // Botão Alerta
-    const oldSignal = document.getElementById('signalBtn');
-    if (oldSignal) oldSignal.remove();
-
-    const signalBtn = document.createElement('button');
-    signalBtn.id = 'signalBtn';
-    signalBtn.className = 'p-2.5 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors';
-    signalBtn.title = 'Enviar Alerta Urgente';
-    signalBtn.innerHTML = '<i data-lucide="siren" class="w-5 h-5"></i>';
-    
-    const closeBtn = document.getElementById('closeHistoryBtn');
-    if (closeBtn) {
-        closeBtn.parentNode.insertBefore(signalBtn, closeBtn);
-        signalBtn.onclick = () => {
-            showConfirmModal(
-                'Enviar Alerta', 
-                'Isto enviará um aviso sonoro para o responsável. Usar apenas em emergências.', 
-                async () => {
-                    const api = await import('./api.js');
-                    await api.signalResponsible(taskId);
-                    showToast('Alerta enviado!', 'success');
-                }
-            );
-        };
-    }
-
+    // EXIBE O MODAL E ATUALIZA ÍCONES
     document.getElementById('taskHistoryModal').classList.remove('hidden');
     if (window.lucide) lucide.createIcons();
+    
+    // Configura autocomplete de menções (@usuario)
     setTimeout(() => setupCommentAutocomplete(), 300);
 }
 

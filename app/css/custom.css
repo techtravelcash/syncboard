@@ -956,3 +956,129 @@ body {
 .glass-panel .modal-footer {
     background: transparent !important;
 }
+
+/* --- ORBITAL UNIFIED MODAL (Clone Fiel do Menu) --- */
+
+.orb-glass-unified {
+    /* GEOMETRIA: Arredondamento de 40px igual ao menu aberto */
+    border-radius: 40px;
+    overflow: hidden;
+
+    /* FUNDO: Usando a opacidade 0.6 (Default) em vez de 0.85 (Expanded) */
+    /* Isso garante que ele seja mais "vidro" e menos "sólido" */
+    background: var(--orb-bg-default, rgba(255, 255, 255, 0.65));
+
+    /* EFEITO DE VIDRO */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    /* BORDA & SOMBRA (LIGHT MODE - Cópia de .corner-orb) */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    
+    /* TEXTO & TRANSIÇÃO */
+    color: #1E293B;
+    transition: all 0.3s ease;
+}
+
+/* DARK MODE (Ajuste Crítico de Cor) */
+.dark .orb-glass-unified {
+    /* Aqui estava o erro: mudamos de rgba(15, 23, 42, 0.85) para 0.6 */
+    background: var(--orb-bg-default, rgba(15, 23, 42, 0.6));
+    
+    /* Bordas e Sombras idênticas ao menu dark */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    
+    color: #FFFFFF;
+}
+
+/* Divisórias Internas (Linhas finas e quase invisíveis) */
+.glass-separator-h {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+}
+.glass-separator-v {
+    border-left: 1px solid rgba(255, 255, 255, 0.6);
+}
+.dark .glass-separator-h {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dark .glass-separator-v {
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Inputs integrados (Sem fundo, apenas borda sutil) */
+.chat-input-integrated {
+    background: transparent;
+    border: 1px solid rgba(0,0,0,0.1);
+    color: inherit;
+    border-radius: 20px;
+}
+.dark .chat-input-integrated {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.chat-input-integrated:focus {
+    background: rgba(0,0,0,0.05);
+    outline: none;
+    border-color: rgba(0,0,0,0.2);
+}
+.dark .chat-input-integrated:focus {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.2);
+}
+
+/* Avatares na Sidebar */
+.avatar-stack-ring {
+    border: 2px solid transparent; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* --- ORBITAL TASK HERO LAYOUT --- */
+
+/* O Card do Responsável Principal */
+.responsible-hero-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.responsible-hero-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Avatar Grande do Principal */
+.avatar-main {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Badge de ID da Tarefa */
+.task-id-badge {
+    font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 8px;
+    color: #94A3B8;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+/* Ajuste no Chat para se fundir melhor */
+.chat-column {
+    background: rgba(0, 0, 0, 0.15); /* Ligeiramente mais escuro para diferenciar do content */
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
