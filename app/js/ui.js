@@ -1045,14 +1045,43 @@ export function renderTaskHistory(taskId) {
                 ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
                 : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
 
-            const currentUserName = (state.currentUser?.userDetails || '').toLowerCase();
-            const currentUserEmail = (state.currentUser?.userId || state.currentUser?.email || '').toLowerCase();
-            const commentAuthorName = (typeof c.author === 'object' ? (c.author.name || '') : (authorName || '')).toLowerCase();
-            const commentAuthorEmail = (typeof c.author === 'object' ? (c.author.email || '') : rawAuthor).toLowerCase();
-            const isMe = Boolean(
-                (currentUserEmail && commentAuthorEmail && currentUserEmail === commentAuthorEmail) ||
-                (currentUserName && commentAuthorName && currentUserName === commentAuthorName)
-            );
+            const normalize = (value) => (value || '').toString().trim().toLowerCase();
+            const emailClaim = (state.currentUser?.claims || []).find(c =>
+                c.typ === 'emails' ||
+                c.typ === 'email' ||
+                c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+            )?.val;
+
+            const myIdentifiers = new Set([
+                state.currentUser?.userDetails,
+                state.currentUser?.userId,
+                state.currentUser?.email,
+                emailClaim,
+                state.currentUser?.identityProvider ? `${state.currentUser.identityProvider}_${state.currentUser.userId}` : null
+            ].map(normalize).filter(Boolean));
+
+            const currentUserEntry = state.users.find(u => {
+                const userName = normalize(u?.name);
+                const userEmail = normalize(u?.email);
+                return (userName && myIdentifiers.has(userName)) || (userEmail && myIdentifiers.has(userEmail));
+            });
+
+            if (currentUserEntry?.name) myIdentifiers.add(normalize(currentUserEntry.name));
+            if (currentUserEntry?.email) myIdentifiers.add(normalize(currentUserEntry.email));
+
+            const commentAuthorEmail = typeof c.author === 'object' ? c.author.email : null;
+            const commentAuthorName = typeof c.author === 'object' ? c.author.name : authorName;
+
+            const commentIdentifiers = new Set([
+                rawAuthor,
+                commentAuthorEmail,
+                commentAuthorName,
+                c.userId,
+                user?.email,
+                user?.name
+            ].map(normalize).filter(Boolean));
+
+            const isMe = [...commentIdentifiers].some(identifier => myIdentifiers.has(identifier));
 
             if (isMe) {
                 const commentKey = c.id || c.index;
