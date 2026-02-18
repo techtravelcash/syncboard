@@ -292,6 +292,7 @@ function initializeEventListeners() {
     const taskModal = document.getElementById('taskModal');
     const taskForm = document.getElementById('taskForm');
 
+    // [CORREÇÃO] Animação de entrada do Modal de Tarefa
     addTaskBtn.addEventListener('click', () => {
         state.editingTaskId = null;
         document.getElementById('modalTitle').textContent = 'Nova Tarefa';
@@ -304,7 +305,11 @@ function initializeEventListeners() {
         ui.setupProjectSuggestions();
         ui.setupCustomColorPicker();
         document.getElementById('status-container').classList.add('hidden');
+        
         taskModal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            taskModal.classList.add('show');
+        });
     });
 
     document.getElementById('main-content').addEventListener('click', async (e) => {
@@ -337,6 +342,7 @@ function initializeEventListeners() {
         const deleteBtn = e.target.closest('.delete-btn');
         if (deleteBtn) {
             e.stopPropagation();
+            // Nota: Para corrigir o modal de confirmação, é necessário editar o ui.js também
             ui.showConfirmModal(
                 'Excluir Tarefa',
                 'Tem a certeza? Esta ação é irreversível.',
@@ -418,7 +424,11 @@ function initializeEventListeners() {
                 ui.showToast('Tarefa criada!', 'success');
             }
 
-            taskModal.classList.add('hidden');
+            // [CORREÇÃO] Fechar modal com animação
+            taskModal.classList.remove('show');
+            setTimeout(() => {
+                taskModal.classList.add('hidden');
+            }, 300);
 
         } catch (error) {
             console.error(error);
@@ -430,23 +440,31 @@ function initializeEventListeners() {
     });
 
     document.getElementById('cancelBtn').addEventListener('click', () => {
-    taskModal.classList.add('hidden'); // Fecha o modal de edição primeiro
-
-        // Verifica se estava editando para reabrir o histórico
-        if (state.editingTaskId) {
-            ui.renderTaskHistory(state.editingTaskId);
-            state.editingTaskId = null; 
-        }
+        // [CORREÇÃO] Fechar modal com animação
+        taskModal.classList.remove('show');
+        
+        setTimeout(() => {
+            taskModal.classList.add('hidden'); // Fecha o modal de edição
+            
+            // Verifica se estava editando para reabrir o histórico
+            if (state.editingTaskId) {
+                ui.renderTaskHistory(state.editingTaskId);
+                state.editingTaskId = null; 
+            }
+        }, 300);
     });
 
-    document.getElementById('closeHistoryBtn').addEventListener('click', () => document.getElementById('taskHistoryModal').classList.add('hidden'));
+    document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
 
+    // [CORREÇÃO] Animação de entrada do Modal de Edição
     document.getElementById('editTaskBtn').addEventListener('click', () => {
         const taskId = state.lastInteractedTaskId;
         const task = state.tasks.find(t => t.id === taskId);
         if (!task) return;
 
+        // Fecha o histórico e abre a edição
         document.getElementById('taskHistoryModal').classList.add('hidden');
+        
         state.editingTaskId = taskId;
         document.getElementById('modalTitle').textContent = 'Editar Tarefa';
         
@@ -476,6 +494,9 @@ function initializeEventListeners() {
         ui.setupCustomColorPicker();
 
         taskModal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            taskModal.classList.add('show');
+        });
     });
 
     document.getElementById('add-comment-btn').addEventListener('click', async () => {
@@ -531,6 +552,7 @@ function initializeEventListeners() {
             const taskId = deleteBtn.dataset.taskId;
             const commentIndex = parseInt(deleteBtn.dataset.commentIndex);
 
+            // Nota: Para corrigir o modal de confirmação, é necessário editar o ui.js também
             ui.showConfirmModal(
                 'Excluir Comentário?',
                 'Deseja realmente apagar este comentário permanentemente?',
@@ -556,6 +578,7 @@ function initializeEventListeners() {
 
     const aiModal = document.getElementById('aiTitleModal');
     if (aiModal) {
+        // [CORREÇÃO] Animação de entrada Modal IA
         document.getElementById('openAiModalBtn').addEventListener('click', () => {
             const current = document.getElementById('taskTitle').value;
             if(!current) return ui.showToast('Escreva um título primeiro', 'info');
@@ -563,7 +586,11 @@ function initializeEventListeners() {
             document.getElementById('ai-result-container').classList.add('hidden');
             document.getElementById('applyAiBtn').classList.add('hidden');
             document.getElementById('generateAiBtn').classList.remove('hidden');
+            
             aiModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                aiModal.classList.add('show');
+            });
         });
 
         document.getElementById('generateAiBtn').addEventListener('click', async () => {
@@ -582,13 +609,20 @@ function initializeEventListeners() {
             finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles" class="w-4 h-4"></i> Gerar'; lucide.createIcons(); }
         });
 
+        const closeAiModal = () => {
+            aiModal.classList.remove('show');
+            setTimeout(() => {
+                aiModal.classList.add('hidden');
+            }, 300);
+        };
+
         document.getElementById('applyAiBtn').addEventListener('click', () => {
             document.getElementById('taskTitle').value = document.getElementById('ai-result-text').value;
-            aiModal.classList.add('hidden');
+            closeAiModal();
         });
 
-        document.getElementById('closeAiModalBtn').addEventListener('click', () => aiModal.classList.add('hidden'));
-        document.getElementById('cancelAiBtn').addEventListener('click', () => aiModal.classList.add('hidden'));
+        document.getElementById('closeAiModalBtn').addEventListener('click', closeAiModal);
+        document.getElementById('cancelAiBtn').addEventListener('click', closeAiModal);
     }
 
     const notifBtn = document.getElementById('orb-notif-btn');

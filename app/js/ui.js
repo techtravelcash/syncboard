@@ -1487,6 +1487,7 @@ export function highlightTask(taskId, temporary = true) {
     }
 }
 
+// [CORREÇÃO] Adicionada animação de entrada e saída
 export function showConfirmModal(title, message, onConfirm, onCancel) {
     const modal = document.getElementById('deleteConfirmModal');
     modal.querySelector('h2').textContent = title;
@@ -1496,17 +1497,28 @@ export function showConfirmModal(title, message, onConfirm, onCancel) {
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     
+    // Função helper para fechar com animação
+    const closeModal = (callback) => {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            if (callback) callback();
+        }, 300);
+    };
+
     newConfirmBtn.onclick = () => {
-        onConfirm();
-        modal.classList.add('hidden');
+        closeModal(onConfirm);
     };
     
     document.getElementById('cancelDeleteBtn').onclick = () => {
-        if(onCancel) onCancel();
-        modal.classList.add('hidden');
+        closeModal(onCancel);
     };
     
+    // Abrir com animação
     modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modal.classList.add('show');
+    });
 }
 
 export async function updateNotificationBadge() {
