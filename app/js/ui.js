@@ -1143,7 +1143,6 @@ export function openTaskHistoryModal(taskId, options = {}) {
     if (sourceEl) sourceEl.classList.add('modal-morph-source-hidden');
 
     modal.classList.remove('hidden');
-    modal.style.opacity = '0';
     panel.style.transformOrigin = 'top left';
 
     requestAnimationFrame(() => {
@@ -1160,25 +1159,14 @@ export function openTaskHistoryModal(taskId, options = {}) {
         const scaleX = Math.max(fromRect.width / targetRect.width, 0.02);
         const scaleY = Math.max(fromRect.height / targetRect.height, 0.02);
 
-        modal.animate([
-            { opacity: 0 },
-            { opacity: 1 }
-        ], {
-            duration: TASK_MODAL_ANIMATION_MS,
-            easing: 'ease-out',
-            fill: 'forwards'
-        });
-
         const animation = panel.animate([
             {
                 transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
-                borderRadius: '16px',
-                opacity: 0.85
+                borderRadius: '16px'
             },
             {
                 transform: 'translate(0px, 0px) scale(1, 1)',
-                borderRadius: '40px',
-                opacity: 1
+                borderRadius: '40px'
             }
         ], {
             duration: TASK_MODAL_ANIMATION_MS,
@@ -1187,7 +1175,6 @@ export function openTaskHistoryModal(taskId, options = {}) {
         });
 
         animation.onfinish = () => {
-            modal.style.opacity = '';
             panel.style.transformOrigin = '';
             taskHistoryMorphState.isAnimating = false;
         };
@@ -1221,22 +1208,14 @@ export function closeTaskHistoryModal() {
     const scaleX = Math.max(toRect.width / panelRect.width, 0.02);
     const scaleY = Math.max(toRect.height / panelRect.height, 0.02);
 
-    modal.animate([{ opacity: 1 }, { opacity: 0 }], {
-        duration: TASK_MODAL_ANIMATION_MS,
-        easing: 'ease-in',
-        fill: 'forwards'
-    });
-
     const animation = panel.animate([
         {
             transform: 'translate(0px, 0px) scale(1, 1)',
-            borderRadius: '40px',
-            opacity: 1
+            borderRadius: '40px'
         },
         {
             transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
-            borderRadius: '16px',
-            opacity: 0.8
+            borderRadius: '16px'
         }
     ], {
         duration: TASK_MODAL_ANIMATION_MS,
@@ -1246,7 +1225,6 @@ export function closeTaskHistoryModal() {
 
     animation.onfinish = () => {
         modal.classList.add('hidden');
-        modal.style.opacity = '';
         panel.style.transformOrigin = '';
         if (currentSource) currentSource.classList.remove('modal-morph-source-hidden');
         taskHistoryMorphState.isAnimating = false;
