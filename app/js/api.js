@@ -202,3 +202,16 @@ export async function updateUserPhoto(pictureUrl) {
     }
     return await response.json();
 }
+
+export async function editComment(taskId, commentId, text, authorEmail) {
+    const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, author: authorEmail })
+    });
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err);
+    }
+    return await response.json();
+}

@@ -900,96 +900,86 @@ export function populateResponsibleFilter() {
 
 // --- MODAL: DETALHES ---
 
+// --- VARIÁVEIS DE ESTADO DA ANIMAÇÃO ---
+let activeOriginRect = null;
+let activeOriginEl = null;
+let isAnimating = false;
+
+// --- MODAL: DETALHES (Rich Text + Menções + Animação FLIP) ---
+
 export function renderTaskHistory(taskId) {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return;
 
     state.lastInteractedTaskId = taskId;
 
-    // 1. HEADER: DADOS BÁSICOS (ID, Título, Projeto)
+    // =================================================================
+    // 1. POPULAÇÃO DE DADOS
+    // =================================================================
+
     const idDisplay = document.getElementById('modal-task-id-display');
     if (idDisplay) idDisplay.textContent = task.id;
-
     document.getElementById('modal-info-title').textContent = task.title;
     
     const projectLabel = document.getElementById('modal-info-project');
     if (projectLabel) {
         projectLabel.textContent = task.project || 'Geral';
-        // Ajuste visual do badge do projeto
         projectLabel.style.color = 'rgba(255, 255, 255, 0.9)'; 
         projectLabel.style.backgroundColor = hexToRgba(task.projectColor || '#94A3B8', 0.2);
         projectLabel.style.borderColor = hexToRgba(task.projectColor || '#94A3B8', 0.3);
     }
 
-    // 2. CONTEÚDO PRINCIPAL (Descrição)
     document.getElementById('modal-info-description').textContent = task.description || '';
 
-    // 3. RESPONSÁVEIS (SIDEBAR - APENAS FOTOS)
+    // Responsáveis (Sidebar)
     const sidebarRespContainer = document.getElementById('sidebar-responsibles-container');
-    
     if (sidebarRespContainer) {
-        sidebarRespContainer.innerHTML = ''; // Limpa container
-
+        sidebarRespContainer.innerHTML = ''; 
         if (task.responsible && task.responsible.length > 0) {
             task.responsible.forEach((resp, index) => {
                 const name = typeof resp === 'object' ? resp.name : resp;
-                
-                // Busca foto do usuário no estado global
                 const userObj = state.users.find(u => u.name === name);
                 const pic = userObj ? userObj.picture : (typeof resp === 'object' ? resp.picture : null);
-                
-                // Lógica Visual: Principal (index 0) vs Outros
                 const isMain = index === 0;
-                
-                // ALTERAÇÃO AQUI: Avatares menores (w-10 para principal e w-8 para outros)
-                const sizeClass = isMain 
-                    ? 'w-10 h-10 ring-2 ring-white/20' 
-                    : 'w-8 h-8 opacity-80 hover:opacity-100';
-
-                const zIndex = 10 - index; // Garante que o primeiro fique por cima no stack
+                const sizeClass = isMain ? 'w-10 h-10 ring-2 ring-white/20' : 'w-8 h-8 opacity-80 hover:opacity-100';
+                const zIndex = 10 - index;
 
                 const avatarEl = document.createElement('div');
                 avatarEl.className = `${sizeClass} rounded-full bg-cover bg-center bg-gray-700 border border-white/10 shadow-lg transition-all hover:scale-105 hover:ring-white/50 relative group cursor-help`;
                 avatarEl.style.zIndex = zIndex;
-                avatarEl.title = isMain ? `Responsável Principal: ${name}` : name; // Tooltip simples
+                avatarEl.title = isMain ? `Responsável Principal: ${name}` : name;
 
                 if (pic) {
                     avatarEl.style.backgroundImage = `url('${pic}')`;
                 } else {
-                    // Fallback se não tiver foto: Inicial do nome
                     avatarEl.classList.add('flex', 'items-center', 'justify-center');
                     avatarEl.innerHTML = `<span class="${isMain ? 'text-lg' : 'text-xs'} font-bold text-white">${name.charAt(0)}</span>`;
                 }
-
                 sidebarRespContainer.appendChild(avatarEl);
             });
         } else {
-            // Estado Vazio (Ninguém atribuído)
             sidebarRespContainer.innerHTML = `
                 <div class="w-10 h-10 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center text-white/20">
                     <i data-lucide="user" class="w-5 h-5"></i>
                 </div>
-                <span class="text-xs text-white/30 italic ml-2">Ninguém atribuído</span>
+                <span class="text-xs text-white/30 italic ml-2">Ninguém</span>
             `;
         }
     }
 
-    // 4. AGENDA & PRAZO (SIDEBAR)
+    // Google Calendar
     const calendarBtn = document.getElementById('modal-calendar-btn');
     if (calendarBtn) {
-        // Gera link para criar evento no Google Calendar
         const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r.email : '')).filter(Boolean).join(',');
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
         calendarBtn.href = googleUrl;
     }
 
+    // Prazo
     const dueDateContainer = document.getElementById('modal-info-dueDate-container');
     const dueDateText = document.getElementById('modal-info-dueDate');
-    
     if (task.dueDate && dueDateContainer && dueDateText) {
         dueDateContainer.classList.remove('hidden');
-        
-        // Verifica se está atrasado para mudar a cor
         if (isTaskOverdue(task)) {
             dueDateText.innerHTML = `<span class="flex items-center gap-1 text-red-400"><i data-lucide="alert-circle" class="w-3 h-3"></i> ${formatDate(task.dueDate)} (Atrasado)</span>`;
         } else {
@@ -997,11 +987,10 @@ export function renderTaskHistory(taskId) {
             dueDateText.className = 'text-sm font-bold text-white';
         }
     } else if (dueDateContainer) {
-        // Se não tem prazo, esconde o bloco inteiro para limpar a UI
         dueDateContainer.classList.add('hidden');
     }
 
-    // 5. LINK EXTERNO / DEVOPS (HEADER)
+    // Link Externo
     const linkContainer = document.getElementById('modal-info-azure-link-container');
     if (task.azureLink && linkContainer) {
         const linkEl = document.getElementById('modal-info-azure-link');
@@ -1011,7 +1000,7 @@ export function renderTaskHistory(taskId) {
         linkContainer.classList.add('hidden');
     }
 
-    // 6. ANEXOS (COLUNA ESQUERDA)
+    // Anexos
     const attachContainer = document.getElementById('modal-info-attachments-container');
     if (task.attachments?.length > 0 && attachContainer) {
         renderAttachmentList('modal-info-attachments', task.attachments);
@@ -1020,11 +1009,10 @@ export function renderTaskHistory(taskId) {
         attachContainer.classList.add('hidden');
     }
 
-    // 7. HISTÓRICO DE ALTERAÇÕES (COLUNA ESQUERDA)
+    // Histórico
     const historyEl = document.getElementById('history-feed');
     if (historyEl) {
         const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        
         if (historyItems.length === 0) {
              historyEl.innerHTML = '<p class="text-xs text-white/30 italic">Nenhuma alteração registrada.</p>';
         } else {
@@ -1038,56 +1026,409 @@ export function renderTaskHistory(taskId) {
         }
     }
 
-    // 8. COMENTÁRIOS / CHAT (SIDEBAR)
+    // Comentários
     const commentsEl = document.getElementById('comments-feed');
-    
-    // ORDENAÇÃO: Mais antigo -> Mais novo (Estilo Chat)
     const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     if (comments.length === 0) {
         commentsEl.innerHTML = '<div class="text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda.</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
-            // Tenta identificar o autor
             let user = state.users.find(u => u.email === c.author);
             if (!user) user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
-
             const authorName = user ? user.name : c.author;
             const picUrl = user ? user.picture : null;
             const initial = authorName.charAt(0).toUpperCase();
-
-            // HTML do Avatar
             const avatarHtml = picUrl 
                 ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
                 : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
-
-            // Verifica se sou eu (para alinhar à direita)
             const isMe = c.author === state.currentUser?.email; 
 
-            // LAYOUT TIPO WHATSAPP/MESSENGER
             if (isMe) {
-                // Minhas mensagens: Direita, Azul
-                // CORREÇÃO: Removemos text-right e limpamos espaços em branco do template literal
                 return `<div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="flex flex-col items-end min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span><span class="text-xs font-bold text-white/90 truncate">Você</span></div><div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}<button class="delete-comment-btn absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>${avatarHtml}</div>`;
             } else {
-                // Mensagens de Outros: Esquerda, Cinza
-                // CORREÇÃO: Limpamos espaços em branco do template literal
                 return `<div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">${avatarHtml}<div class="flex flex-col items-start min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-xs font-bold text-white/90 truncate">${authorName}</span><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span></div><div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">${c.text}</div></div></div>`;
             }
         }).join('');
-
-        // AUTO-SCROLL: Rola para o final para mostrar a mensagem mais recente
-        setTimeout(() => {
-            if(commentsEl) commentsEl.scrollTop = commentsEl.scrollHeight;
-        }, 100);
+        setTimeout(() => { if(commentsEl) commentsEl.scrollTop = commentsEl.scrollHeight; }, 100);
     }
 
-    // EXIBE O MODAL E ATUALIZA ÍCONES
-    document.getElementById('taskHistoryModal').classList.remove('hidden');
-    if (window.lucide) lucide.createIcons();
+    // =================================================================
+    // 2. INJEÇÃO DO RICH TEXT EDITOR
+    // =================================================================
     
-    // Configura autocomplete de menções (@usuario)
-    setTimeout(() => setupCommentAutocomplete(), 300);
+    // Substitui o container do input padrão pelo novo Rich Editor
+    const rightColumn = document.querySelector('#taskHistoryModal .glass-separator-v');
+    const inputContainer = rightColumn ? rightColumn.querySelector('.p-6.mt-auto') : null;
+    
+    if(inputContainer) {
+        inputContainer.innerHTML = `
+            <div class="rich-editor-wrapper relative group">
+                <div class="editor-toolbar">
+                    <button type="button" class="editor-tool-btn" data-cmd="bold" title="Negrito">
+                        <i data-lucide="bold" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" class="editor-tool-btn" data-cmd="italic" title="Itálico">
+                        <i data-lucide="italic" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" class="editor-tool-btn" data-cmd="underline" title="Sublinhado">
+                        <i data-lucide="underline" class="w-4 h-4"></i>
+                    </button>
+                    <div class="w-px h-4 bg-white/10 mx-1"></div>
+                    <button type="button" class="editor-tool-btn" data-cmd="insertUnorderedList" title="Lista">
+                        <i data-lucide="list" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="comment-input-rich" contenteditable="true" class="editor-content custom-scrollbar" placeholder="Escreva um comentário (use @ para mencionar)..."></div>
+
+                <button id="add-comment-btn" class="absolute bottom-3 right-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md z-10">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    // =================================================================
+    // 3. ANIMAÇÃO (MORPH/FLIP - Opacidade 1 Instantânea)
+    // =================================================================
+    
+    const modal = document.getElementById('taskHistoryModal');
+    const modalContent = modal.querySelector('.orb-glass-unified');
+    const backdrop = modal; 
+
+    activeOriginEl = document.querySelector(`.task-card[data-task-id="${taskId}"]`);
+    if (!activeOriginEl || activeOriginEl.offsetParent === null) {
+        activeOriginEl = document.querySelector(`.list-row[data-task-id="${taskId}"]`);
+    }
+
+    if (activeOriginEl) {
+        activeOriginRect = activeOriginEl.getBoundingClientRect();
+        activeOriginEl.style.opacity = '0'; 
+    } else {
+        activeOriginRect = null;
+    }
+
+    modal.classList.remove('hidden');
+    backdrop.classList.remove('show'); 
+    modalContent.style.transform = '';
+    
+    if (activeOriginRect) {
+        const finalRect = modalContent.getBoundingClientRect(); 
+        const deltaX = activeOriginRect.left - finalRect.left;
+        const deltaY = activeOriginRect.top - finalRect.top;
+        const scaleX = activeOriginRect.width / finalRect.width;
+        const scaleY = activeOriginRect.height / finalRect.height;
+
+        modalContent.style.transition = 'none';
+        modalContent.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`;
+        modalContent.style.opacity = '1'; 
+        modalContent.style.borderRadius = '12px'; 
+        modalContent.classList.add('animating-morph');
+
+        requestAnimationFrame(() => {
+            modalContent.getBoundingClientRect(); // Force reflow
+            modalContent.style.transition = ''; 
+            modalContent.style.transform = 'translate(0, 0) scale(1, 1)';
+            modalContent.style.borderRadius = ''; 
+            backdrop.classList.add('show'); 
+            setTimeout(() => { modalContent.classList.remove('animating-morph'); }, 400); 
+        });
+    } else {
+        modalContent.style.opacity = '1';
+        backdrop.classList.add('show');
+    }
+
+    // =================================================================
+    // 4. CONFIGURAÇÃO DE EVENTOS E EDITOR
+    // =================================================================
+
+    const closeBtn = document.getElementById('closeHistoryBtn');
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    
+    newCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeTaskHistory(taskId);
+    });
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) closeTaskHistory(taskId);
+    };
+
+    if (window.lucide) lucide.createIcons();
+
+    // Setup do Editor Rich Text (Com suporte a @Menção e Foto)
+    setupRichTextEditor();
+    
+    // Lógica de Enviar
+    const sendBtn = document.getElementById('add-comment-btn');
+    const editor = document.getElementById('comment-input-rich');
+
+    if (sendBtn && editor) {
+        sendBtn.onclick = async () => {
+            const text = editor.innerHTML.trim(); 
+            const cleanText = editor.innerText.trim();
+            if (!cleanText && !text.includes('<img')) return; 
+
+            const api = await import('./api.js');
+            await api.addComment(taskId, { text: text, author: state.currentUser.email });
+            
+            editor.innerHTML = '';
+            renderTaskHistory(taskId); 
+        };
+    }
+}
+
+// --- FUNÇÃO AUXILIAR: FECHAR MODAL ---
+
+export function closeTaskHistory(taskId) {
+    const modal = document.getElementById('taskHistoryModal');
+    const modalContent = modal.querySelector('.orb-glass-unified');
+    const backdrop = modal;
+
+    if (isAnimating) return;
+    isAnimating = true;
+
+    backdrop.classList.remove('show');
+
+    let currentOriginRect = activeOriginRect;
+    if (activeOriginEl) {
+        currentOriginRect = activeOriginEl.getBoundingClientRect();
+    }
+
+    if (currentOriginRect) {
+        const currentModalRect = modalContent.getBoundingClientRect();
+        const deltaX = currentOriginRect.left - currentModalRect.left;
+        const deltaY = currentOriginRect.top - currentModalRect.top;
+        const scaleX = currentOriginRect.width / currentModalRect.width;
+        const scaleY = currentOriginRect.height / currentModalRect.height;
+
+        modalContent.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`;
+        modalContent.style.opacity = '0'; 
+        modalContent.style.borderRadius = '12px';
+        
+        // Delay otimizado (300ms) para suavidade
+        setTimeout(() => {
+            if (activeOriginEl) activeOriginEl.style.opacity = '1';
+            modal.classList.add('hidden');
+            modalContent.style.transform = '';
+            modalContent.style.opacity = '';
+            modalContent.style.borderRadius = '';
+            activeOriginRect = null;
+            activeOriginEl = null;
+            isAnimating = false;
+        }, 300); 
+    } else {
+        modal.classList.add('hidden');
+        isAnimating = false;
+    }
+}
+
+// --- SETUP DO RICH TEXT EDITOR COM MENÇÕES (@) ---
+
+export function setupRichTextEditor() {
+    const editor = document.getElementById('comment-input-rich');
+    const btns = document.querySelectorAll('.editor-tool-btn');
+    
+    // 1. Garante que a caixa de sugestões exista e tenha estilos críticos
+    let suggestionBox = document.getElementById('rich-mention-suggestions');
+    if (!suggestionBox) {
+        suggestionBox = document.createElement('div');
+        suggestionBox.id = 'rich-mention-suggestions';
+        
+        // Estilos Inline de Segurança (Garante visibilidade independente do CSS externo)
+        Object.assign(suggestionBox.style, {
+            position: 'fixed',
+            zIndex: '99999',
+            display: 'none',
+            flexDirection: 'column',
+            backgroundColor: 'rgba(15, 23, 42, 0.98)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            minWidth: '220px',
+            maxHeight: '250px',
+            overflowY: 'auto',
+            padding: '4px',
+            backdropFilter: 'blur(12px)'
+        });
+        
+        document.body.appendChild(suggestionBox); 
+    }
+    
+    if (!editor) return;
+
+    // 2. Toolbar Actions
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            const cmd = btn.dataset.cmd;
+            document.execCommand(cmd, false, null);
+            editor.focus();
+            btn.classList.toggle('active');
+            setTimeout(() => btn.classList.remove('active'), 200);
+        });
+    });
+
+    // 3. Atalhos Básicos
+    editor.addEventListener('keydown', (e) => {
+        // Se Enter for pressionado sem Shift e o menu estiver visível, seleciona a primeira opção
+        if (e.key === 'Enter' && !e.shiftKey) {
+            if (suggestionBox.style.display !== 'none') {
+                e.preventDefault();
+                const firstItem = suggestionBox.querySelector('.mention-item');
+                if (firstItem) firstItem.click();
+            } else {
+                e.preventDefault();
+                document.getElementById('add-comment-btn').click();
+            }
+        }
+        
+        // Fecha menu com ESC
+        if (e.key === 'Escape') {
+            suggestionBox.style.display = 'none';
+        }
+    });
+
+    // 4. Lógica de Menção Inteligente (@)
+    editor.addEventListener('keyup', (e) => {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        let textNode = range.startContainer;
+        
+        // Normalização: Se o foco estiver no DIV e não no texto (comum em editores vazios)
+        if (textNode.nodeType !== Node.TEXT_NODE) {
+            // Tenta encontrar o nó de texto dentro da seleção ou ignora se não houver conteúdo
+            if (textNode.childNodes.length > 0 && textNode.childNodes[0].nodeType === Node.TEXT_NODE) {
+                textNode = textNode.childNodes[0];
+            } else {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+        }
+
+        // Pega o texto até o cursor
+        const textBeforeCaret = textNode.textContent.substring(0, range.startOffset);
+        
+        // Regex Melhorada: Aceita espaços normais (\s) e Non-Breaking Spaces (\u00A0)
+        const match = textBeforeCaret.match(/@([\w\sáàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ\u00A0]*)$/);
+
+        if (match) {
+            const query = match[1].trim().toLowerCase(); // Trim para evitar espaços extras na busca
+            
+            // Proteção contra state.users vazio
+            const allUsers = state.users || [];
+            
+            const users = allUsers.filter(u => 
+                u.name !== 'DEFINIR' && 
+                u.name.toLowerCase().includes(query)
+            );
+
+            if (users.length > 0) {
+                // Renderiza Lista
+                suggestionBox.innerHTML = users.map(u => `
+                    <div class="mention-item" 
+                         style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; color: white; border-radius: 8px; transition: background 0.2s;"
+                         onmouseover="this.style.backgroundColor='rgba(56, 189, 248, 0.2)'" 
+                         onmouseout="this.style.backgroundColor='transparent'"
+                         data-email="${u.email}" 
+                         data-name="${u.name}" 
+                         data-pic="${u.picture || ''}">
+                        <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" style="width: 24px; height: 24px; rounded-full; object-fit: cover; border-radius: 50%;">
+                        <span style="font-size: 0.9rem; font-weight: 500;">${u.name}</span>
+                    </div>
+                `).join('');
+
+                // Posiciona popup
+                const rect = range.getBoundingClientRect();
+                
+                // Correção de posicionamento: Se rect for 0 (elemento oculto/bug), usa o editor
+                const topPos = (rect.bottom === 0) ? editor.getBoundingClientRect().bottom : rect.bottom;
+                const leftPos = (rect.left === 0) ? editor.getBoundingClientRect().left : rect.left;
+
+                suggestionBox.style.display = 'flex';
+                suggestionBox.style.top = `${topPos + 5}px`;
+                suggestionBox.style.left = `${leftPos}px`;
+
+                // Evento de Clique na Sugestão
+                suggestionBox.querySelectorAll('.mention-item').forEach(item => {
+                    item.onclick = (evt) => {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        insertMention(item, textNode, match.index, match[0].length);
+                    };
+                });
+            } else {
+                suggestionBox.style.display = 'none';
+            }
+        } else {
+            suggestionBox.style.display = 'none';
+        }
+    });
+
+    // Fecha ao clicar fora
+    document.addEventListener('click', (e) => {
+        if (suggestionBox && !suggestionBox.contains(e.target) && e.target !== editor) {
+            suggestionBox.style.display = 'none';
+        }
+    });
+
+    // Função interna para inserir a "pílula" de menção
+    function insertMention(item, textNode, startIndex, lengthToReplace) {
+        const name = item.dataset.name;
+        const pic = item.dataset.pic || 'https://i.imgur.com/6b6psVE.png';
+        const email = item.dataset.email;
+
+        // 1. Corta o texto: remove o "@nome..." digitado
+        const fullText = textNode.textContent;
+        const before = fullText.substring(0, startIndex);
+        const after = fullText.substring(startIndex + lengthToReplace);
+        
+        // Atualiza o nó de texto atual apenas com a parte anterior
+        textNode.textContent = before;
+        
+        // 2. HTML da Pílula
+        const mentionHtml = `
+            <span class="mention-tag" contenteditable="false" data-email="${email}" 
+                  style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38BDF8; padding: 2px 8px 2px 2px; border-radius: 99px; font-size: 0.85em; font-weight: 600; vertical-align: middle; user-select: none; margin: 0 2px;">
+                <img src="${pic}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                @${name}
+            </span>&nbsp;
+        `;
+
+        // 3. Insere a Pílula e o resto do texto
+        const fragment = document.createRange().createContextualFragment(mentionHtml);
+        const lastNode = fragment.lastChild; // O espaço &nbsp;
+        
+        // Se houver texto depois, cria um novo nó de texto
+        if (after) {
+            const afterNode = document.createTextNode(after);
+            fragment.appendChild(afterNode);
+        }
+
+        // Insere tudo logo após o nó de texto original
+        if (textNode.nextSibling) {
+            textNode.parentNode.insertBefore(fragment, textNode.nextSibling);
+        } else {
+            textNode.parentNode.appendChild(fragment);
+        }
+
+        // 4. Move o cursor para depois do espaço
+        const newRange = document.createRange();
+        newRange.setStartAfter(lastNode); // Posição após o &nbsp;
+        newRange.collapse(true);
+        
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+
+        // 5. Limpa
+        suggestionBox.style.display = 'none';
+        editor.focus();
+    }
 }
 
 // --- UTILITÁRIOS ---
@@ -1432,8 +1773,6 @@ export function setupProjectSuggestions() {
         if (!input.contains(e.target) && !list.contains(e.target)) list.classList.add('hidden');
     });
 }
-
-// No arquivo app/js/ui.js
 
 export function setupCustomColorPicker() {
     const btn = document.getElementById('color-picker-button');

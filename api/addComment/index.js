@@ -7,11 +7,51 @@ const client = new CosmosClient(connectionString);
 const database = client.database("TasksDB");
 const container = database.container("Tasks");
 const usersContainer = database.container("Users");
-const notificationsContainer = database.container("Notifications");
+const notificationsContainer = database.container("Notifications"); // Container correto
 const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
-function getUser(request) {
-    const header = request.headers['x-ms-client-principal'];
+// --- FUNÇÃO AUXILIAR: LIMPEZA DE HTML PARA MARKDOWN ---
+function formatHtmlToDiscord(html) {
+    if (!html) return "";
+
+    let text = html;
+
+    // 1. Converte Menções (@Usuario)
+    // Transforma <span ... data-name="Elmo">...</span> em **@Elmo**
+    text = text.replace(/<span[^>]*class="mention-tag"[^>]*data-name="([^"]*)"[^>]*>.*?<\/span>/g, '**@$1**');
+
+    // 2. Converte Quebras de Linha e Parágrafos
+    text = text.replace(/<br\s*\/?>/gi, '\n');
+    text = text.replace(/<\/p>/gi, '\n\n'); 
+    text = text.replace(/<p>/gi, '');
+    text = text.replace(/<\/div>/gi, '\n');
+    text = text.replace(/<div>/gi, '');
+
+    // 3. Converte Formatação Básica
+    text = text.replace(/<b>/gi, '**').replace(/<\/b>/gi, '**');
+    text = text.replace(/<strong>/gi, '**').replace(/<\/strong>/gi, '**');
+    text = text.replace(/<i>/gi, '*').replace(/<\/i>/gi, '*');
+    text = text.replace(/<em>/gi, '*').replace(/<\/em>/gi, '*');
+    text = text.replace(/<u>/gi, '__').replace(/<\/u>/gi, '__'); 
+
+    // 4. Converte Listas
+    text = text.replace(/<ul>/gi, '').replace(/<\/ul>/gi, '');
+    text = text.replace(/<li>/gi, '• ').replace(/<\/li>/gi, '\n');
+
+    // 5. Remove todas as outras tags HTML restantes
+    text = text.replace(/<[^>]+>/g, '');
+
+    // 6. Decodifica entidades HTML comuns
+    text = text.replace(/&nbsp;/g, ' ');
+    text = text.replace(/&amp;/g, '&');
+    text = text.replace(/&lt;/g, '<');
+    text = text.replace(/&gt;/g, '>');
+
+    return text.trim();
+}
+
+function getUser(req) {
+    const header = req.headers['x-ms-client-principal'];
     if (!header) return null;
     const encoded = Buffer.from(header, 'base64');
     const decoded = encoded.toString('ascii');
@@ -39,8 +79,11 @@ module.exports = async function (context, req) {
     context.log(`Adicionando comentário à tarefa com ID: ${taskId}`);
 
     try {
-        // Garante que o container de notificações existe
-        await database.containers.createIfNotExists({ id: "Notifications", partitionKey: { paths: ["/targetUserEmail"] } });
+        // Garante que o container de notificações existe (caso ainda não exista)
+        // Nota: Idealmente isso é feito no setup do banco, mas mantendo a segurança aqui
+        try {
+            await database.containers.createIfNotExists({ id: "Notifications", partitionKey: { paths: ["/targetUserEmail"] } });
+        } catch (e) { /* Ignora se já existir */ }
 
         const { resource: existingTask } = await container.item(taskId, taskId).read();
         if (!existingTask) {
@@ -48,34 +91,47 @@ module.exports = async function (context, req) {
             return;
         }
 
-        // 1. Adicionar o Comentário
+        // 1. Adicionar o Comentário (SALVA O HTML ORIGINAL)
         const newComment = {
-            text: commentData.text,
+            text: commentData.text, // Aqui fica o HTML rico (<b>, <span>, etc)
             author: user.userDetails,
             userId: user.userId, 
             timestamp: new Date().toISOString()
         };
 
-        if (!Array.isArray(existingTask.comments)) {
+        if (!existingTask.comments) {
+            existingTask.comments = [];
+        } else if (!Array.isArray(existingTask.comments)) {
             existingTask.comments = [];
         }
         existingTask.comments.push(newComment);
 
-        // 2. Lógica de Menção (@Nome) - APENAS NOTIFICAÇÃO (Sem Alerta Vermelho)
+        // 2. Lógica de Menção (@Nome) para Notificações Internas
+        // Nota: A verificação de .includes('@') no HTML ainda funciona, 
+        // mas para ser mais robusto com o novo formato, buscamos pelo data-name
         const { resources: allUsers } = await usersContainer.items.readAll().fetchAll();
-        const mentionedUsers = allUsers.filter(u => commentData.text.includes(`@${u.name}`));
+        
+        // Regex para extrair nomes mencionados nas tags <span ... data-name="NOME">
+        const mentionRegex = /data-name="([^"]*)"/g;
+        let match;
+        const mentionedNames = [];
+        while ((match = mentionRegex.exec(commentData.text)) !== null) {
+            mentionedNames.push(match[1]);
+        }
+
+        // Filtra usuários que foram mencionados
+        const mentionedUsers = allUsers.filter(u => mentionedNames.includes(u.name));
         
         if (mentionedUsers.length > 0) {
             for (const mentionedUser of mentionedUsers) {
-                // Cria o registo no Histórico de Notificações
                 const newNotification = {
                     id: uuidv4(),
-                    targetUserEmail: mentionedUser.email, // Partition Key
+                    targetUserEmail: mentionedUser.email, 
                     type: 'mention',
                     taskId: taskId,
                     taskTitle: existingTask.title,
                     message: `Você foi mencionado por ${user.userDetails}`,
-                    commentPreview: commentData.text,
+                    commentPreview: formatHtmlToDiscord(commentData.text), // Salva preview limpo na notificação
                     isRead: false,
                     createdAt: new Date().toISOString()
                 };
@@ -85,14 +141,16 @@ module.exports = async function (context, req) {
 
         const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask);
 
-        // 3. Notificar Discord
+        // 3. Notificar Discord (USA A VERSÃO LIMPA / MARKDOWN)
+        const discordMessage = formatHtmlToDiscord(newComment.text);
+
         await sendDiscordNotification({
             username: "SyncBoard",
             avatar_url: "https://i.imgur.com/AoaA8WI.png",
             content: `**💬 Novo Comentário de ${user.userDetails} na Tarefa [${taskId}]**`,
             embeds: [{
-                description: newComment.text,
-                color: 0x9DB2BF
+                description: discordMessage, // <--- Texto Limpo
+                color: 0x9DB2BF,
             }]
         });
 

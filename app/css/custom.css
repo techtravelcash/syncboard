@@ -1171,3 +1171,151 @@ body {
 #modal-info-dueDate-container {
     margin-bottom: 0 !important;
 }
+
+/* --- ANIMAÇÃO: MORPHING MODAL (FLIP) --- */
+
+/* O backdrop (fundo escuro) deve aparecer suavemente, mas independente do card */
+.modal-backdrop {
+    transition: opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none; /* Não clica enquanto invisível */
+}
+
+.modal-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* O conteúdo do modal (o vidro) é quem sofre a transformação */
+.orb-glass-unified {
+    /* Controlamos o transform via JS, mas precisamos das curvas de transição */
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                border-radius 0.4s ease;
+    transform-origin: top left; /* Essencial para o cálculo FLIP funcionar */
+    will-change: transform, opacity, border-radius;
+}
+
+/* Classe utilitária para travar o conteúdo durante a animação rápida */
+.animating-morph {
+    overflow: hidden !important;
+    pointer-events: none;
+}
+
+/* --- RICH TEXT EDITOR (GLASS STYLE) --- */
+
+.rich-editor-wrapper {
+    background: rgba(255, 255, 255, 0.05); /* Fundo sutil */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark .rich-editor-wrapper {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.rich-editor-wrapper:focus-within {
+    border-color: rgba(56, 189, 248, 0.4); /* Azul de foco */
+    box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
+}
+
+/* Barra de Ferramentas */
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.editor-tool-btn {
+    padding: 6px;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.editor-tool-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.editor-tool-btn.active {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38BDF8;
+}
+
+/* Área de Texto Editável */
+.editor-content {
+    flex-grow: 1;
+    min-height: 80px;
+    max-height: 200px;
+    padding: 12px 16px;
+    padding-right: 50px; /* Espaço para o botão de enviar não cobrir o texto */
+    outline: none;
+    overflow-y: auto;
+    color: #fff;
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.6;
+}
+
+/* Placeholder simulado */
+.editor-content:empty:before {
+    content: attr(placeholder);
+    color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    display: block; /* Garante renderização */
+}
+
+/* Formatação básica dentro do editor */
+.editor-content b, .editor-content strong { font-weight: 800; color: #fff; }
+.editor-content i, .editor-content em { font-style: italic; }
+.editor-content u { text-decoration: underline; }
+.editor-content ul { list-style: disc; margin-left: 20px; }
+.editor-content ol { list-style: decimal; margin-left: 20px; }
+
+/* Estilo da Menção (Pílula com Foto) - Ajuste de Tamanho Relativo */
+.mention-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em; /* Gap proporcional ao texto */
+    
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38BDF8;
+    
+    /* Padding reduzido e relativo: garante que a pílula abrace o conteúdo */
+    padding: 0 0.5em 0 0.1em; 
+    
+    border-radius: 99em; /* Borda arredondada perfeita */
+    
+    /* Importante: Define o tamanho base da tag ligeiramente menor que o texto corrido */
+    font-size: 0.9em; 
+    
+    /* Alinhamento vertical preciso para não quebrar o ritmo da linha */
+    vertical-align: middle;
+    line-height: 1; 
+    
+    user-select: none;
+    cursor: default;
+    margin: 0 0.15em; /* Pequeno respiro lateral */
+    white-space: nowrap;
+}
+
+.mention-tag img {
+    /* O segredo: Tamanho em 'em' faz a foto escalar junto com o texto */
+    width: 1.4em; 
+    height: 1.4em;
+    
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.2);
+    display: block; /* Evita espaçamento fantasma inferior */
+}
