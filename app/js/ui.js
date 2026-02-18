@@ -1,6 +1,14 @@
 import { state } from './state.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
+const TASK_MODAL_ANIMATION_MS = 380;
+let taskHistoryMorphState = {
+    sourceEl: null,
+    taskId: null,
+    triggerPoint: null,
+    isAnimating: false
+};
+
 
 // --- HELPERS E FORMATAÇÃO ---
 
@@ -259,7 +267,10 @@ export const createTaskElement = (task) => {
     if(expandBtn) {
         expandBtn.addEventListener('click', (e) => {
             e.stopPropagation(); 
-            renderTaskHistory(task.id);
+            renderTaskHistory(task.id, {
+                sourceEl: taskCard,
+                triggerPoint: { x: e.clientX, y: e.clientY }
+            });
         });
     }
 
@@ -573,7 +584,10 @@ export function renderListView() {
             if (!e.target.closest('button, a')) {
                 const taskId = row.dataset.taskId;
                 highlightTask(taskId, false);
-                renderTaskHistory(taskId);
+                renderTaskHistory(taskId, {
+                    sourceEl: row,
+                    triggerPoint: { x: e.clientX, y: e.clientY }
+                });
             }
         });
     });
@@ -900,7 +914,7 @@ export function populateResponsibleFilter() {
 
 // --- MODAL: DETALHES ---
 
-export function renderTaskHistory(taskId) {
+export function renderTaskHistory(taskId, options = {}) {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return;
 
@@ -1083,11 +1097,160 @@ export function renderTaskHistory(taskId) {
     }
 
     // EXIBE O MODAL E ATUALIZA ÍCONES
-    document.getElementById('taskHistoryModal').classList.remove('hidden');
+    openTaskHistoryModal(taskId, options);
     if (window.lucide) lucide.createIcons();
     
     // Configura autocomplete de menções (@usuario)
     setTimeout(() => setupCommentAutocomplete(), 300);
+}
+
+function createPointRect(point) {
+    if (!point) return null;
+    return {
+        left: point.x,
+        top: point.y,
+        width: 1,
+        height: 1
+    };
+}
+
+function getTaskSourceElement(taskId, sourceEl) {
+    if (sourceEl && sourceEl instanceof HTMLElement) return sourceEl;
+    const el = document.querySelector(`[data-task-id="${taskId}"]`);
+    return el instanceof HTMLElement ? el : null;
+}
+
+export function openTaskHistoryModal(taskId, options = {}) {
+    const modal = document.getElementById('taskHistoryModal');
+    const panel = modal?.querySelector('.orb-glass-unified');
+    if (!modal || !panel) return;
+
+    const sourceEl = getTaskSourceElement(taskId, options.sourceEl);
+    const pointRect = createPointRect(options.triggerPoint || taskHistoryMorphState.triggerPoint);
+    const sourceRect = sourceEl?.getBoundingClientRect() || pointRect;
+
+    if (taskHistoryMorphState.sourceEl && taskHistoryMorphState.sourceEl !== sourceEl) {
+        taskHistoryMorphState.sourceEl.classList.remove('modal-morph-source-hidden');
+    }
+
+    taskHistoryMorphState = {
+        sourceEl,
+        taskId,
+        triggerPoint: options.triggerPoint || taskHistoryMorphState.triggerPoint,
+        isAnimating: true
+    };
+
+    if (sourceEl) sourceEl.classList.add('modal-morph-source-hidden');
+
+    modal.classList.remove('hidden');
+    modal.style.opacity = '0';
+    panel.style.transformOrigin = 'top left';
+
+    requestAnimationFrame(() => {
+        const targetRect = panel.getBoundingClientRect();
+        const fromRect = sourceRect || {
+            left: targetRect.left + (targetRect.width / 2),
+            top: targetRect.top + (targetRect.height / 2),
+            width: 1,
+            height: 1
+        };
+
+        const deltaX = fromRect.left - targetRect.left;
+        const deltaY = fromRect.top - targetRect.top;
+        const scaleX = Math.max(fromRect.width / targetRect.width, 0.02);
+        const scaleY = Math.max(fromRect.height / targetRect.height, 0.02);
+
+        modal.animate([
+            { opacity: 0 },
+            { opacity: 1 }
+        ], {
+            duration: TASK_MODAL_ANIMATION_MS,
+            easing: 'ease-out',
+            fill: 'forwards'
+        });
+
+        const animation = panel.animate([
+            {
+                transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
+                borderRadius: '16px',
+                opacity: 0.85
+            },
+            {
+                transform: 'translate(0px, 0px) scale(1, 1)',
+                borderRadius: '40px',
+                opacity: 1
+            }
+        ], {
+            duration: TASK_MODAL_ANIMATION_MS,
+            easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            fill: 'forwards'
+        });
+
+        animation.onfinish = () => {
+            modal.style.opacity = '';
+            panel.style.transformOrigin = '';
+            taskHistoryMorphState.isAnimating = false;
+        };
+    });
+}
+
+export function closeTaskHistoryModal() {
+    const modal = document.getElementById('taskHistoryModal');
+    const panel = modal?.querySelector('.orb-glass-unified');
+    if (!modal || !panel) return;
+    if (taskHistoryMorphState.isAnimating) return;
+
+    const { taskId, sourceEl, triggerPoint } = taskHistoryMorphState;
+    const currentSource = getTaskSourceElement(taskId, sourceEl);
+    const pointRect = createPointRect(triggerPoint);
+    const destinationRect = currentSource?.getBoundingClientRect() || pointRect;
+    const panelRect = panel.getBoundingClientRect();
+
+    taskHistoryMorphState.isAnimating = true;
+    panel.style.transformOrigin = 'top left';
+
+    const toRect = destinationRect || {
+        left: panelRect.left + (panelRect.width / 2),
+        top: panelRect.top + (panelRect.height / 2),
+        width: 1,
+        height: 1
+    };
+
+    const deltaX = toRect.left - panelRect.left;
+    const deltaY = toRect.top - panelRect.top;
+    const scaleX = Math.max(toRect.width / panelRect.width, 0.02);
+    const scaleY = Math.max(toRect.height / panelRect.height, 0.02);
+
+    modal.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: TASK_MODAL_ANIMATION_MS,
+        easing: 'ease-in',
+        fill: 'forwards'
+    });
+
+    const animation = panel.animate([
+        {
+            transform: 'translate(0px, 0px) scale(1, 1)',
+            borderRadius: '40px',
+            opacity: 1
+        },
+        {
+            transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})`,
+            borderRadius: '16px',
+            opacity: 0.8
+        }
+    ], {
+        duration: TASK_MODAL_ANIMATION_MS,
+        easing: 'cubic-bezier(0.55, 0, 0.1, 1)',
+        fill: 'forwards'
+    });
+
+    animation.onfinish = () => {
+        modal.classList.add('hidden');
+        modal.style.opacity = '';
+        panel.style.transformOrigin = '';
+        if (currentSource) currentSource.classList.remove('modal-morph-source-hidden');
+        taskHistoryMorphState.isAnimating = false;
+    };
 }
 
 // --- UTILITÁRIOS ---

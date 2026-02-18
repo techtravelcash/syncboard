@@ -312,7 +312,10 @@ function initializeEventListeners() {
         if (infoBtn) {
             e.stopPropagation();
             state.lastInteractedTaskId = infoBtn.dataset.taskId;
-            ui.renderTaskHistory(state.lastInteractedTaskId);
+            ui.renderTaskHistory(state.lastInteractedTaskId, {
+                sourceEl: infoBtn.closest('.task-list-row') || infoBtn.closest('[data-task-id]'),
+                triggerPoint: { x: e.clientX, y: e.clientY }
+            });
             return;
         }
         const approveBtn = e.target.closest('.approve-btn');
@@ -439,14 +442,14 @@ function initializeEventListeners() {
         }
     });
 
-    document.getElementById('closeHistoryBtn').addEventListener('click', () => document.getElementById('taskHistoryModal').classList.add('hidden'));
+    document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistoryModal());
 
     document.getElementById('editTaskBtn').addEventListener('click', () => {
         const taskId = state.lastInteractedTaskId;
         const task = state.tasks.find(t => t.id === taskId);
         if (!task) return;
 
-        document.getElementById('taskHistoryModal').classList.add('hidden');
+        ui.closeTaskHistoryModal();
         state.editingTaskId = taskId;
         document.getElementById('modalTitle').textContent = 'Editar Tarefa';
         

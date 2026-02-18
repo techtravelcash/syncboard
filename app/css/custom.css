@@ -1171,3 +1171,15 @@ body {
 #modal-info-dueDate-container {
     margin-bottom: 0 !important;
 }
+.modal-morph-source-hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#taskHistoryModal {
+    will-change: opacity;
+}
+
+#taskHistoryModal .orb-glass-unified {
+    will-change: transform, opacity, border-radius;
+}
