@@ -1034,15 +1034,25 @@ export function renderTaskHistory(taskId) {
         commentsEl.innerHTML = '<div class="text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda.</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
-            let user = state.users.find(u => u.email === c.author);
-            if (!user) user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
-            const authorName = user ? user.name : c.author;
+            const rawAuthor = typeof c.author === 'object' ? (c.author.email || c.author.name || '') : (c.author || '');
+            let user = state.users.find(u => u.email === rawAuthor);
+            if (!user) user = state.users.find(u => u.name && rawAuthor && u.name.toLowerCase() === rawAuthor.toLowerCase());
+
+            const authorName = user ? user.name : (typeof c.author === 'object' ? (c.author.name || c.author.email || 'Usuário') : c.author);
             const picUrl = user ? user.picture : null;
-            const initial = authorName.charAt(0).toUpperCase();
+            const initial = (authorName || 'U').charAt(0).toUpperCase();
             const avatarHtml = picUrl 
                 ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
                 : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
-            const isMe = c.author === state.currentUser?.email; 
+
+            const currentUserName = (state.currentUser?.userDetails || '').toLowerCase();
+            const currentUserEmail = (state.currentUser?.userId || state.currentUser?.email || '').toLowerCase();
+            const commentAuthorName = (typeof c.author === 'object' ? (c.author.name || '') : (authorName || '')).toLowerCase();
+            const commentAuthorEmail = (typeof c.author === 'object' ? (c.author.email || '') : rawAuthor).toLowerCase();
+            const isMe = Boolean(
+                (currentUserEmail && commentAuthorEmail && currentUserEmail === commentAuthorEmail) ||
+                (currentUserName && commentAuthorName && currentUserName === commentAuthorName)
+            );
 
             if (isMe) {
                 const commentKey = c.id || c.index;

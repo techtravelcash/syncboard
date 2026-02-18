@@ -27,9 +27,16 @@ module.exports = async function (context, req, inputDocument) {
     }
 
     const comment = inputDocument.comments[commentIndex];
-    const commentAuthor = typeof comment.author === 'object' ? comment.author?.email : comment.author;
+    const commentAuthorEmail = typeof comment.author === 'object' ? (comment.author?.email || '') : '';
+    const commentAuthorName = typeof comment.author === 'object' ? (comment.author?.name || '') : (comment.author || '');
+    const normalizedAuthor = (author || '').toString().toLowerCase();
 
-    if (commentAuthor !== author) {
+    const canEdit = [commentAuthorEmail, commentAuthorName]
+        .filter(Boolean)
+        .map(v => v.toString().toLowerCase())
+        .includes(normalizedAuthor);
+
+    if (!canEdit) {
         context.res = { status: 403, body: "Sem permissão para editar este comentário." };
         return;
     }

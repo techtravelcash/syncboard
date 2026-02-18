@@ -506,7 +506,8 @@ function initializeEventListeners() {
 
             (async () => {
                 try {
-                    await api.editComment(taskId, commentKey, trimmedText, state.currentUser?.email);
+                    const currentAuthor = state.currentUser?.userId || state.currentUser?.email || state.currentUser?.userDetails;
+                    await api.editComment(taskId, commentKey, trimmedText, currentAuthor);
 
                     const task = state.tasks.find(t => t.id === taskId);
                     if (task && task.comments && task.comments[commentIndex]) {
