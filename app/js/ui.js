@@ -1034,18 +1034,58 @@ export function renderTaskHistory(taskId) {
         commentsEl.innerHTML = '<div class="text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda.</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
-            let user = state.users.find(u => u.email === c.author);
-            if (!user) user = state.users.find(u => u.name && u.name.toLowerCase() === c.author.toLowerCase());
-            const authorName = user ? user.name : c.author;
+            const rawAuthor = typeof c.author === 'object' ? (c.author.email || c.author.name || '') : (c.author || '');
+            let user = state.users.find(u => u.email === rawAuthor);
+            if (!user) user = state.users.find(u => u.name && rawAuthor && u.name.toLowerCase() === rawAuthor.toLowerCase());
+
+            const authorName = user ? user.name : (typeof c.author === 'object' ? (c.author.name || c.author.email || 'Usuário') : c.author);
             const picUrl = user ? user.picture : null;
-            const initial = authorName.charAt(0).toUpperCase();
+            const initial = (authorName || 'U').charAt(0).toUpperCase();
             const avatarHtml = picUrl 
                 ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
                 : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
-            const isMe = c.author === state.currentUser?.email; 
+
+            const normalize = (value) => (value || '').toString().trim().toLowerCase();
+            const emailClaim = (state.currentUser?.claims || []).find(c =>
+                c.typ === 'emails' ||
+                c.typ === 'email' ||
+                c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+            )?.val;
+
+            const myIdentifiers = new Set([
+                state.currentUser?.userDetails,
+                state.currentUser?.userId,
+                state.currentUser?.email,
+                emailClaim,
+                state.currentUser?.identityProvider ? `${state.currentUser.identityProvider}_${state.currentUser.userId}` : null
+            ].map(normalize).filter(Boolean));
+
+            const currentUserEntry = state.users.find(u => {
+                const userName = normalize(u?.name);
+                const userEmail = normalize(u?.email);
+                return (userName && myIdentifiers.has(userName)) || (userEmail && myIdentifiers.has(userEmail));
+            });
+
+            if (currentUserEntry?.name) myIdentifiers.add(normalize(currentUserEntry.name));
+            if (currentUserEntry?.email) myIdentifiers.add(normalize(currentUserEntry.email));
+
+            const commentAuthorEmail = typeof c.author === 'object' ? c.author.email : null;
+            const commentAuthorName = typeof c.author === 'object' ? c.author.name : authorName;
+
+            const commentIdentifiers = new Set([
+                rawAuthor,
+                commentAuthorEmail,
+                commentAuthorName,
+                c.userId,
+                user?.email,
+                user?.name
+            ].map(normalize).filter(Boolean));
+
+            const isMe = [...commentIdentifiers].some(identifier => myIdentifiers.has(identifier));
 
             if (isMe) {
-                return `<div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="flex flex-col items-end min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span><span class="text-xs font-bold text-white/90 truncate">Você</span></div><div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}<button class="delete-comment-btn absolute top-2 left-2 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-opacity p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>${avatarHtml}</div>`;
+                const commentKey = c.id || c.index;
+                return `<div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="flex flex-col items-end min-w-0 max-w-full"><div class="flex items-center gap-2 mb-1"><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span><span class="text-xs font-bold text-white/90 truncate">Você</span><button class="edit-comment-btn text-amber-300/80 hover:text-amber-200 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" data-comment-key="${commentKey}" data-comment-text="${encodeURIComponent(c.text)}" title="Editar"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="delete-comment-btn text-red-400/90 hover:text-red-300 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div><div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}</div></div>${avatarHtml}</div>`;
             } else {
                 return `<div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">${avatarHtml}<div class="flex flex-col items-start min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-xs font-bold text-white/90 truncate">${authorName}</span><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span></div><div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">${c.text}</div></div></div>`;
             }

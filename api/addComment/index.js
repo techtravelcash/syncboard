@@ -93,6 +93,7 @@ module.exports = async function (context, req) {
 
         // 1. Adicionar o Comentário (SALVA O HTML ORIGINAL)
         const newComment = {
+            id: uuidv4(),
             text: commentData.text, // Aqui fica o HTML rico (<b>, <span>, etc)
             author: user.userDetails,
             userId: user.userId, 
