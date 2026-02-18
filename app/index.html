@@ -482,20 +482,27 @@
         </div>
     </div>
 
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-[1700] hidden modal-backdrop">
-        <div class="glass-panel rounded-3xl p-8 w-full max-w-sm mx-4 modal-content text-center">
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+        <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
             
-            <div class="w-16 h-16 rounded-full bg-red-100/50 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-red-200/20">
-                <i id="modal-icon" data-lucide="trash-2" class="w-8 h-8 text-red-600 dark:text-red-500"></i>
+            <div class="w-20 h-20 rounded-full bg-red-500/10 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-red-500/20 shadow-inner">
+                <i id="modal-icon" data-lucide="trash-2" class="w-9 h-9 text-red-600 dark:text-red-400"></i>
             </div>
             
-            <h2 class="text-xl font-bold text-custom-darkest dark:text-white mb-2">Tem a certeza?</h2>
-            <p class="text-custom-dark dark:text-gray-300 mb-8 text-sm leading-relaxed font-medium">Esta ação não poderá ser desfeita e removerá o item permanentemente.</p>
+            <h2 class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Tem a certeza?</h2>
             
-            <div class="grid grid-cols-2 gap-4">
-                <button type="button" id="cancelDeleteBtn" class="bg-gray-200/40 hover:bg-gray-200/60 dark:bg-white/5 dark:hover:bg-white/10 text-custom-darkest dark:text-white font-bold py-3 px-4 rounded-xl transition-colors border border-gray-200/20 dark:border-white/5 backdrop-blur-sm">Cancelar</button>
+            <p class="text-custom-dark dark:text-blue-100/70 mb-8 text-sm leading-relaxed font-medium">
+                Esta ação é irreversível e removerá o item permanentemente do quadro.
+            </p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="cancelDeleteBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-gray-500/10 dark:bg-white/5 hover:bg-gray-500/20 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-colors border border-black/5 dark:border-white/5">
+                    Cancelar
+                </button>
                 
-                <button type="button" id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-red-500/30 transition-transform active:scale-95">Sim, remover</button>
+                <button type="button" id="confirmDeleteBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-transform active:scale-95">
+                    Sim, remover
+                </button>
             </div>
         </div>
     </div>
