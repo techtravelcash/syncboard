@@ -3,7 +3,7 @@ export const state = {
     users: [],
     tasks: [],
     notifications: [],
-    currentView: 'kanban', 
+    currentView: 'home', 
     selectedProject: 'all',
     selectedResponsible: 'all',
     searchQuery: '',

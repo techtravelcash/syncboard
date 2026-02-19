@@ -318,6 +318,241 @@ function filterTasks(tasks) {
     return filtered;
 }
 
+// --- RENDERIZAÇÃO: HOME (DASHBOARD DO USUÁRIO) ---
+
+function getGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bom dia';
+    if (hour < 18) return 'Boa tarde';
+    return 'Boa noite';
+}
+
+export function renderHomeView() {
+    const container = document.getElementById('homeView');
+
+    // 1. Identificar o usuário logado com precisão (Azure Auth)
+    const normalize = (val) => (val || '').toString().trim().toLowerCase();
+    
+    const emailClaim = (state.currentUser?.claims || []).find(c =>
+        c.typ === 'emails' ||
+        c.typ === 'email' ||
+        c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+    )?.val;
+
+    const myIdentifiers = new Set([
+        state.currentUser?.userDetails,
+        state.currentUser?.userId,
+        emailClaim
+    ].map(normalize).filter(Boolean));
+
+    const dbUser = state.users.find(u => myIdentifiers.has(normalize(u.email)) || myIdentifiers.has(normalize(u.name)));
+    if (dbUser) {
+        if (dbUser.name) myIdentifiers.add(normalize(dbUser.name));
+        if (dbUser.email) myIdentifiers.add(normalize(dbUser.email));
+    }
+
+    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis
+    const myActiveTasks = state.tasks.filter(t => {
+        if (t.status === 'done') return false;
+        if (!t.responsible || !Array.isArray(t.responsible)) return false;
+        
+        return t.responsible.some(r => {
+            const rName = normalize(typeof r === 'object' ? r.name : r);
+            const rEmail = normalize(typeof r === 'object' ? r.email : null);
+            return myIdentifiers.has(rName) || myIdentifiers.has(rEmail);
+        });
+    });
+
+    // 3. Calcular Métricas
+    const counts = {
+        todo: myActiveTasks.filter(t => t.status === 'todo').length,
+        inprogress: myActiveTasks.filter(t => t.status === 'inprogress').length,
+        homologation: myActiveTasks.filter(t => t.status === 'homologation').length,
+        overdue: myActiveTasks.filter(t => isTaskOverdue(t)).length
+    };
+
+    const displayFullName = dbUser?.name || state.currentUser?.userDetails || 'Visitante';
+    const userName = displayFullName.split(' ')[0];
+    const greeting = getGreeting();
+
+    // 4. Estrutura Base HTML com Cards Interativos (metric-card)
+    container.innerHTML = `
+        <div class="max-w-4xl mx-auto space-y-10 animate-fade-in">
+            
+            <div class="pt-4">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-custom-darkest dark:text-white tracking-tight">${greeting}, ${userName}!</h1>
+                <p class="text-custom-dark dark:text-gray-400 mt-2 font-medium">Aqui está o resumo do seu fluxo de trabalho.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" id="home-metric-cards">
+                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="inprogress">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl"><i data-lucide="play-circle" class="w-5 h-5"></i></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Em Andamento</h3>
+                    </div>
+                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.inprogress}</p>
+                </div>
+
+                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2.5 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl"><i data-lucide="eye" class="w-5 h-5"></i></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Homologação</h3>
+                    </div>
+                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.homologation}</p>
+                </div>
+
+                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="todo">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2.5 bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl"><i data-lucide="list-todo" class="w-5 h-5"></i></div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Na Fila</h3>
+                    </div>
+                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.todo}</p>
+                </div>
+
+                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border ${counts.overdue > 0 ? 'border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10' : 'border-white/40 dark:border-white/10'} rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="overdue">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2.5 ${counts.overdue > 0 ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'} rounded-xl">
+                            <i data-lucide="${counts.overdue > 0 ? 'alert-triangle' : 'check-circle'}" class="w-5 h-5"></i>
+                        </div>
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest ${counts.overdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}">Atrasadas</h3>
+                    </div>
+                    <p class="text-4xl font-black ${counts.overdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-custom-darkest dark:text-white'}">${counts.overdue}</p>
+                </div>
+            </div>
+
+            <div>
+                <h2 id="home-list-title" class="text-lg font-bold text-custom-darkest dark:text-white mb-5 flex items-center gap-2 transition-colors">
+                    <i id="home-list-icon" data-lucide="play-circle" class="w-5 h-5 text-blue-500"></i>
+                    <span>Tarefas em Andamento</span>
+                </h2>
+                <div id="home-dynamic-list" class="space-y-3 min-h-[200px]">
+                    </div>
+            </div>
+        </div>
+    `;
+
+    lucide.createIcons({ root: container });
+
+    // 5. Função que renderiza a lista com base no filtro selecionado
+    const updateList = (filter) => {
+        // Atualiza a UI dos cards para mostrar qual está selecionado (efeito "anel luminoso")
+        container.querySelectorAll('.metric-card').forEach(card => {
+            if (card.dataset.filter === filter) {
+                card.classList.add('ring-4', 'ring-blue-500/40', 'dark:ring-blue-400/30');
+            } else {
+                card.classList.remove('ring-4', 'ring-blue-500/40', 'dark:ring-blue-400/30');
+            }
+        });
+
+        // Configurações baseadas no filtro
+        let filteredTasks = [];
+        let listTitle = '';
+        let listIcon = '';
+        let iconColor = '';
+
+        if (filter === 'inprogress') {
+            filteredTasks = myActiveTasks.filter(t => t.status === 'inprogress');
+            listTitle = 'Tarefas em Andamento';
+            listIcon = 'play-circle';
+            iconColor = 'text-blue-500';
+        } else if (filter === 'homologation') {
+            filteredTasks = myActiveTasks.filter(t => t.status === 'homologation');
+            listTitle = 'Tarefas em Homologação';
+            listIcon = 'eye';
+            iconColor = 'text-orange-500';
+        } else if (filter === 'todo') {
+            filteredTasks = myActiveTasks.filter(t => t.status === 'todo');
+            listTitle = 'Tarefas na Fila';
+            listIcon = 'list-todo';
+            iconColor = 'text-gray-500 dark:text-gray-400';
+        } else if (filter === 'overdue') {
+            filteredTasks = myActiveTasks.filter(t => isTaskOverdue(t));
+            listTitle = 'Tarefas Atrasadas';
+            listIcon = 'alert-triangle';
+            iconColor = 'text-red-500';
+        }
+
+        // Ordena as tarefas exibidas (Prazo mais próximo no topo)
+        filteredTasks.sort((a, b) => {
+            const dA = a.dueDate ? new Date(a.dueDate) : new Date(8640000000000000);
+            const dB = b.dueDate ? new Date(b.dueDate) : new Date(8640000000000000);
+            return dA - dB;
+        });
+
+        // Atualiza o título e ícone da lista
+       const titleEl = document.getElementById('home-list-title');
+        titleEl.innerHTML = `
+            <i data-lucide="${listIcon}" class="w-5 h-5 ${iconColor}"></i>
+            <span>${listTitle}</span>
+        `;
+        lucide.createIcons({ root: titleEl });
+
+        const listContainer = document.getElementById('home-dynamic-list');
+
+        // Estado Vazio
+        if (filteredTasks.length === 0) {
+            listContainer.innerHTML = `<div class="text-center py-10 bg-white/30 dark:bg-white/5 rounded-3xl border border-dashed border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 text-sm font-medium animate-fade-in">Não há tarefas aqui. 🎉</div>`;
+            return;
+        }
+
+        // Renderiza as linhas
+        listContainer.innerHTML = filteredTasks.map(task => {
+            const isOverdue = isTaskOverdue(task);
+            const statusColors = {
+                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500'
+            };
+            const sColor = statusColors[task.status] || 'bg-gray-400';
+
+            return `
+            <div class="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
+                <div class="flex items-center gap-4 min-w-0">
+                    <div class="w-1.5 h-10 rounded-full ${sColor} shrink-0"></div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#94A3B8'}">${task.project || 'Geral'}</span>
+                            <span class="text-xs font-mono font-bold text-gray-400">#${task.id}</span>
+                            ${task.priority === 'Urgente' ? '<span class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">URGENTE</span>' : ''}
+                        </div>
+                        <h4 class="font-bold text-custom-darkest dark:text-white truncate pr-4">${task.title}</h4>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 shrink-0 text-right hidden sm:block">
+                    ${task.dueDate ? `
+                        <div class="text-xs font-semibold ${isOverdue ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}">
+                            <i data-lucide="${isOverdue ? 'alert-triangle' : 'calendar'}" class="w-3.5 h-3.5 inline mb-0.5"></i>
+                            ${formatDate(task.dueDate)}
+                        </div>
+                    ` : '<span class="text-xs text-gray-400 italic">Sem prazo</span>'}
+                </div>
+            </div>`;
+        }).join('');
+
+        lucide.createIcons({ root: listContainer });
+
+        // Adiciona eventos de clique nas tarefas recém renderizadas
+        listContainer.querySelectorAll('.list-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (!e.target.closest('button, a')) {
+                    const taskId = row.dataset.taskId;
+                    highlightTask(taskId, false);
+                    renderTaskHistory(taskId); // Abre o modal de detalhes
+                }
+            });
+        });
+    };
+
+    // 6. Configurar os cliques nos Cards
+    container.querySelectorAll('.metric-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const filter = card.dataset.filter;
+            updateList(filter);
+        });
+    });
+
+    // 7. Renderização inicial: Mostrar as tarefas 'Em Andamento' por padrão
+    updateList('inprogress');
+}
+
 // --- RENDERIZAÇÃO: KANBAN ---
 
 export function renderKanbanView() {
@@ -699,6 +934,7 @@ export function renderUserManagementView() {
 // --- ROTEADOR UI (ATUALIZADO COM ANIMAÇÃO DE ENTRADA E SAÍDA) ---
 
 export function updateActiveView() {
+    const home = document.getElementById('homeView');
     const kanban = document.getElementById('kanbanView');
     const list = document.getElementById('listView');
     const archived = document.getElementById('archivedView');
@@ -706,9 +942,10 @@ export function updateActiveView() {
     const main = document.getElementById('main-content');
     const label = document.getElementById('current-view-label');
     const sortOrb = document.getElementById('orb-sort'); 
+    const filterOrb = document.getElementById('orb-filter'); // Pegamos o botão de filtro
     
     // Esconde views de conteúdo imediatamente
-    [kanban, list, archived, users].forEach(el => el.classList.add('hidden'));
+    [home, kanban, list, archived, users].forEach(el => el && el.classList.add('hidden'));
 
     // Atualiza botões do menu inferior
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
@@ -721,6 +958,16 @@ export function updateActiveView() {
             btn.classList.add('ring-transparent');
         }
     });
+
+    // --- VISIBILIDADE DO ORB DE FILTRO ---
+    if (filterOrb) {
+        if (state.currentView === 'kanban' || state.currentView === 'list') {
+            filterOrb.classList.remove('hidden');
+        } else {
+            filterOrb.classList.add('hidden');
+            filterOrb.classList.remove('expanded'); // Garante que ele feche se estivesse aberto
+        }
+    }
 
     // --- LÓGICA DE ANIMAÇÃO DO ORB ---
     if (state.currentView === 'list') {
@@ -775,7 +1022,12 @@ export function updateActiveView() {
         main.classList.remove('immersive-canvas');
         main.classList.add('block', 'h-screen', 'overflow-hidden', 'relative'); 
 
-        if (state.currentView === 'list') {
+        // Adicionamos a verificação da Home aqui junto com as outras telas em lista
+        if (state.currentView === 'home') {
+            renderHomeView();
+            home.classList.remove('hidden');
+            label.textContent = "Início";
+        } else if (state.currentView === 'list') {
             renderListView();
             list.classList.remove('hidden');
             label.textContent = "Lista de Tarefas";

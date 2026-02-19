@@ -46,9 +46,10 @@
         
         <div class="corner-orb text-custom-darkest dark:text-white" id="orb-nav">
             <div class="orb-icon-wrapper">
-                <i data-lucide="layout-grid" class="w-8 h-8 cycling-icon active" data-idx="0"></i>
-                <i data-lucide="list" class="w-8 h-8 cycling-icon" data-idx="1"></i>
-                <i data-lucide="archive" class="w-8 h-8 cycling-icon" data-idx="2"></i>
+                <i data-lucide="home" class="w-8 h-8 cycling-icon active" data-idx="0"></i>
+                <i data-lucide="layout-grid" class="w-8 h-8 cycling-icon" data-idx="1"></i>
+                <i data-lucide="list" class="w-8 h-8 cycling-icon" data-idx="2"></i>
+                <i data-lucide="archive" class="w-8 h-8 cycling-icon" data-idx="3"></i>
             </div>
 
             <div class="menu-content text-white">
@@ -57,7 +58,11 @@
                 </button>
                 <h4 class="text-2xl font-bold mb-8 tracking-tight text-custom-darkest dark:text-white">Navegação</h4>
                 <div id="view-switcher-orb" class="space-y-3">
-                    <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10 text-custom-darkest dark:text-white">
+                    <button data-view="home" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10 text-custom-darkest dark:text-white bg-white/20 font-bold">
+                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
+                        <span class="font-semibold">Home</span>
+                    </button>
+                    <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all text-custom-darkest dark:text-white">
                         <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
                         <span class="font-semibold">Quadro</span>
                     </button>
@@ -196,6 +201,7 @@
         </div>
 
         <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out">
+            <div id="homeView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
             <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto"></div>
             <div id="listView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
             <div id="archivedView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
