@@ -448,7 +448,7 @@ body {
 #orb-tools.expanded { 
     width: 340px; 
     height: auto; 
-    min-height: 450px; 
+    min-height: auto; 
     border-radius: 40px; 
     top: 30px;
     right: 30px;
