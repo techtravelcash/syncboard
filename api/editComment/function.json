@@ -1,0 +1,43 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["put"],
+      "route": "tasks/{taskId}/comments/{commentId}"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "in",
+      "name": "inputDocument",
+      "databaseName": "TasksDB",
+      "collectionName": "Tasks",
+      "connectionStringSetting": "CosmosDB",
+      "id": "{taskId}",
+      "partitionKey": "{taskId}"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "out",
+      "name": "outputDocument",
+      "databaseName": "TasksDB",
+      "collectionName": "Tasks",
+      "connectionStringSetting": "CosmosDB",
+      "createIfNotExists": false
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    },
+    {
+      "type": "signalR",
+      "name": "signalRMessage",
+      "hubName": "default",
+      "connectionStringSetting": "AzureSignalRConnectionString",
+      "direction": "out"
+    }
+  ]
+}
