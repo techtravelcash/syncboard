@@ -1965,6 +1965,10 @@ export async function updateNotificationBadge() {
         if(badgeOrb) badgeOrb.classList.add('hidden');
         if(badgeOrbExternal) badgeOrbExternal.classList.add('hidden');
         if(badgeMenu) badgeMenu.classList.add('hidden');
+        
+        // NOVO: Garante que a foto do usuário volte a aparecer imediatamente
+        const avatarOrb = document.getElementById('orb-avatar-container');
+        if (avatarOrb) avatarOrb.classList.add('active');
     }
 
     const listContainer = document.getElementById('orb-notifications-list');

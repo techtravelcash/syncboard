@@ -329,24 +329,41 @@ function initializeEventListeners() {
         });
     }
 
-    // --- 2. ANIMAÇÃO CÍCLICA DOS ÍCONES (CORRIGIDO) ---
-    let navIconIdx = 0;
+    // --- 2. ANIMAÇÃO CÍCLICA DOS ÍCONES ---
+    const cyclingState = {};
     
     setInterval(() => {
-        const navOrb = document.getElementById('orb-nav');
-        // RE-SELECIONA os ícones a cada ciclo para garantir que temos os elementos atuais do DOM
-        const navIcons = document.querySelectorAll('#orb-nav .cycling-icon');
+        // Avalia tanto o menu de navegação (esquerda) quanto o menu de ferramentas/perfil (direita)
+        const containers = [
+            document.getElementById('orb-nav'), 
+            document.getElementById('orb-tools')
+        ].filter(Boolean);
         
-        if (navIcons.length === 0) return;
+        containers.forEach(container => {
+            // Só cicla se o menu estiver FECHADO
+            if (!container.classList.contains('expanded')) {
+                // Seleciona os ícones do container que NÃO estão ocultos
+                const icons = Array.from(container.querySelectorAll('.cycling-icon')).filter(el => !el.classList.contains('hidden'));
+                
+                if (icons.length === 0) return;
+                
+                // Se só sobrou 1 ícone visível (ex: zerou as notificações e ocultou o sino),
+                // garante que a foto fique visível e para de ciclar.
+                if (icons.length === 1) {
+                    icons[0].classList.add('active');
+                    return;
+                }
 
-        // Só alterna se o menu estiver FECHADO
-        if (navOrb && !navOrb.classList.contains('expanded')) {
-            navIcons.forEach(icon => icon.classList.remove('active'));
-            
-            navIconIdx = (navIconIdx + 1) % navIcons.length;
-            
-            navIcons[navIconIdx].classList.add('active');
-        }
+                const cid = container.id;
+                if (typeof cyclingState[cid] === 'undefined') cyclingState[cid] = 0;
+                
+                icons.forEach(icon => icon.classList.remove('active'));
+                
+                cyclingState[cid] = (cyclingState[cid] + 1) % icons.length;
+                
+                icons[cyclingState[cid]].classList.add('active');
+            }
+        });
     }, 1500); // 1.5 segundos
 
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
