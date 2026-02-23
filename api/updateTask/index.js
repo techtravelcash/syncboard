@@ -12,6 +12,7 @@ const statusLabels = {
     stopped: 'Parado',
     inprogress: 'Andamento',
     homologation: 'Homologação',
+    publication: 'Publicação',
     done: 'Concluída'
 };
 

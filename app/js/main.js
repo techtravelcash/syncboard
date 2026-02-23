@@ -324,8 +324,19 @@ function initializeEventListeners() {
         if (approveBtn) {
             e.stopPropagation();
             try {
-                await api.updateTask(approveBtn.dataset.taskId, { status: 'done' });
-                ui.showToast('Tarefa concluída!', 'success');
+                // Agora envia para publicação em vez de 'done'
+                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication' });
+                ui.showToast('Enviado para Publicação!', 'success');
+            } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
+            return;
+        }
+        const publishBtn = e.target.closest('.publish-btn');
+        if (publishBtn) {
+            e.stopPropagation();
+            try {
+                // Este botão finaliza a tarefa (envia para arquivado)
+                await api.updateTask(publishBtn.dataset.taskId, { status: 'done' });
+                ui.showToast('Tarefa publicada e concluída!', 'success');
             } catch (err) { ui.showToast('Erro ao concluir', 'error'); }
             return;
         }

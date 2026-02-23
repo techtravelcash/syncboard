@@ -222,6 +222,14 @@ export const createTaskElement = (task) => {
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
+    // LÓGICA ATUALIZADA DOS BOTÕES DE AÇÃO RÁPIDA
+    let actionButtons = '';
+    if (task.status === 'homologation') {
+        actionButtons = `<button class="approve-btn p-1 rounded-md bg-orange-500 hover:bg-orange-600 text-white shadow-sm" title="Aprovar para Publicação" data-task-id="${task.id}"><i data-lucide="arrow-right" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+    } else if (task.status === 'publication') {
+        actionButtons = `<button class="publish-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Publicar Tarefa" data-task-id="${task.id}"><i data-lucide="check-circle" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+    }
+
     const quickActions = `
         <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
             <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
@@ -232,7 +240,7 @@ export const createTaskElement = (task) => {
                 <i data-lucide="maximize-2" class="w-3.5 h-3.5 pointer-events-none"></i>
             </button>
 
-            ${task.status === 'homologation' ? `<button class="approve-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-3.5 h-3.5 pointer-events-none"></i></button>` : ''}
+            ${actionButtons}
         </div>
     `;
 
@@ -499,7 +507,7 @@ export function renderHomeView() {
         listContainer.innerHTML = filteredTasks.map(task => {
             const isOverdue = isTaskOverdue(task);
             const statusColors = {
-                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500'
+                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500', publication: 'bg-purple-500'
             };
             const sColor = statusColors[task.status] || 'bg-gray-400';
 
@@ -564,7 +572,8 @@ export function renderKanbanView() {
         { id: 'todo', name: 'Fila', color: 'bg-gray-400' },
         { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
         { id: 'inprogress', name: 'Andamento', color: 'bg-blue-500' },
-        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' }
+        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' },
+        { id: 'publication', name: 'Publicação', color: 'bg-purple-500' }
     ];
 
     columns.forEach((col, index) => {
@@ -735,6 +744,7 @@ export function renderListView() {
         'stopped': 'Parado',
         'inprogress': 'Em Andamento',
         'homologation': 'Homologação',
+        'publication': 'Publicação',
         'done': 'Concluído'
     };
 
@@ -745,6 +755,7 @@ export function renderListView() {
         const statusColor = task.status === 'stopped' ? 'red-500' : 
                           task.status === 'homologation' ? 'orange-500' : 
                           task.status === 'inprogress' ? 'blue-500' : 'gray-300';
+                          task.status === 'publication' ? 'purple-500' : 'gray-300';
         
         const statusLabel = statusMap[task.status] || 'Desconhecido';
 
