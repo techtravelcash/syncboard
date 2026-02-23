@@ -439,6 +439,22 @@ export function renderHomeView() {
         overdue: myActiveTasks.filter(t => isTaskOverdue(t)).length
     };
 
+    // NOVO: Calcular quantas tarefas dependem da homologação ESPECÍFICA do usuário logado
+    const myHomologationsPending = myActiveTasks.filter(t => {
+        if (t.status !== 'homologation' || !t.homologador) return false;
+        const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
+        const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
+        return myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+    }).length;
+
+    // NOVO: Gerar o HTML do badge animado (se houver pendências)
+    const homologationBadge = myHomologationsPending > 0 
+        ? `<div class="absolute -top-2 -right-2 flex h-6 w-6 z-10" title="Você tem ${myHomologationsPending} homologação(ões) pendente(s)">
+             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+             <span class="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-[10px] font-bold items-center justify-center border-2 border-white dark:border-[#1E293B] shadow-sm">${myHomologationsPending}</span>
+           </div>`
+        : '';
+
     const displayFullName = dbUser?.name || state.currentUser?.userDetails || 'Visitante';
     const userName = displayFullName.split(' ')[0];
     const greeting = getGreeting();
@@ -461,7 +477,8 @@ export function renderHomeView() {
                     <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.inprogress}</p>
                 </div>
 
-                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
+                <div class="metric-card relative cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
+                    ${homologationBadge}
                     <div class="flex items-center gap-3 mb-3">
                         <div class="p-2.5 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl"><i data-lucide="eye" class="w-5 h-5"></i></div>
                         <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Homologação</h3>
