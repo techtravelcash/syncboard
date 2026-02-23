@@ -222,6 +222,63 @@ export const createTaskElement = (task) => {
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
+    // --- NOVO: BADGE DO HOMOLOGADOR ---
+    let homologadorBadge = '';
+    
+    // Agora o badge aparece tanto na homologação quanto na publicação
+    if ((task.status === 'homologation' || task.status === 'publication') && task.homologador) {
+        const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+        const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
+        
+        // Verifica se já foi aprovado para publicação
+        const isApproved = task.status === 'publication';
+        
+        // Definição dinâmica de cores e estilos
+        const badgeBg = isApproved 
+            ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/20' 
+            : 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20';
+            
+        const iconName = isApproved ? 'check-circle' : 'shield-check';
+        const iconColor = isApproved ? 'text-green-500' : 'text-orange-500';
+        
+        // Mantém a animação pulsante apenas quando está pendente
+        const pingEffect = isApproved ? '' : '<span class="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-30 group-hover/homol:animate-ping"></span>';
+        
+        const avatarBorder = isApproved ? 'border-green-200 dark:border-green-800' : 'border-orange-200 dark:border-orange-800';
+        const avatarFallbackBg = isApproved ? 'bg-green-200 dark:bg-green-800' : 'bg-orange-200 dark:bg-orange-800';
+        const avatarFallbackText = isApproved ? 'text-green-700 dark:text-green-200' : 'text-orange-700 dark:text-orange-200';
+        
+        const labelTextClass = isApproved ? 'text-green-600/70 dark:text-green-400/80' : 'text-orange-600/70 dark:text-orange-400/80';
+        const nameTextClass = isApproved ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300';
+        const labelText = isApproved ? 'Homologado por' : 'Homologador';
+
+        const avatarImg = homolPic 
+            ? `<img src="${homolPic}" class="w-5 h-5 rounded-full object-cover border ${avatarBorder}">` 
+            : `<div class="w-5 h-5 rounded-full ${avatarFallbackBg} flex items-center justify-center text-[9px] font-bold ${avatarFallbackText} shadow-inner">${homolName.charAt(0)}</div>`;
+
+        homologadorBadge = `
+            <div class="mt-3 flex items-center gap-2 px-2.5 py-1.5 ${badgeBg} border rounded-xl w-fit group/homol transition-colors duration-500">
+                <div class="relative flex items-center justify-center">
+                    ${pingEffect}
+                    <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} relative z-10"></i>
+                </div>
+                ${avatarImg}
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-bold uppercase tracking-widest ${labelTextClass} leading-none mb-0.5">${labelText}</span>
+                    <span class="text-[11px] font-extrabold ${nameTextClass} leading-none tracking-tight">${homolName.split(' ')[0]}</span>
+                </div>
+            </div>
+        `;
+    }
+    // -------------------------------------------
+
+    let actionButtons = '';
+    if (task.status === 'homologation') {
+        actionButtons = `<button class="approve-btn p-1 rounded-md bg-orange-500 hover:bg-orange-600 text-white shadow-sm" title="Aprovar para Publicação" data-task-id="${task.id}"><i data-lucide="arrow-right" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+    } else if (task.status === 'publication') {
+        actionButtons = `<button class="publish-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Publicar Tarefa" data-task-id="${task.id}"><i data-lucide="check-circle" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+    }
+
     const quickActions = `
         <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
             <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
@@ -232,7 +289,7 @@ export const createTaskElement = (task) => {
                 <i data-lucide="maximize-2" class="w-3.5 h-3.5 pointer-events-none"></i>
             </button>
 
-            ${task.status === 'homologation' ? `<button class="approve-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Aprovar" data-task-id="${task.id}"><i data-lucide="check" class="w-3.5 h-3.5 pointer-events-none"></i></button>` : ''}
+            ${actionButtons}
         </div>
     `;
 
@@ -240,10 +297,11 @@ export const createTaskElement = (task) => {
         ${projectStrip}
         ${quickActions}
         
-        <div class="task-body">
+        <div class="task-body flex flex-col h-full">
             <h3 class="text-sm ox-text-primary leading-snug break-words pr-1">${task.title}</h3>
+            ${homologadorBadge}
             
-            <div class="flex items-end justify-between mt-auto pt-2 border-t border-dashed border-gray-200 dark:border-white/5">
+            <div class="flex items-end justify-between mt-auto pt-3 border-t border-dashed border-gray-200 dark:border-white/5">
                 <div class="flex items-center gap-3 min-h-[24px]">
                     ${idBadge}
                     ${dateBadge}
@@ -351,16 +409,26 @@ export function renderHomeView() {
         if (dbUser.email) myIdentifiers.add(normalize(dbUser.email));
     }
 
-    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis
+    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis OU o homologador
     const myActiveTasks = state.tasks.filter(t => {
         if (t.status === 'done') return false;
-        if (!t.responsible || !Array.isArray(t.responsible)) return false;
         
-        return t.responsible.some(r => {
+        // Verifica se é o responsável
+        const isResponsible = Array.isArray(t.responsible) && t.responsible.some(r => {
             const rName = normalize(typeof r === 'object' ? r.name : r);
             const rEmail = normalize(typeof r === 'object' ? r.email : null);
             return myIdentifiers.has(rName) || myIdentifiers.has(rEmail);
         });
+
+        // Verifica se é o homologador pendente
+        let isHomologador = false;
+        if (t.homologador && t.status === 'homologation') {
+            const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
+            const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
+            isHomologador = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+        }
+
+        return isResponsible || isHomologador;
     });
 
     // 3. Calcular Métricas
@@ -370,6 +438,22 @@ export function renderHomeView() {
         homologation: myActiveTasks.filter(t => t.status === 'homologation').length,
         overdue: myActiveTasks.filter(t => isTaskOverdue(t)).length
     };
+
+    // NOVO: Calcular quantas tarefas dependem da homologação ESPECÍFICA do usuário logado
+    const myHomologationsPending = myActiveTasks.filter(t => {
+        if (t.status !== 'homologation' || !t.homologador) return false;
+        const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
+        const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
+        return myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+    }).length;
+
+    // NOVO: Gerar o HTML do badge animado (se houver pendências)
+    const homologationBadge = myHomologationsPending > 0 
+        ? `<div class="absolute -top-2 -right-2 flex h-6 w-6 z-10" title="Você tem ${myHomologationsPending} homologação(ões) pendente(s)">
+             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+             <span class="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-[10px] font-bold items-center justify-center border-2 border-white dark:border-[#1E293B] shadow-sm">${myHomologationsPending}</span>
+           </div>`
+        : '';
 
     const displayFullName = dbUser?.name || state.currentUser?.userDetails || 'Visitante';
     const userName = displayFullName.split(' ')[0];
@@ -393,7 +477,8 @@ export function renderHomeView() {
                     <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.inprogress}</p>
                 </div>
 
-                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
+                <div class="metric-card relative cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
+                    ${homologationBadge}
                     <div class="flex items-center gap-3 mb-3">
                         <div class="p-2.5 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl"><i data-lucide="eye" class="w-5 h-5"></i></div>
                         <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Homologação</h3>
@@ -499,19 +584,33 @@ export function renderHomeView() {
         listContainer.innerHTML = filteredTasks.map(task => {
             const isOverdue = isTaskOverdue(task);
             const statusColors = {
-                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500'
+                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500', publication: 'bg-purple-500'
             };
             const sColor = statusColors[task.status] || 'bg-gray-400';
 
+            // NOVO: Verifica se o usuário logado é o homologador pendente DESSA tarefa
+            let isPendingMyHomologation = false;
+            if (task.homologador && task.status === 'homologation') {
+                const hName = normalize(typeof task.homologador === 'object' ? task.homologador.name : task.homologador);
+                const hEmail = normalize(typeof task.homologador === 'object' ? task.homologador.email : null);
+                isPendingMyHomologation = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+            }
+
+            // Cria o Badge caso dependa dele
+            const homologadorBadge = isPendingMyHomologation 
+                ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 rounded-full border border-orange-300 dark:border-orange-700 animate-pulse flex items-center gap-1 shadow-sm"><i data-lucide="shield-alert" class="w-3 h-3"></i> SUA HOMOLOGAÇÃO</span>` 
+                : '';
+
             return `
-            <div class="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
+            <div class="bg-white dark:bg-[#1E293B] border ${isPendingMyHomologation ? 'border-orange-300 dark:border-orange-500/50' : 'border-gray-100 dark:border-gray-700'} rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="w-1.5 h-10 rounded-full ${sColor} shrink-0"></div>
                     <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
+                        <div class="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#94A3B8'}">${task.project || 'Geral'}</span>
                             <span class="text-xs font-mono font-bold text-gray-400">#${task.id}</span>
                             ${task.priority === 'Urgente' ? '<span class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">URGENTE</span>' : ''}
+                            ${homologadorBadge}
                         </div>
                         <h4 class="font-bold text-custom-darkest dark:text-white truncate pr-4">${task.title}</h4>
                     </div>
@@ -564,7 +663,8 @@ export function renderKanbanView() {
         { id: 'todo', name: 'Fila', color: 'bg-gray-400' },
         { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
         { id: 'inprogress', name: 'Andamento', color: 'bg-blue-500' },
-        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' }
+        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' },
+        { id: 'publication', name: 'Publicação', color: 'bg-purple-500' }
     ];
 
     columns.forEach((col, index) => {
@@ -735,6 +835,7 @@ export function renderListView() {
         'stopped': 'Parado',
         'inprogress': 'Em Andamento',
         'homologation': 'Homologação',
+        'publication': 'Publicação',
         'done': 'Concluído'
     };
 
@@ -744,9 +845,28 @@ export function renderListView() {
         
         const statusColor = task.status === 'stopped' ? 'red-500' : 
                           task.status === 'homologation' ? 'orange-500' : 
-                          task.status === 'inprogress' ? 'blue-500' : 'gray-300';
+                          task.status === 'inprogress' ? 'blue-500' : 
+                          task.status === 'publication' ? 'purple-500' : 'gray-300';
         
         const statusLabel = statusMap[task.status] || 'Desconhecido';
+
+        // NOVO: Badge do Homologador na Lista
+        let homologadorHtml = '';
+        if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
+            const hName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+            const isApproved = task.status === 'publication';
+            const colorClass = isApproved 
+                ? 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20' 
+                : 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20';
+            const icon = isApproved ? 'check-circle' : 'shield-check';
+            
+            homologadorHtml = `
+                <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-lg border ${colorClass} text-[10px] font-bold ml-1" title="Homologador: ${hName}">
+                    <i data-lucide="${icon}" class="w-3 h-3"></i>
+                    <span>${hName.split(' ')[0]}</span>
+                </div>
+            `;
+        }
 
         return `
         <div class="animate-slide-up-enter" style="animation-delay: ${index * 0.05}s">
@@ -758,6 +878,7 @@ export function renderListView() {
                         <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
                         <span class="text-sm font-mono ox-text-secondary font-bold">${task.id}</span>
                         <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">${statusLabel}</span>
+                        ${homologadorHtml}
                     </div>
                     <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
                     <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
@@ -1219,12 +1340,63 @@ export function renderTaskHistory(taskId) {
         }
     }
 
+    // Homologador (Sidebar do Modal)
+    const homologadorContainer = document.getElementById('modal-info-homologador-container');
+    const homologadorContent = document.getElementById('modal-info-homologador');
+    
+    if (homologadorContainer && homologadorContent) {
+        if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
+            const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+            const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
+            const isApproved = task.status === 'publication';
+            
+            const borderColor = isApproved ? 'border-green-500' : 'border-orange-500';
+            const bgColor = isApproved ? 'bg-green-500/20 text-green-300' : 'bg-orange-500/20 text-orange-300';
+            const statusText = isApproved ? 'Aprovado' : 'Pendente';
+            const statusColor = isApproved ? 'text-green-400' : 'text-orange-400';
+
+            const avatarImg = homolPic 
+                ? `<img src="${homolPic}" class="w-8 h-8 rounded-full object-cover border-2 ${borderColor}">` 
+                : `<div class="w-8 h-8 rounded-full ${bgColor} border-2 ${borderColor} flex items-center justify-center text-xs font-bold">${homolName.charAt(0)}</div>`;
+
+            homologadorContent.innerHTML = `
+                <div class="flex items-center gap-3 bg-black/10 dark:bg-white/5 pr-4 rounded-full border border-black/5 dark:border-white/10" title="Homologador: ${homolName}">
+                    ${avatarImg}
+                    <div class="flex flex-col py-1">
+                        <span class="text-xs font-bold text-custom-darkest dark:text-white leading-none">${homolName.split(' ')[0]}</span>
+                        <span class="text-[9px] ${statusColor} uppercase font-bold tracking-wider mt-0.5">${statusText}</span>
+                    </div>
+                </div>
+            `;
+            homologadorContainer.classList.remove('hidden');
+            homologadorContainer.classList.add('flex');
+        } else {
+            homologadorContainer.classList.add('hidden');
+            homologadorContainer.classList.remove('flex');
+        }
+    }
+
     // Google Calendar
     const calendarBtn = document.getElementById('modal-calendar-btn');
     if (calendarBtn) {
         const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r.email : '')).filter(Boolean).join(',');
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
         calendarBtn.href = googleUrl;
+    }
+
+    // Controle de Visibilidade do Botão de Aprovação
+    const modalApproveBtn = document.getElementById('modal-approve-btn');
+    if (modalApproveBtn) {
+        if (task.status === 'homologation') {
+            modalApproveBtn.classList.remove('hidden');
+            modalApproveBtn.classList.add('flex');
+            modalApproveBtn.dataset.taskId = task.id; // Guarda o ID para o click
+            modalApproveBtn.disabled = false;
+            modalApproveBtn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>`;
+        } else {
+            modalApproveBtn.classList.add('hidden');
+            modalApproveBtn.classList.remove('flex');
+        }
     }
 
     // Prazo
@@ -1793,6 +1965,10 @@ export async function updateNotificationBadge() {
         if(badgeOrb) badgeOrb.classList.add('hidden');
         if(badgeOrbExternal) badgeOrbExternal.classList.add('hidden');
         if(badgeMenu) badgeMenu.classList.add('hidden');
+        
+        // NOVO: Garante que a foto do usuário volte a aparecer imediatamente
+        const avatarOrb = document.getElementById('orb-avatar-container');
+        if (avatarOrb) avatarOrb.classList.add('active');
     }
 
     const listContainer = document.getElementById('orb-notifications-list');

@@ -159,13 +159,35 @@ function updateDragAndDropState() {
                     const task = state.tasks.find(t => t.id === taskId);
                     if (!task) return;
 
+                    // INTERCEPTAR IDA PARA HOMOLOGAÇÃO (Abre o modal)
+                    if (oldStatus !== newStatus && newStatus === 'homologation') {
+                        // Reverte o elemento no DOM para a coluna original visualmente
+                        if (evt.oldIndex < evt.from.children.length) {
+                            evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
+                        } else {
+                            evt.from.appendChild(itemEl);
+                        }
+                        
+                        // Abre o modal de escolha do homologador
+                        openHomologadorModal(task, oldStatus, newStatus);
+                        return; // O fluxo segue apenas se o modal for confirmado
+                    }
+
+                    // PREPARAR DADOS PARA ATUALIZAÇÃO DA TAREFA
+                    let updatePayload = { status: newStatus };
+                    
+                    // SE SAIR DA HOMOLOGAÇÃO PARA OUTRA COLUNA: Remove o homologador
+                    let removedHomologador = false;
+                    if (oldStatus === 'homologation' && newStatus !== 'homologation') {
+                        task.homologador = null;
+                        updatePayload.homologador = null;
+                        removedHomologador = true;
+                    }
+
                     task.status = newStatus;
 
                     if (oldStatus !== newStatus) {
                         itemEl.classList.remove('border-l-[6px]', 'border-l-red-500');
-                        if (ui.isTaskOverdue(task)) {
-                           // Mantém estilo se necessário
-                        }
                         
                         const oldColHeader = evt.from.parentElement.querySelector('.column-count');
                         const newColHeader = evt.to.parentElement.querySelector('.column-count');
@@ -189,9 +211,16 @@ function updateDragAndDropState() {
 
                     try {
                         if (oldStatus !== newStatus) {
-                            await api.updateTask(taskId, { status: newStatus });
+                            // Atualiza na API enviando o status e, se necessário, anulando o homologador
+                            await api.updateTask(taskId, updatePayload);
                         }
                         await api.updateOrder(orderedTasksPayload);
+                        
+                        // Se removeu o homologador, renderiza novamente para limpar o crachá do front-end
+                        if (removedHomologador) {
+                            ui.renderKanbanView();
+                            updateDragAndDropState();
+                        }
                     } catch (error) {
                         console.error("Erro no sync:", error);
                         ui.showToast('Erro ao salvar posição.', 'error');
@@ -202,6 +231,70 @@ function updateDragAndDropState() {
             kanbanSortableInstances.push(sortable);
         });
     }
+}
+
+// Gerencia o modal de seleção do homologador
+function openHomologadorModal(task, oldStatus, newStatus) {
+    const modal = document.getElementById('homologadorModal');
+    const select = document.getElementById('homologadorSelect');
+    
+    // Popula a lista dinamicamente
+    select.innerHTML = '<option value="" disabled selected>Selecione um usuário...</option>' + 
+        state.users.filter(u => u.name !== 'DEFINIR').map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+
+    const confirmBtn = document.getElementById('confirmHomologadorBtn');
+    const cancelBtn = document.getElementById('cancelHomologadorBtn');
+
+    // FIX: Garante que o botão seja redefinido para o estado inicial sempre que abrir o modal
+    confirmBtn.innerHTML = 'Confirmar';
+    confirmBtn.disabled = false;
+
+    // Remove event listeners antigos clonando os botões
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    // Mostra o modal
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('show'));
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    };
+
+    newCancelBtn.onclick = closeModal;
+
+    newConfirmBtn.onclick = async () => {
+        const selectedName = select.value;
+        if (!selectedName) return ui.showToast('Selecione um homologador', 'info');
+        
+        newConfirmBtn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> ...';
+        newConfirmBtn.disabled = true;
+        lucide.createIcons();
+
+        const selectedUser = state.users.find(u => u.name === selectedName);
+        const homologadorData = { name: selectedUser.name, picture: selectedUser.picture, email: selectedUser.email };
+
+        try {
+            task.status = newStatus;
+            task.homologador = homologadorData;
+
+            // Salva na API tanto o status quanto o homologador
+            await api.updateTask(task.id, { status: newStatus, homologador: homologadorData });
+            
+            ui.renderKanbanView(); // Re-renderiza o quadro com a tarefa na coluna certa
+            updateDragAndDropState(); // Reinicializa as instâncias do SortableJS
+            ui.showToast(`Enviado para Homologação com ${selectedName.split(' ')[0]}!`, 'success');
+            closeModal();
+        } catch (error) {
+            console.error(error);
+            ui.showToast('Erro ao mover tarefa', 'error');
+            newConfirmBtn.innerHTML = 'Confirmar'; // Em caso de erro, permite tentar de novo
+            newConfirmBtn.disabled = false;
+        }
+    };
 }
 
 // --- EVENT LISTENERS ---
@@ -236,24 +329,41 @@ function initializeEventListeners() {
         });
     }
 
-    // --- 2. ANIMAÇÃO CÍCLICA DOS ÍCONES (CORRIGIDO) ---
-    let navIconIdx = 0;
+    // --- 2. ANIMAÇÃO CÍCLICA DOS ÍCONES ---
+    const cyclingState = {};
     
     setInterval(() => {
-        const navOrb = document.getElementById('orb-nav');
-        // RE-SELECIONA os ícones a cada ciclo para garantir que temos os elementos atuais do DOM
-        const navIcons = document.querySelectorAll('#orb-nav .cycling-icon');
+        // Avalia tanto o menu de navegação (esquerda) quanto o menu de ferramentas/perfil (direita)
+        const containers = [
+            document.getElementById('orb-nav'), 
+            document.getElementById('orb-tools')
+        ].filter(Boolean);
         
-        if (navIcons.length === 0) return;
+        containers.forEach(container => {
+            // Só cicla se o menu estiver FECHADO
+            if (!container.classList.contains('expanded')) {
+                // Seleciona os ícones do container que NÃO estão ocultos
+                const icons = Array.from(container.querySelectorAll('.cycling-icon')).filter(el => !el.classList.contains('hidden'));
+                
+                if (icons.length === 0) return;
+                
+                // Se só sobrou 1 ícone visível (ex: zerou as notificações e ocultou o sino),
+                // garante que a foto fique visível e para de ciclar.
+                if (icons.length === 1) {
+                    icons[0].classList.add('active');
+                    return;
+                }
 
-        // Só alterna se o menu estiver FECHADO
-        if (navOrb && !navOrb.classList.contains('expanded')) {
-            navIcons.forEach(icon => icon.classList.remove('active'));
-            
-            navIconIdx = (navIconIdx + 1) % navIcons.length;
-            
-            navIcons[navIconIdx].classList.add('active');
-        }
+                const cid = container.id;
+                if (typeof cyclingState[cid] === 'undefined') cyclingState[cid] = 0;
+                
+                icons.forEach(icon => icon.classList.remove('active'));
+                
+                cyclingState[cid] = (cyclingState[cid] + 1) % icons.length;
+                
+                icons[cyclingState[cid]].classList.add('active');
+            }
+        });
     }, 1500); // 1.5 segundos
 
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
@@ -324,8 +434,19 @@ function initializeEventListeners() {
         if (approveBtn) {
             e.stopPropagation();
             try {
-                await api.updateTask(approveBtn.dataset.taskId, { status: 'done' });
-                ui.showToast('Tarefa concluída!', 'success');
+                // Agora envia para publicação em vez de 'done'
+                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication' });
+                ui.showToast('Enviado para Publicação!', 'success');
+            } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
+            return;
+        }
+        const publishBtn = e.target.closest('.publish-btn');
+        if (publishBtn) {
+            e.stopPropagation();
+            try {
+                // Este botão finaliza a tarefa (envia para arquivado)
+                await api.updateTask(publishBtn.dataset.taskId, { status: 'done' });
+                ui.showToast('Tarefa publicada e concluída!', 'success');
             } catch (err) { ui.showToast('Erro ao concluir', 'error'); }
             return;
         }
@@ -455,6 +576,42 @@ function initializeEventListeners() {
     });
 
     document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
+
+    // Evento para Aprovar a tarefa diretamente do Modal de Histórico
+    const modalApproveBtn = document.getElementById('modal-approve-btn');
+    if (modalApproveBtn) {
+        modalApproveBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const taskId = modalApproveBtn.dataset.taskId;
+            if (!taskId) return;
+
+            try {
+                // Feedback visual de carregamento
+                modalApproveBtn.innerHTML = '<i class="animate-spin w-4 h-4" data-lucide="loader-2"></i><span class="hidden sm:inline">Aprovando...</span>';
+                modalApproveBtn.disabled = true;
+                if (window.lucide) lucide.createIcons();
+
+                // Atualiza a tarefa na API enviando para o próximo status
+                await api.updateTask(taskId, { status: 'publication' });
+                ui.showToast('Tarefa aprovada para Publicação!', 'success');
+                
+                // Atualiza o state local (otimista) e recarrega a UI
+                const taskIndex = state.tasks.findIndex(t => t.id === taskId);
+                if(taskIndex !== -1) state.tasks[taskIndex].status = 'publication';
+                
+                ui.renderTaskHistory(taskId); // Re-renderiza o modal (vai esconder o botão agora que mudou de status)
+                ui.updateActiveView(); // Atualiza a tela atrás do modal (Home, Lista ou Kanban)
+                
+            } catch (err) {
+                console.error(err);
+                ui.showToast('Erro ao aprovar tarefa', 'error');
+                // Restaura o botão em caso de falha
+                modalApproveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>';
+                modalApproveBtn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        });
+    }
 
     // [CORREÇÃO] Animação de entrada do Modal de Edição
     document.getElementById('editTaskBtn').addEventListener('click', () => {
