@@ -275,7 +275,7 @@ function openHomologadorModal(task, oldStatus, newStatus) {
         lucide.createIcons();
 
         const selectedUser = state.users.find(u => u.name === selectedName);
-        const homologadorData = { name: selectedUser.name, picture: selectedUser.picture };
+        const homologadorData = { name: selectedUser.name, picture: selectedUser.picture, email: selectedUser.email };
 
         try {
             task.status = newStatus;
@@ -559,6 +559,42 @@ function initializeEventListeners() {
     });
 
     document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
+
+    // Evento para Aprovar a tarefa diretamente do Modal de Histórico
+    const modalApproveBtn = document.getElementById('modal-approve-btn');
+    if (modalApproveBtn) {
+        modalApproveBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const taskId = modalApproveBtn.dataset.taskId;
+            if (!taskId) return;
+
+            try {
+                // Feedback visual de carregamento
+                modalApproveBtn.innerHTML = '<i class="animate-spin w-4 h-4" data-lucide="loader-2"></i><span class="hidden sm:inline">Aprovando...</span>';
+                modalApproveBtn.disabled = true;
+                if (window.lucide) lucide.createIcons();
+
+                // Atualiza a tarefa na API enviando para o próximo status
+                await api.updateTask(taskId, { status: 'publication' });
+                ui.showToast('Tarefa aprovada para Publicação!', 'success');
+                
+                // Atualiza o state local (otimista) e recarrega a UI
+                const taskIndex = state.tasks.findIndex(t => t.id === taskId);
+                if(taskIndex !== -1) state.tasks[taskIndex].status = 'publication';
+                
+                ui.renderTaskHistory(taskId); // Re-renderiza o modal (vai esconder o botão agora que mudou de status)
+                ui.updateActiveView(); // Atualiza a tela atrás do modal (Home, Lista ou Kanban)
+                
+            } catch (err) {
+                console.error(err);
+                ui.showToast('Erro ao aprovar tarefa', 'error');
+                // Restaura o botão em caso de falha
+                modalApproveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>';
+                modalApproveBtn.disabled = false;
+                if (window.lucide) lucide.createIcons();
+            }
+        });
+    }
 
     // [CORREÇÃO] Animação de entrada do Modal de Edição
     document.getElementById('editTaskBtn').addEventListener('click', () => {

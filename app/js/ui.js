@@ -1384,6 +1384,21 @@ export function renderTaskHistory(taskId) {
         calendarBtn.href = googleUrl;
     }
 
+    // Controle de Visibilidade do Botão de Aprovação
+    const modalApproveBtn = document.getElementById('modal-approve-btn');
+    if (modalApproveBtn) {
+        if (task.status === 'homologation') {
+            modalApproveBtn.classList.remove('hidden');
+            modalApproveBtn.classList.add('flex');
+            modalApproveBtn.dataset.taskId = task.id; // Guarda o ID para o click
+            modalApproveBtn.disabled = false;
+            modalApproveBtn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>`;
+        } else {
+            modalApproveBtn.classList.add('hidden');
+            modalApproveBtn.classList.remove('flex');
+        }
+    }
+
     // Prazo
     const dueDateContainer = document.getElementById('modal-info-dueDate-container');
     const dueDateText = document.getElementById('modal-info-dueDate');
