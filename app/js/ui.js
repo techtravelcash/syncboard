@@ -222,7 +222,56 @@ export const createTaskElement = (task) => {
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
-    // LÓGICA ATUALIZADA DOS BOTÕES DE AÇÃO RÁPIDA
+    // --- NOVO: BADGE DO HOMOLOGADOR ---
+    let homologadorBadge = '';
+    
+    // Agora o badge aparece tanto na homologação quanto na publicação
+    if ((task.status === 'homologation' || task.status === 'publication') && task.homologador) {
+        const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+        const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
+        
+        // Verifica se já foi aprovado para publicação
+        const isApproved = task.status === 'publication';
+        
+        // Definição dinâmica de cores e estilos
+        const badgeBg = isApproved 
+            ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/20' 
+            : 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20';
+            
+        const iconName = isApproved ? 'check-circle' : 'shield-check';
+        const iconColor = isApproved ? 'text-green-500' : 'text-orange-500';
+        
+        // Mantém a animação pulsante apenas quando está pendente
+        const pingEffect = isApproved ? '' : '<span class="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-30 group-hover/homol:animate-ping"></span>';
+        
+        const avatarBorder = isApproved ? 'border-green-200 dark:border-green-800' : 'border-orange-200 dark:border-orange-800';
+        const avatarFallbackBg = isApproved ? 'bg-green-200 dark:bg-green-800' : 'bg-orange-200 dark:bg-orange-800';
+        const avatarFallbackText = isApproved ? 'text-green-700 dark:text-green-200' : 'text-orange-700 dark:text-orange-200';
+        
+        const labelTextClass = isApproved ? 'text-green-600/70 dark:text-green-400/80' : 'text-orange-600/70 dark:text-orange-400/80';
+        const nameTextClass = isApproved ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300';
+        const labelText = isApproved ? 'Homologado por' : 'Homologador';
+
+        const avatarImg = homolPic 
+            ? `<img src="${homolPic}" class="w-5 h-5 rounded-full object-cover border ${avatarBorder}">` 
+            : `<div class="w-5 h-5 rounded-full ${avatarFallbackBg} flex items-center justify-center text-[9px] font-bold ${avatarFallbackText} shadow-inner">${homolName.charAt(0)}</div>`;
+
+        homologadorBadge = `
+            <div class="mt-3 flex items-center gap-2 px-2.5 py-1.5 ${badgeBg} border rounded-xl w-fit group/homol transition-colors duration-500">
+                <div class="relative flex items-center justify-center">
+                    ${pingEffect}
+                    <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} relative z-10"></i>
+                </div>
+                ${avatarImg}
+                <div class="flex flex-col">
+                    <span class="text-[8px] font-bold uppercase tracking-widest ${labelTextClass} leading-none mb-0.5">${labelText}</span>
+                    <span class="text-[11px] font-extrabold ${nameTextClass} leading-none tracking-tight">${homolName.split(' ')[0]}</span>
+                </div>
+            </div>
+        `;
+    }
+    // -------------------------------------------
+
     let actionButtons = '';
     if (task.status === 'homologation') {
         actionButtons = `<button class="approve-btn p-1 rounded-md bg-orange-500 hover:bg-orange-600 text-white shadow-sm" title="Aprovar para Publicação" data-task-id="${task.id}"><i data-lucide="arrow-right" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
@@ -248,10 +297,11 @@ export const createTaskElement = (task) => {
         ${projectStrip}
         ${quickActions}
         
-        <div class="task-body">
+        <div class="task-body flex flex-col h-full">
             <h3 class="text-sm ox-text-primary leading-snug break-words pr-1">${task.title}</h3>
+            ${homologadorBadge}
             
-            <div class="flex items-end justify-between mt-auto pt-2 border-t border-dashed border-gray-200 dark:border-white/5">
+            <div class="flex items-end justify-between mt-auto pt-3 border-t border-dashed border-gray-200 dark:border-white/5">
                 <div class="flex items-center gap-3 min-h-[24px]">
                     ${idBadge}
                     ${dateBadge}
@@ -754,10 +804,28 @@ export function renderListView() {
         
         const statusColor = task.status === 'stopped' ? 'red-500' : 
                           task.status === 'homologation' ? 'orange-500' : 
-                          task.status === 'inprogress' ? 'blue-500' : 'gray-300';
+                          task.status === 'inprogress' ? 'blue-500' : 
                           task.status === 'publication' ? 'purple-500' : 'gray-300';
         
         const statusLabel = statusMap[task.status] || 'Desconhecido';
+
+        // NOVO: Badge do Homologador na Lista
+        let homologadorHtml = '';
+        if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
+            const hName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+            const isApproved = task.status === 'publication';
+            const colorClass = isApproved 
+                ? 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20' 
+                : 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20';
+            const icon = isApproved ? 'check-circle' : 'shield-check';
+            
+            homologadorHtml = `
+                <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-lg border ${colorClass} text-[10px] font-bold ml-1" title="Homologador: ${hName}">
+                    <i data-lucide="${icon}" class="w-3 h-3"></i>
+                    <span>${hName.split(' ')[0]}</span>
+                </div>
+            `;
+        }
 
         return `
         <div class="animate-slide-up-enter" style="animation-delay: ${index * 0.05}s">
@@ -769,6 +837,7 @@ export function renderListView() {
                         <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
                         <span class="text-sm font-mono ox-text-secondary font-bold">${task.id}</span>
                         <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">${statusLabel}</span>
+                        ${homologadorHtml}
                     </div>
                     <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
                     <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
@@ -1227,6 +1296,42 @@ export function renderTaskHistory(taskId) {
                 </div>
                 <span class="text-xs text-white/30 italic ml-2">Ninguém</span>
             `;
+        }
+    }
+
+    // Homologador (Sidebar do Modal)
+    const homologadorContainer = document.getElementById('modal-info-homologador-container');
+    const homologadorContent = document.getElementById('modal-info-homologador');
+    
+    if (homologadorContainer && homologadorContent) {
+        if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
+            const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+            const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
+            const isApproved = task.status === 'publication';
+            
+            const borderColor = isApproved ? 'border-green-500' : 'border-orange-500';
+            const bgColor = isApproved ? 'bg-green-500/20 text-green-300' : 'bg-orange-500/20 text-orange-300';
+            const statusText = isApproved ? 'Aprovado' : 'Pendente';
+            const statusColor = isApproved ? 'text-green-400' : 'text-orange-400';
+
+            const avatarImg = homolPic 
+                ? `<img src="${homolPic}" class="w-8 h-8 rounded-full object-cover border-2 ${borderColor}">` 
+                : `<div class="w-8 h-8 rounded-full ${bgColor} border-2 ${borderColor} flex items-center justify-center text-xs font-bold">${homolName.charAt(0)}</div>`;
+
+            homologadorContent.innerHTML = `
+                <div class="flex items-center gap-3 bg-black/10 dark:bg-white/5 pr-4 rounded-full border border-black/5 dark:border-white/10" title="Homologador: ${homolName}">
+                    ${avatarImg}
+                    <div class="flex flex-col py-1">
+                        <span class="text-xs font-bold text-custom-darkest dark:text-white leading-none">${homolName.split(' ')[0]}</span>
+                        <span class="text-[9px] ${statusColor} uppercase font-bold tracking-wider mt-0.5">${statusText}</span>
+                    </div>
+                </div>
+            `;
+            homologadorContainer.classList.remove('hidden');
+            homologadorContainer.classList.add('flex');
+        } else {
+            homologadorContainer.classList.add('hidden');
+            homologadorContainer.classList.remove('flex');
         }
     }
 

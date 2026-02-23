@@ -159,13 +159,35 @@ function updateDragAndDropState() {
                     const task = state.tasks.find(t => t.id === taskId);
                     if (!task) return;
 
+                    // INTERCEPTAR IDA PARA HOMOLOGAÇÃO (Abre o modal)
+                    if (oldStatus !== newStatus && newStatus === 'homologation') {
+                        // Reverte o elemento no DOM para a coluna original visualmente
+                        if (evt.oldIndex < evt.from.children.length) {
+                            evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
+                        } else {
+                            evt.from.appendChild(itemEl);
+                        }
+                        
+                        // Abre o modal de escolha do homologador
+                        openHomologadorModal(task, oldStatus, newStatus);
+                        return; // O fluxo segue apenas se o modal for confirmado
+                    }
+
+                    // PREPARAR DADOS PARA ATUALIZAÇÃO DA TAREFA
+                    let updatePayload = { status: newStatus };
+                    
+                    // SE SAIR DA HOMOLOGAÇÃO PARA OUTRA COLUNA: Remove o homologador
+                    let removedHomologador = false;
+                    if (oldStatus === 'homologation' && newStatus !== 'homologation') {
+                        task.homologador = null;
+                        updatePayload.homologador = null;
+                        removedHomologador = true;
+                    }
+
                     task.status = newStatus;
 
                     if (oldStatus !== newStatus) {
                         itemEl.classList.remove('border-l-[6px]', 'border-l-red-500');
-                        if (ui.isTaskOverdue(task)) {
-                           // Mantém estilo se necessário
-                        }
                         
                         const oldColHeader = evt.from.parentElement.querySelector('.column-count');
                         const newColHeader = evt.to.parentElement.querySelector('.column-count');
@@ -189,9 +211,16 @@ function updateDragAndDropState() {
 
                     try {
                         if (oldStatus !== newStatus) {
-                            await api.updateTask(taskId, { status: newStatus });
+                            // Atualiza na API enviando o status e, se necessário, anulando o homologador
+                            await api.updateTask(taskId, updatePayload);
                         }
                         await api.updateOrder(orderedTasksPayload);
+                        
+                        // Se removeu o homologador, renderiza novamente para limpar o crachá do front-end
+                        if (removedHomologador) {
+                            ui.renderKanbanView();
+                            updateDragAndDropState();
+                        }
                     } catch (error) {
                         console.error("Erro no sync:", error);
                         ui.showToast('Erro ao salvar posição.', 'error');
@@ -202,6 +231,70 @@ function updateDragAndDropState() {
             kanbanSortableInstances.push(sortable);
         });
     }
+}
+
+// Gerencia o modal de seleção do homologador
+function openHomologadorModal(task, oldStatus, newStatus) {
+    const modal = document.getElementById('homologadorModal');
+    const select = document.getElementById('homologadorSelect');
+    
+    // Popula a lista dinamicamente
+    select.innerHTML = '<option value="" disabled selected>Selecione um usuário...</option>' + 
+        state.users.filter(u => u.name !== 'DEFINIR').map(u => `<option value="${u.name}">${u.name}</option>`).join('');
+
+    const confirmBtn = document.getElementById('confirmHomologadorBtn');
+    const cancelBtn = document.getElementById('cancelHomologadorBtn');
+
+    // FIX: Garante que o botão seja redefinido para o estado inicial sempre que abrir o modal
+    confirmBtn.innerHTML = 'Confirmar';
+    confirmBtn.disabled = false;
+
+    // Remove event listeners antigos clonando os botões
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    // Mostra o modal
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('show'));
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    };
+
+    newCancelBtn.onclick = closeModal;
+
+    newConfirmBtn.onclick = async () => {
+        const selectedName = select.value;
+        if (!selectedName) return ui.showToast('Selecione um homologador', 'info');
+        
+        newConfirmBtn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> ...';
+        newConfirmBtn.disabled = true;
+        lucide.createIcons();
+
+        const selectedUser = state.users.find(u => u.name === selectedName);
+        const homologadorData = { name: selectedUser.name, picture: selectedUser.picture };
+
+        try {
+            task.status = newStatus;
+            task.homologador = homologadorData;
+
+            // Salva na API tanto o status quanto o homologador
+            await api.updateTask(task.id, { status: newStatus, homologador: homologadorData });
+            
+            ui.renderKanbanView(); // Re-renderiza o quadro com a tarefa na coluna certa
+            updateDragAndDropState(); // Reinicializa as instâncias do SortableJS
+            ui.showToast(`Enviado para Homologação com ${selectedName.split(' ')[0]}!`, 'success');
+            closeModal();
+        } catch (error) {
+            console.error(error);
+            ui.showToast('Erro ao mover tarefa', 'error');
+            newConfirmBtn.innerHTML = 'Confirmar'; // Em caso de erro, permite tentar de novo
+            newConfirmBtn.disabled = false;
+        }
+    };
 }
 
 // --- EVENT LISTENERS ---
