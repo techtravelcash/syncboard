@@ -409,16 +409,26 @@ export function renderHomeView() {
         if (dbUser.email) myIdentifiers.add(normalize(dbUser.email));
     }
 
-    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis
+    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis OU o homologador
     const myActiveTasks = state.tasks.filter(t => {
         if (t.status === 'done') return false;
-        if (!t.responsible || !Array.isArray(t.responsible)) return false;
         
-        return t.responsible.some(r => {
+        // Verifica se é o responsável
+        const isResponsible = Array.isArray(t.responsible) && t.responsible.some(r => {
             const rName = normalize(typeof r === 'object' ? r.name : r);
             const rEmail = normalize(typeof r === 'object' ? r.email : null);
             return myIdentifiers.has(rName) || myIdentifiers.has(rEmail);
         });
+
+        // Verifica se é o homologador pendente
+        let isHomologador = false;
+        if (t.homologador && t.status === 'homologation') {
+            const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
+            const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
+            isHomologador = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+        }
+
+        return isResponsible || isHomologador;
     });
 
     // 3. Calcular Métricas
@@ -561,15 +571,29 @@ export function renderHomeView() {
             };
             const sColor = statusColors[task.status] || 'bg-gray-400';
 
+            // NOVO: Verifica se o usuário logado é o homologador pendente DESSA tarefa
+            let isPendingMyHomologation = false;
+            if (task.homologador && task.status === 'homologation') {
+                const hName = normalize(typeof task.homologador === 'object' ? task.homologador.name : task.homologador);
+                const hEmail = normalize(typeof task.homologador === 'object' ? task.homologador.email : null);
+                isPendingMyHomologation = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
+            }
+
+            // Cria o Badge caso dependa dele
+            const homologadorBadge = isPendingMyHomologation 
+                ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 rounded-full border border-orange-300 dark:border-orange-700 animate-pulse flex items-center gap-1 shadow-sm"><i data-lucide="shield-alert" class="w-3 h-3"></i> SUA HOMOLOGAÇÃO</span>` 
+                : '';
+
             return `
-            <div class="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
+            <div class="bg-white dark:bg-[#1E293B] border ${isPendingMyHomologation ? 'border-orange-300 dark:border-orange-500/50' : 'border-gray-100 dark:border-gray-700'} rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="w-1.5 h-10 rounded-full ${sColor} shrink-0"></div>
                     <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
+                        <div class="flex items-center gap-2 mb-0.5 flex-wrap">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#94A3B8'}">${task.project || 'Geral'}</span>
                             <span class="text-xs font-mono font-bold text-gray-400">#${task.id}</span>
                             ${task.priority === 'Urgente' ? '<span class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">URGENTE</span>' : ''}
+                            ${homologadorBadge}
                         </div>
                         <h4 class="font-bold text-custom-darkest dark:text-white truncate pr-4">${task.title}</h4>
                     </div>
