@@ -17,8 +17,8 @@ function formatHtmlToDiscord(html) {
     let text = html;
 
     // 1. Converte Menções (@Usuario)
-    // Transforma <span ... data-name="Elmo">...</span> em **@Elmo**
-    text = text.replace(/<span[^>]*class="mention-tag"[^>]*data-name="([^"]*)"[^>]*>.*?<\/span>/g, '**@$1**');
+    // A tag de menção possui o nome precedido por @ dentro do conteúdo do span
+    text = text.replace(/<span[^>]*class="mention-tag"[^>]*>[\s\S]*?@([^<\n]+?)[\s]*<\/span>/g, '**@$1**');
 
     // 2. Converte Quebras de Linha e Parágrafos
     text = text.replace(/<br\s*\/?>/gi, '\n');
@@ -79,8 +79,7 @@ module.exports = async function (context, req) {
     context.log(`Adicionando comentário à tarefa com ID: ${taskId}`);
 
     try {
-        // Garante que o container de notificações existe (caso ainda não exista)
-        // Nota: Idealmente isso é feito no setup do banco, mas mantendo a segurança aqui
+        // Garante que o container de notificações existe
         try {
             await database.containers.createIfNotExists({ id: "Notifications", partitionKey: { paths: ["/targetUserEmail"] } });
         } catch (e) { /* Ignora se já existir */ }
@@ -94,7 +93,7 @@ module.exports = async function (context, req) {
         // 1. Adicionar o Comentário (SALVA O HTML ORIGINAL)
         const newComment = {
             id: uuidv4(),
-            text: commentData.text, // Aqui fica o HTML rico (<b>, <span>, etc)
+            text: commentData.text,
             author: user.userDetails,
             userId: user.userId, 
             timestamp: new Date().toISOString()
@@ -108,20 +107,18 @@ module.exports = async function (context, req) {
         existingTask.comments.push(newComment);
 
         // 2. Lógica de Menção (@Nome) para Notificações Internas
-        // Nota: A verificação de .includes('@') no HTML ainda funciona, 
-        // mas para ser mais robusto com o novo formato, buscamos pelo data-name
         const { resources: allUsers } = await usersContainer.items.readAll().fetchAll();
         
-        // Regex para extrair nomes mencionados nas tags <span ... data-name="NOME">
-        const mentionRegex = /data-name="([^"]*)"/g;
+        // Regex para extrair os e-mails mencionados nas tags <span ... data-email="EMAIL">
+        const mentionRegex = /data-email="([^"]*)"/g;
         let match;
-        const mentionedNames = [];
+        const mentionedEmails = [];
         while ((match = mentionRegex.exec(commentData.text)) !== null) {
-            mentionedNames.push(match[1]);
+            mentionedEmails.push(match[1].toLowerCase());
         }
 
-        // Filtra usuários que foram mencionados
-        const mentionedUsers = allUsers.filter(u => mentionedNames.includes(u.name));
+        // Filtra usuários pelo e-mail (resolvendo o problema)
+        const mentionedUsers = allUsers.filter(u => u.email && mentionedEmails.includes(u.email.toLowerCase()));
         
         if (mentionedUsers.length > 0) {
             for (const mentionedUser of mentionedUsers) {
@@ -132,7 +129,7 @@ module.exports = async function (context, req) {
                     taskId: taskId,
                     taskTitle: existingTask.title,
                     message: `Você foi mencionado por ${user.userDetails}`,
-                    commentPreview: formatHtmlToDiscord(commentData.text), // Salva preview limpo na notificação
+                    commentPreview: formatHtmlToDiscord(commentData.text),
                     isRead: false,
                     createdAt: new Date().toISOString()
                 };
@@ -150,7 +147,7 @@ module.exports = async function (context, req) {
             avatar_url: "https://i.imgur.com/AoaA8WI.png",
             content: `**💬 Novo Comentário de ${user.userDetails} na Tarefa [${taskId}]**`,
             embeds: [{
-                description: discordMessage, // <--- Texto Limpo
+                description: discordMessage, 
                 color: 0x9DB2BF,
             }]
         });
