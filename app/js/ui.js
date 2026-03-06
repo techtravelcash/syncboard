@@ -340,6 +340,8 @@ export const createTaskElement = (task) => {
     return taskCard;
 };
 
+
+
 // --- LOGICA DE FILTRO ---
 
 function filterTasks(tasks) {
@@ -1272,6 +1274,33 @@ export function populateResponsibleFilter() {
 }
 
 // --- MODAL: DETALHES ---
+
+// Adiciona o listener de duplo clique ('dblclick') no container do Kanban
+document.getElementById('kanbanView').addEventListener('dblclick', function(e) {
+    
+    // Verifica se o duplo clique ocorreu dentro de um card de tarefa
+    const taskCard = e.target.closest('.task-card');
+    
+    if (taskCard) {
+        // Truque de UX: Previne a seleção de texto azul chata que acontece ao dar duplo clique
+        window.getSelection().removeAllRanges();
+        
+        // Pega o ID da tarefa (Ajuste dependendo de como o ID está no seu HTML)
+        // Geralmente está num atributo como data-id="123" ou id="task-123"
+        const taskId = taskCard.dataset.id || taskCard.id.replace('task-', '');
+        
+        // Chama a função que já existe no seu código para abrir o modal do histórico/detalhes
+        // IMPORTANTE: Substitua 'openTaskHistoryModal' pelo nome real da sua função!
+        if (typeof openTaskHistoryModal === 'function') {
+            openTaskHistoryModal(taskId);
+        } else if (typeof window.openTaskDetails === 'function') {
+            window.openTaskDetails(taskId);
+        } else {
+            console.log('Duplo clique detetado na tarefa ID:', taskId);
+            // Insira aqui a sua chamada de função para abrir o #taskHistoryModal
+        }
+    }
+});
 
 // --- VARIÁVEIS DE ESTADO DA ANIMAÇÃO ---
 let activeOriginRect = null;

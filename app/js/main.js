@@ -398,6 +398,28 @@ function initializeEventListeners() {
         ui.updateActiveView();
     });
 
+    // --- DUPLO CLIQUE NO KANBAN PARA ABRIR TAREFA ---
+    const kanbanView = document.getElementById('kanbanView');
+    if (kanbanView) {
+        kanbanView.addEventListener('dblclick', (e) => {
+            const taskCard = e.target.closest('.task-card');
+            
+            if (taskCard) {
+                // Previne a seleção de texto azul acidental ao dar duplo clique
+                window.getSelection().removeAllRanges();
+                
+                // Vai buscar o ID da tarefa (que é guardado no atributo data-task-id)
+                const taskId = taskCard.dataset.taskId;
+                
+                if (taskId) {
+                    // Dá um pequeno destaque visual e abre o modal
+                    ui.highlightTask(taskId, false);
+                    ui.renderTaskHistory(taskId);
+                }
+            }
+        });
+    }
+
     const addTaskBtn = document.getElementById('addTaskBtn');
     const taskModal = document.getElementById('taskModal');
     const taskForm = document.getElementById('taskForm');
