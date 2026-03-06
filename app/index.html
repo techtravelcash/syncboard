@@ -162,7 +162,6 @@
                         <i data-lucide="log-out" class="w-5 h-5"></i> Sair
                     </a>
                 </div>
-                <div id="orb-notifications-list" class="hidden mt-4 pt-4 border-t border-custom-light dark:border-white/10 overflow-y-auto max-h-[150px] custom-scrollbar"></div>
             </div>
         </div>
 
@@ -414,10 +413,6 @@
                     <a id="modal-calendar-btn" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Agendar Reunião no Google Calendar">
                         <i data-lucide="calendar-plus" class="w-6 h-6"></i>
                     </a>
-                    
-                    <a id="modal-calendar-btn" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Agendar Reunião no Google Calendar">
-                        <i data-lucide="calendar-plus" class="w-6 h-6"></i>
-                    </a>
 
                     <button id="editTaskBtn" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-all" title="Editar">
                         <i data-lucide="file-pen-line" class="w-6 h-6"></i>
@@ -621,6 +616,27 @@
                     Confirmar
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div id="notificationsModal" class="fixed inset-0 z-[1600] hidden flex items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
+        <div class="orb-glass-unified w-full max-w-2xl max-h-[85vh] flex flex-col relative animate-scale-up overflow-hidden shadow-2xl">
+            
+            <div class="flex-shrink-0 px-8 py-6 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-white/10 dark:bg-black/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="text-2xl font-extrabold text-custom-darkest dark:text-white tracking-tight">Notificações</h2>
+                </div>
+                <button id="closeNotificationsBtn" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-custom-dark dark:text-gray-400 transition-all opacity-80 hover:opacity-100">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <div id="modal-notifications-list" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3 bg-black/[0.015] dark:bg-white/[0.015]">
+                </div>
+            
         </div>
     </div>
 

@@ -804,7 +804,41 @@ function initializeEventListeners() {
         document.getElementById('cancelAiBtn').addEventListener('click', closeAiModal);
     }
 
+    // --- LÓGICA DO MODAL DE NOTIFICAÇÕES ---
     const notifBtn = document.getElementById('orb-notif-btn');
+    const notifModal = document.getElementById('notificationsModal');
+    const closeNotifBtn = document.getElementById('closeNotificationsBtn');
+
+    if (notifBtn && notifModal) {
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Fecha o menu orbital
+            document.getElementById('orb-tools').classList.remove('expanded');
+            
+            // Abre o modal de notificações com animação
+            notifModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                notifModal.classList.add('show');
+            });
+        });
+
+        // Fechar pelo botão X
+        if (closeNotifBtn) {
+            closeNotifBtn.addEventListener('click', () => {
+                notifModal.classList.remove('show');
+                setTimeout(() => notifModal.classList.add('hidden'), 300);
+            });
+        }
+
+        // Fechar clicando fora (no backdrop escuro)
+        notifModal.addEventListener('click', (e) => {
+            if (e.target === notifModal) {
+                notifModal.classList.remove('show');
+                setTimeout(() => notifModal.classList.add('hidden'), 300);
+            }
+        });
+    }
     const notifList = document.getElementById('orb-notifications-list');
     if (notifBtn) {
         notifBtn.addEventListener('click', (e) => {

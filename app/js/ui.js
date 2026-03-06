@@ -1309,11 +1309,12 @@ let isAnimating = false;
 
 // --- MODAL: DETALHES (Rich Text + Menções + Animação FLIP) ---
 
-export function renderTaskHistory(taskId) {
+export function renderTaskHistory(taskId, fromNotification = false) {
     const task = state.tasks.find(t => t.id === taskId);
     if (!task) return;
 
     state.lastInteractedTaskId = taskId;
+    state.returnToNotifications = fromNotification; // Memoriza se viemos das notificações
 
     // =================================================================
     // 1. POPULAÇÃO DE DADOS
@@ -1499,10 +1500,10 @@ export function renderTaskHistory(taskId) {
                 : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
 
             const normalize = (value) => (value || '').toString().trim().toLowerCase();
-            const emailClaim = (state.currentUser?.claims || []).find(c =>
-                c.typ === 'emails' ||
-                c.typ === 'email' ||
-                c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+            const emailClaim = (state.currentUser?.claims || []).find(claim =>
+                claim.typ === 'emails' ||
+                claim.typ === 'email' ||
+                claim.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
             )?.val;
 
             const myIdentifiers = new Set([
@@ -1550,7 +1551,6 @@ export function renderTaskHistory(taskId) {
     // 2. INJEÇÃO DO RICH TEXT EDITOR
     // =================================================================
     
-    // Substitui o container do input padrão pelo novo Rich Editor
     const rightColumn = document.querySelector('#taskHistoryModal .glass-separator-v');
     const inputContainer = rightColumn ? rightColumn.querySelector('.p-6.mt-auto') : null;
     
@@ -1651,10 +1651,8 @@ export function renderTaskHistory(taskId) {
 
     if (window.lucide) lucide.createIcons();
 
-    // Setup do Editor Rich Text (Com suporte a @Menção e Foto)
     setupRichTextEditor();
     
-    // Lógica de Enviar
     const sendBtn = document.getElementById('add-comment-btn');
     const editor = document.getElementById('comment-input-rich');
 
@@ -1711,10 +1709,34 @@ export function closeTaskHistory(taskId) {
             activeOriginRect = null;
             activeOriginEl = null;
             isAnimating = false;
+
+            // NOVO: Volta para o modal de notificações se tiver vindo de lá
+            if (state.returnToNotifications) {
+                state.returnToNotifications = false; // Limpa o estado para os próximos cliques
+                const notifModal = document.getElementById('notificationsModal');
+                if (notifModal) {
+                    notifModal.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        notifModal.classList.add('show');
+                    });
+                }
+            }
         }, 300); 
     } else {
         modal.classList.add('hidden');
         isAnimating = false;
+        
+        // Trata o caso em que o modal fecha sem origem animada
+        if (state.returnToNotifications) {
+            state.returnToNotifications = false;
+            const notifModal = document.getElementById('notificationsModal');
+            if (notifModal) {
+                notifModal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    notifModal.classList.add('show');
+                });
+            }
+        }
     }
 }
 
@@ -1983,6 +2005,7 @@ export async function updateNotificationBadge() {
     const badgeMenu = document.getElementById('orb-notif-count');
     const badgeOrbExternal = document.getElementById('notification-orb-badge');
     
+    // 1. Atualiza as bolinhas vermelhas de contagem
     if (count > 0) {
         if(badgeOrb) badgeOrb.classList.remove('hidden');
         if(badgeOrbExternal) badgeOrbExternal.classList.remove('hidden');
@@ -1995,41 +2018,76 @@ export async function updateNotificationBadge() {
         if(badgeOrbExternal) badgeOrbExternal.classList.add('hidden');
         if(badgeMenu) badgeMenu.classList.add('hidden');
         
-        // NOVO: Garante que a foto do usuário volte a aparecer imediatamente
         const avatarOrb = document.getElementById('orb-avatar-container');
         if (avatarOrb) avatarOrb.classList.add('active');
     }
 
-    const listContainer = document.getElementById('orb-notifications-list');
+    // 2. Renderiza a lista no Novo Modal
+    const listContainer = document.getElementById('modal-notifications-list');
+    if (!listContainer) return; // Proteção contra erros
+
     if (notifs.length === 0) {
-        listContainer.innerHTML = '<div class="text-center text-gray-400 text-xs py-4">Sem notificações.</div>';
+        listContainer.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-16 text-custom-dark/50 dark:text-white/30">
+                <i data-lucide="bell-off" class="w-12 h-12 mb-3 opacity-50"></i>
+                <p class="text-sm font-bold tracking-wide uppercase">Tudo limpo por aqui</p>
+            </div>
+        `;
     } else {
         listContainer.innerHTML = notifs.map(n => `
-            <div class="p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer ${n.isRead ? 'opacity-50' : 'bg-blue-50/50 dark:bg-blue-900/10'}" data-notif-id="${n.id}" data-task-id="${n.taskId}">
-                <p class="text-xs font-bold text-custom-darkest dark:text-white">${n.message}</p>
-                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1 truncate">"${n.commentPreview}"</p>
-                <p class="text-[9px] text-gray-400 text-right mt-1">${formatDateTime(n.createdAt)}</p>
+            <div class="p-4 rounded-2xl border ${n.isRead ? 'bg-white/40 dark:bg-white/5 border-transparent opacity-60' : 'bg-white/80 dark:bg-[#1E293B]/80 border-blue-200 dark:border-blue-500/30 shadow-sm'} hover:scale-[1.01] transition-all duration-300 cursor-pointer flex gap-4 group" data-notif-id="${n.id}" data-task-id="${n.taskId}">
+                
+                <div class="mt-1 flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center ${n.isRead ? 'bg-black/5 dark:bg-white/10 text-custom-dark dark:text-gray-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}">
+                        <i data-lucide="${n.isRead ? 'check' : 'bell'}" class="w-5 h-5"></i>
+                    </div>
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start mb-1 gap-2">
+                        <h4 class="text-sm font-bold text-custom-darkest dark:text-white leading-snug">${n.message}</h4>
+                        <span class="text-[10px] font-bold text-custom-dark/60 dark:text-gray-400 whitespace-nowrap pt-0.5">${formatDateTime(n.createdAt)}</span>
+                    </div>
+                    <p class="text-xs font-medium text-custom-dark dark:text-gray-300 italic line-clamp-2">"${n.commentPreview}"</p>
+                </div>
+                
             </div>
         `).join('');
         
+        if (window.lucide) lucide.createIcons();
+        
+        // 3. Lógica do Clique Coreografado
         listContainer.querySelectorAll('div[data-notif-id]').forEach(el => {
-            el.addEventListener('click', async () => {
+            el.addEventListener('click', (e) => {
                 const notifId = el.dataset.notifId;
                 const taskId = el.dataset.taskId;
                 
-                if (!el.classList.contains('opacity-50')) {
-                    await markNotificationRead(notifId);
-                    updateNotificationBadge();
+                // Dá feedback imediato (encolhe levemente o cartão)
+                el.style.transform = 'scale(0.98)';
+                el.style.opacity = '0.5';
+                
+                // Marca como lida
+                if (!el.classList.contains('opacity-60')) {
+                    markNotificationRead(notifId).then(() => updateNotificationBadge());
                 }
                 
-                document.getElementById('orb-tools').classList.remove('expanded');
+                // Começa a fechar o modal das notificações
+                const notifModal = document.getElementById('notificationsModal');
+                if (notifModal) notifModal.classList.remove('show');
                 
-                if (state.tasks.find(t => t.id === taskId)) {
-                    highlightTask(taskId);
-                    renderTaskHistory(taskId);
-                } else {
-                    showToast('Tarefa não encontrada (pode ter sido excluída).', 'error');
-                }
+                // Espera 300ms (tempo da animação) e lança o modal da tarefa
+                setTimeout(() => {
+                    if (notifModal) notifModal.classList.add('hidden');
+                    
+                    if (state.tasks.find(t => t.id === taskId)) {
+                        highlightTask(taskId);
+                        
+                        // O SEGREDO ESTÁ AQUI: O "true" avisa o sistema que o modal veio das notificações!
+                        renderTaskHistory(taskId, true); 
+                    } else {
+                        showToast('Tarefa não encontrada (pode ter sido excluída).', 'error');
+                    }
+                }, 300);
             });
         });
     }
