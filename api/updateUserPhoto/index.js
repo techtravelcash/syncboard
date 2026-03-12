@@ -16,7 +16,7 @@ function getUser(request) {
 module.exports = async function (context, req) {
     const currentUser = getUser(req);
     
-    // Segurança: Só roda se o usuário estiver logado
+    // Segurança: Só roda se o utilizador estiver logado
     if (!currentUser) {
         context.res = { status: 401, body: "Não autenticado" };
         return;
@@ -28,34 +28,29 @@ module.exports = async function (context, req) {
         return;
     }
 
-    // O ID do usuário no banco é o email em minúsculas (padrão do addUser)
     const userId = currentUser.userDetails.toLowerCase();
 
     try {
-        // 1. Busca o usuário no banco
-        const { resource: userDoc } = await usersContainer.item(userId, userId).read();
+        // ATUALIZAÇÃO CIRÚRGICA (PATCH): 
+        // Em vez de ler e substituir o documento inteiro, dizemos ao Cosmos DB
+        // para alterar APENAS o campo "picture". Assim, o Nome e Cargo ficam intactos!
+        const { resource: updatedUser } = await usersContainer.item(userId, userId).patch({
+            operations: [
+                { op: 'set', path: '/picture', value: pictureUrl }
+            ]
+        });
 
-        if (!userDoc) {
-            // Se o usuário logado não está na tabela Users, ignoramos (sem permissão)
-            context.res = { status: 404, body: "Usuário não encontrado no banco." };
-            return;
-        }
-
-        // 2. Verifica se precisa atualizar (Economiza banco de dados)
-        if (userDoc.picture === pictureUrl) {
-            context.res = { body: { message: "Foto já está atualizada." } };
-            return;
-        }
-
-        // 3. Atualiza a foto
-        userDoc.picture = pictureUrl;
-        const { resource: updatedUser } = await usersContainer.item(userId, userId).replace(userDoc);
-
-        context.log(`Foto do usuário ${userId} atualizada com sucesso.`);
+        context.log(`Foto do utilizador ${userId} atualizada com sucesso via Patch.`);
         context.res = { body: updatedUser };
 
     } catch (error) {
-        context.log.error(`Erro ao atualizar foto do usuário ${userId}: ${error.message}`);
-        context.res = { status: 500, body: "Erro interno ao atualizar foto." };
+        // O erro 404 significa que o utilizador ainda não existe na BD. 
+        // Não fazemos nada, porque ele tem de ser criado pelo Admin primeiro.
+        if (error.code === 404) {
+            context.res = { status: 404, body: "Utilizador não encontrado no banco." };
+        } else {
+            context.log.error(`Erro ao atualizar foto do utilizador ${userId}: ${error.message}`);
+            context.res = { status: 500, body: "Erro interno ao atualizar foto." };
+        }
     }
 };

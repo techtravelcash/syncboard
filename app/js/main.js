@@ -12,27 +12,22 @@ let isAlertModalOpen = false;
 // --- PONTO DE ENTRADA ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // 1. Carrega Utilizador
+        // 1. Carrega a Sessão do Utilizador (Google Auth)
         state.currentUser = await api.getUserInfo();
 
-        // 2. Atualiza UI do Orb de Perfil
+        // 2. Verifica permissões de acesso
         if (state.currentUser) {
-            updateUserProfileUI();
-            
-            // Verifica permissão
             if (!state.currentUser.userRoles.includes('travelcash_user')) {
                 document.body.innerHTML = '<div class="flex items-center justify-center h-screen text-white bg-red-900">Acesso Negado</div>';
                 return;
             }
-            
-            // Mostra botão de admin se necessário
             if (state.currentUser.userRoles.includes('admin')) {
                 const adminBtn = document.getElementById('user-management-btn');
                 if(adminBtn) adminBtn.classList.remove('hidden');
             }
         }
 
-        // 3. Carrega Dados
+        // 3. Carrega os Dados (Isto tem de acontecer ANTES de renderizar o perfil)
         const [users, tasks] = await Promise.all([
             api.fetchUsers(),
             api.fetchTasks()
@@ -40,13 +35,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.users = users;
         state.tasks = tasks;
 
-        // 4. Inicializa UI e Filtros
+        // 4. Atualiza a UI do Orb de Perfil (Agora já tem acesso à lista state.users)
+        if (state.currentUser) {
+            updateUserProfileUI();
+        }
+
+        // 5. Inicializa UI e Filtros
         ui.populateProjectFilter();
         ui.populateResponsibleFilter();
         ui.updateNotificationBadge();
         ui.updateActiveView();
 
-        // 5. Remove Loader
+        // 6. Remove Loader
         const loader = document.getElementById('loader-container');
         const mainContent = document.getElementById('main-content');
         if (loader) {
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             mainContent.style.opacity = '1';
         }
 
-        // 6. Conecta SignalR e Eventos
+        // 7. Conecta SignalR e Eventos
         connectToSignalR(updateDragAndDropState);
         updateDragAndDropState();
         initializeEventListeners();
@@ -72,14 +72,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Exemplo de código para adicionar no DOMContentLoaded ou no script principal
 const setupSortOrbEvents = () => {
     const orb = document.getElementById('orb-sort');
     if(!orb) return;
 
     // Expandir ao clicar no orb
     orb.addEventListener('click', (e) => {
-        // Se clicar no botão de fechar, não faz nada (o listener do close cuida disso)
+        // Se clicar no botão de fechar, não faz nada
         if(e.target.closest('.close-btn')) return;
         
         if (!orb.classList.contains('expanded')) {
@@ -96,7 +95,7 @@ const setupSortOrbEvents = () => {
         });
     }
 
-    // Fechar ao clicar fora (opcional, mas recomendado)
+    // Fechar ao clicar fora
     document.addEventListener('click', (e) => {
         if (orb.classList.contains('expanded') && !orb.contains(e.target)) {
             orb.classList.remove('expanded');
@@ -104,7 +103,6 @@ const setupSortOrbEvents = () => {
     });
 };
 
-// Chame isso uma vez ao carregar a página
 document.addEventListener('DOMContentLoaded', setupSortOrbEvents);
 
 // --- ATUALIZA PERFIL NO ORB (Botão e Menu) ---
@@ -114,9 +112,18 @@ function updateUserProfileUI() {
     const avatarMenu = document.getElementById('user-avatar-menu'); 
     const avatarOrb = document.getElementById('orb-avatar-container');
 
-    if (nameDisplay) nameDisplay.textContent = state.currentUser.userDetails || 'Utilizador';
-    if (roleDisplay) roleDisplay.textContent = state.currentUser.userRoles.includes('admin') ? 'Administrador' : 'Membro';
+    // 1. Procura o utilizador logado na Base de Dados (para obter o nome e cargo editados)
+    const authEmail = state.currentUser.userDetails; // Email que vem do Google Auth
+    const dbUser = state.users.find(u => u.email.toLowerCase() === authEmail.toLowerCase());
 
+    // 2. Prioriza o Nome e Cargo da BD. Se não encontrar, usa os do Google por defeito.
+   const displayName = dbUser ? (dbUser.displayName || dbUser.name) : (state.currentUser.userDetails || 'Utilizador');
+    const displayRole = (dbUser && dbUser.role) ? dbUser.role : (state.currentUser.userRoles.includes('admin') ? 'Administrador' : 'Membro');
+
+    if (nameDisplay) nameDisplay.textContent = displayName;
+    if (roleDisplay) roleDisplay.textContent = displayRole;
+
+    // 3. Trata a fotografia de perfil
     const picClaim = state.currentUser.claims.find(c => c.typ === 'picture' || c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture');
     const photoUrl = picClaim ? picClaim.val : null;
 
@@ -124,9 +131,10 @@ function updateUserProfileUI() {
         const imgTag = `<img src="${photoUrl}" class="w-full h-full object-cover">`;
         if (avatarMenu) avatarMenu.innerHTML = imgTag;
         if (avatarOrb) avatarOrb.innerHTML = imgTag;
+        // Atualiza a foto na BD silenciosamente
         api.updateUserPhoto(photoUrl).catch(console.error);
     } else {
-        const initial = (state.currentUser.userDetails || 'U').charAt(0).toUpperCase();
+        const initial = displayName.charAt(0).toUpperCase();
         const placeholder = `<div class="w-full h-full bg-custom-dark text-white flex items-center justify-center font-bold text-xl">${initial}</div>`;
         if (avatarMenu) avatarMenu.innerHTML = placeholder;
         if (avatarOrb) avatarOrb.innerHTML = placeholder;
@@ -159,18 +167,15 @@ function updateDragAndDropState() {
                     const task = state.tasks.find(t => t.id === taskId);
                     if (!task) return;
 
-                    // INTERCEPTAR IDA PARA HOMOLOGAÇÃO (Abre o modal)
+                    // INTERCEPTAR IDA PARA HOMOLOGAÇÃO
                     if (oldStatus !== newStatus && newStatus === 'homologation') {
-                        // Reverte o elemento no DOM para a coluna original visualmente
                         if (evt.oldIndex < evt.from.children.length) {
                             evt.from.insertBefore(itemEl, evt.from.children[evt.oldIndex]);
                         } else {
                             evt.from.appendChild(itemEl);
                         }
-                        
-                        // Abre o modal de escolha do homologador
                         openHomologadorModal(task, oldStatus, newStatus);
-                        return; // O fluxo segue apenas se o modal for confirmado
+                        return; 
                     }
 
                     // PREPARAR DADOS PARA ATUALIZAÇÃO DA TAREFA
@@ -211,12 +216,10 @@ function updateDragAndDropState() {
 
                     try {
                         if (oldStatus !== newStatus) {
-                            // Atualiza na API enviando o status e, se necessário, anulando o homologador
                             await api.updateTask(taskId, updatePayload);
                         }
                         await api.updateOrder(orderedTasksPayload);
                         
-                        // Se removeu o homologador, renderiza novamente para limpar o crachá do front-end
                         if (removedHomologador) {
                             ui.renderKanbanView();
                             updateDragAndDropState();
@@ -238,24 +241,20 @@ function openHomologadorModal(task, oldStatus, newStatus) {
     const modal = document.getElementById('homologadorModal');
     const select = document.getElementById('homologadorSelect');
     
-    // Popula a lista dinamicamente
     select.innerHTML = '<option value="" disabled selected>Selecione um usuário...</option>' + 
         state.users.filter(u => u.name !== 'DEFINIR').map(u => `<option value="${u.name}">${u.name}</option>`).join('');
 
     const confirmBtn = document.getElementById('confirmHomologadorBtn');
     const cancelBtn = document.getElementById('cancelHomologadorBtn');
 
-    // FIX: Garante que o botão seja redefinido para o estado inicial sempre que abrir o modal
     confirmBtn.innerHTML = 'Confirmar';
     confirmBtn.disabled = false;
 
-    // Remove event listeners antigos clonando os botões
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
     const newCancelBtn = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
-    // Mostra o modal
     modal.classList.remove('hidden');
     requestAnimationFrame(() => modal.classList.add('show'));
 
@@ -281,17 +280,16 @@ function openHomologadorModal(task, oldStatus, newStatus) {
             task.status = newStatus;
             task.homologador = homologadorData;
 
-            // Salva na API tanto o status quanto o homologador
             await api.updateTask(task.id, { status: newStatus, homologador: homologadorData });
             
-            ui.renderKanbanView(); // Re-renderiza o quadro com a tarefa na coluna certa
-            updateDragAndDropState(); // Reinicializa as instâncias do SortableJS
+            ui.renderKanbanView(); 
+            updateDragAndDropState(); 
             ui.showToast(`Enviado para Homologação com ${selectedName.split(' ')[0]}!`, 'success');
             closeModal();
         } catch (error) {
             console.error(error);
             ui.showToast('Erro ao mover tarefa', 'error');
-            newConfirmBtn.innerHTML = 'Confirmar'; // Em caso de erro, permite tentar de novo
+            newConfirmBtn.innerHTML = 'Confirmar'; 
             newConfirmBtn.disabled = false;
         }
     };
@@ -333,22 +331,17 @@ function initializeEventListeners() {
     const cyclingState = {};
     
     setInterval(() => {
-        // Avalia tanto o menu de navegação (esquerda) quanto o menu de ferramentas/perfil (direita)
         const containers = [
             document.getElementById('orb-nav'), 
             document.getElementById('orb-tools')
         ].filter(Boolean);
         
         containers.forEach(container => {
-            // Só cicla se o menu estiver FECHADO
             if (!container.classList.contains('expanded')) {
-                // Seleciona os ícones do container que NÃO estão ocultos
                 const icons = Array.from(container.querySelectorAll('.cycling-icon')).filter(el => !el.classList.contains('hidden'));
                 
                 if (icons.length === 0) return;
                 
-                // Se só sobrou 1 ícone visível (ex: zerou as notificações e ocultou o sino),
-                // garante que a foto fique visível e para de ciclar.
                 if (icons.length === 1) {
                     icons[0].classList.add('active');
                     return;
@@ -364,7 +357,7 @@ function initializeEventListeners() {
                 icons[cyclingState[cid]].classList.add('active');
             }
         });
-    }, 1500); // 1.5 segundos
+    }, 1500); 
 
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
         const btn = e.target.closest('button');
@@ -398,21 +391,16 @@ function initializeEventListeners() {
         ui.updateActiveView();
     });
 
-    // --- DUPLO CLIQUE NO KANBAN PARA ABRIR TAREFA ---
     const kanbanView = document.getElementById('kanbanView');
     if (kanbanView) {
         kanbanView.addEventListener('dblclick', (e) => {
             const taskCard = e.target.closest('.task-card');
             
             if (taskCard) {
-                // Previne a seleção de texto azul acidental ao dar duplo clique
                 window.getSelection().removeAllRanges();
-                
-                // Vai buscar o ID da tarefa (que é guardado no atributo data-task-id)
                 const taskId = taskCard.dataset.taskId;
                 
                 if (taskId) {
-                    // Dá um pequeno destaque visual e abre o modal
                     ui.highlightTask(taskId, false);
                     ui.renderTaskHistory(taskId);
                 }
@@ -424,7 +412,6 @@ function initializeEventListeners() {
     const taskModal = document.getElementById('taskModal');
     const taskForm = document.getElementById('taskForm');
 
-    // [CORREÇÃO] Animação de entrada do Modal de Tarefa
     addTaskBtn.addEventListener('click', () => {
         state.editingTaskId = null;
         document.getElementById('modalTitle').textContent = 'Nova Tarefa';
@@ -456,7 +443,6 @@ function initializeEventListeners() {
         if (approveBtn) {
             e.stopPropagation();
             try {
-                // Agora envia para publicação em vez de 'done'
                 await api.updateTask(approveBtn.dataset.taskId, { status: 'publication' });
                 ui.showToast('Enviado para Publicação!', 'success');
             } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
@@ -466,7 +452,6 @@ function initializeEventListeners() {
         if (publishBtn) {
             e.stopPropagation();
             try {
-                // Este botão finaliza a tarefa (envia para arquivado)
                 await api.updateTask(publishBtn.dataset.taskId, { status: 'done' });
                 ui.showToast('Tarefa publicada e concluída!', 'success');
             } catch (err) { ui.showToast('Erro ao concluir', 'error'); }
@@ -483,9 +468,8 @@ function initializeEventListeners() {
             return;
         }
         const deleteBtn = e.target.closest('.delete-btn');
-        if (deleteBtn) {
+        if (deleteBtn && !deleteBtn.classList.contains('delete-user-btn') && !deleteBtn.classList.contains('delete-comment-btn')) {
             e.stopPropagation();
-            // Nota: Para corrigir o modal de confirmação, é necessário editar o ui.js também
             ui.showConfirmModal(
                 'Excluir Tarefa',
                 'Tem a certeza? Esta ação é irreversível.',
@@ -499,6 +483,155 @@ function initializeEventListeners() {
                 }
             );
             return;
+        }
+
+        /// ==========================================
+        // GESTÃO DE UTILIZADORES E MODAL
+        // ==========================================
+
+        // 1. ABRIR MODAL: NOVO MEMBRO
+        const openNewUserBtn = e.target.closest('#openNewUserModalBtn');
+        if (openNewUserBtn) {
+            e.stopPropagation();
+            document.getElementById('addUserForm').reset();
+            document.getElementById('editUserId').value = '';
+            
+            document.getElementById('user-form-title').textContent = 'Novo Membro';
+            document.getElementById('user-form-subtitle').textContent = 'Adicionar ao SyncBoard';
+            document.getElementById('submitUserBtn').querySelector('span').textContent = 'Salvar Utilizador';
+
+            const modal = document.getElementById('userFormModal');
+            const content = document.getElementById('userFormModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            });
+            return;
+        }
+
+        // 2. ABRIR MODAL: EDITAR MEMBRO
+        const editUserBtn = e.target.closest('.edit-user-btn');
+        if (editUserBtn) {
+            e.stopPropagation();
+            const userEmail = editUserBtn.dataset.userEmail;
+            const user = state.users.find(u => u.email === userEmail);
+            
+            if (user) {
+                document.getElementById('editUserId').value = user.id || user.email;
+                document.getElementById('newUserName').value = user.displayName || user.name || '';
+                document.getElementById('newUserEmail').value = user.email;
+                document.getElementById('newUserRole').value = user.role || '';
+                document.getElementById('newUserIsAdmin').checked = user.isAdmin;
+
+                document.getElementById('user-form-title').textContent = 'Editar Membro';
+                document.getElementById('user-form-subtitle').textContent = 'Atualizar informações';
+                document.getElementById('submitUserBtn').querySelector('span').textContent = 'Atualizar Utilizador';
+
+                const modal = document.getElementById('userFormModal');
+                const content = document.getElementById('userFormModalContent');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                requestAnimationFrame(() => {
+                    modal.classList.add('show');
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                });
+            }
+            return;
+        }
+
+        // 3. FECHAR MODAL
+        const closeUserModalBtn = e.target.closest('.close-user-modal');
+        if (closeUserModalBtn) {
+            e.stopPropagation();
+            const modal = document.getElementById('userFormModal');
+            const content = document.getElementById('userFormModalContent');
+            
+            modal.classList.remove('show'); // <-- CORREÇÃO: Esconde o backdrop
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+            return;
+        }
+
+        // 4. APAGAR UTILIZADOR (Mantém exatamente igual)
+        const deleteUserBtn = e.target.closest('.delete-user-btn');
+        if (deleteUserBtn) {
+            e.stopPropagation();
+            const userId = deleteUserBtn.dataset.userId;
+            
+            ui.showConfirmModal(
+                'Remover Acesso',
+                'Tem a certeza? Este utilizador perderá o acesso ao SyncBoard imediatamente.',
+                async () => {
+                    try {
+                        await api.deleteUser(userId);
+                        ui.showToast('Membro removido com sucesso.', 'info');
+                        
+                        state.users = await api.fetchUsers();
+                        ui.renderUserManagementView();
+                    } catch (err) { 
+                        ui.showToast('Erro ao remover membro.', 'error'); 
+                    }
+                }
+            );
+            return;
+        }
+    });
+
+    // ==========================================
+    // DELEGAÇÃO DO SUBMIT DE FORMULÁRIOS INJETADOS DINAMICAMENTE
+    // ==========================================
+    document.getElementById('main-content').addEventListener('submit', async (e) => {
+        if (e.target.id === 'addUserForm') {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitUserBtn');
+            const originalHtml = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="animate-spin w-5 h-5" data-lucide="loader-2"></i><span>A guardar...</span>';
+            if (window.lucide) lucide.createIcons();
+
+            const editUserId = document.getElementById('editUserId').value;
+            const payload = {
+                displayName: document.getElementById('newUserName').value,
+                email: document.getElementById('newUserEmail').value,
+                role: document.getElementById('newUserRole').value,
+                isAdmin: document.getElementById('newUserIsAdmin').checked
+            };
+
+            try {
+                if (editUserId) {
+                    // MODO EDIÇÃO: Agora chama a API correta de Update
+                    await api.updateUser(editUserId, payload);
+                    ui.showToast('Membro atualizado com sucesso!', 'success');
+                } else {
+                    // MODO CRIAÇÃO
+                    await api.addUser(payload);
+                    ui.showToast('Novo membro adicionado à equipa!', 'success');
+                }
+
+                // Recarrega a lista do servidor
+                state.users = await api.fetchUsers();
+                
+                // Redesenha a vista de Gestão de Utilizadores
+                ui.renderUserManagementView();
+
+                // 🌟 NOVO: Atualiza instantaneamente o seu perfil no menu superior direito!
+                updateUserProfileUI();
+
+            } catch (error) {
+                console.error(error);
+                ui.showToast('Erro ao guardar as alterações.', 'error');
+            }
         }
     });
 
@@ -567,7 +700,6 @@ function initializeEventListeners() {
                 ui.showToast('Tarefa criada!', 'success');
             }
 
-            // [CORREÇÃO] Fechar modal com animação
             taskModal.classList.remove('show');
             setTimeout(() => {
                 taskModal.classList.add('hidden');
@@ -583,13 +715,11 @@ function initializeEventListeners() {
     });
 
     document.getElementById('cancelBtn').addEventListener('click', () => {
-        // [CORREÇÃO] Fechar modal com animação
         taskModal.classList.remove('show');
         
         setTimeout(() => {
-            taskModal.classList.add('hidden'); // Fecha o modal de edição
+            taskModal.classList.add('hidden'); 
             
-            // Verifica se estava editando para reabrir o histórico
             if (state.editingTaskId) {
                 ui.renderTaskHistory(state.editingTaskId);
                 state.editingTaskId = null; 
@@ -599,7 +729,6 @@ function initializeEventListeners() {
 
     document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
 
-    // Evento para Aprovar a tarefa diretamente do Modal de Histórico
     const modalApproveBtn = document.getElementById('modal-approve-btn');
     if (modalApproveBtn) {
         modalApproveBtn.addEventListener('click', async (e) => {
@@ -608,26 +737,22 @@ function initializeEventListeners() {
             if (!taskId) return;
 
             try {
-                // Feedback visual de carregamento
                 modalApproveBtn.innerHTML = '<i class="animate-spin w-4 h-4" data-lucide="loader-2"></i><span class="hidden sm:inline">Aprovando...</span>';
                 modalApproveBtn.disabled = true;
                 if (window.lucide) lucide.createIcons();
 
-                // Atualiza a tarefa na API enviando para o próximo status
                 await api.updateTask(taskId, { status: 'publication' });
                 ui.showToast('Tarefa aprovada para Publicação!', 'success');
                 
-                // Atualiza o state local (otimista) e recarrega a UI
                 const taskIndex = state.tasks.findIndex(t => t.id === taskId);
                 if(taskIndex !== -1) state.tasks[taskIndex].status = 'publication';
                 
-                ui.renderTaskHistory(taskId); // Re-renderiza o modal (vai esconder o botão agora que mudou de status)
-                ui.updateActiveView(); // Atualiza a tela atrás do modal (Home, Lista ou Kanban)
+                ui.renderTaskHistory(taskId); 
+                ui.updateActiveView(); 
                 
             } catch (err) {
                 console.error(err);
                 ui.showToast('Erro ao aprovar tarefa', 'error');
-                // Restaura o botão em caso de falha
                 modalApproveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>';
                 modalApproveBtn.disabled = false;
                 if (window.lucide) lucide.createIcons();
@@ -635,13 +760,11 @@ function initializeEventListeners() {
         });
     }
 
-    // [CORREÇÃO] Animação de entrada do Modal de Edição
     document.getElementById('editTaskBtn').addEventListener('click', () => {
         const taskId = state.lastInteractedTaskId;
         const task = state.tasks.find(t => t.id === taskId);
         if (!task) return;
 
-        // Fecha o histórico e abre a edição
         document.getElementById('taskHistoryModal').classList.add('hidden');
         
         state.editingTaskId = taskId;
@@ -689,7 +812,6 @@ function initializeEventListeners() {
         } catch (e) { ui.showToast('Erro ao comentar', 'error'); }
     });
 
-    // Listener para ações em comentários (Delegado no Modal de Histórico)
     document.getElementById('taskHistoryModal').addEventListener('click', (e) => {
         const editBtn = e.target.closest('.edit-comment-btn');
         if (editBtn) {
@@ -731,7 +853,6 @@ function initializeEventListeners() {
             const taskId = deleteBtn.dataset.taskId;
             const commentIndex = parseInt(deleteBtn.dataset.commentIndex);
 
-            // Nota: Para corrigir o modal de confirmação, é necessário editar o ui.js também
             ui.showConfirmModal(
                 'Excluir Comentário?',
                 'Deseja realmente apagar este comentário permanentemente?',
@@ -757,7 +878,6 @@ function initializeEventListeners() {
 
     const aiModal = document.getElementById('aiTitleModal');
     if (aiModal) {
-        // [CORREÇÃO] Animação de entrada Modal IA
         document.getElementById('openAiModalBtn').addEventListener('click', () => {
             const current = document.getElementById('taskTitle').value;
             if(!current) return ui.showToast('Escreva um título primeiro', 'info');
@@ -804,7 +924,6 @@ function initializeEventListeners() {
         document.getElementById('cancelAiBtn').addEventListener('click', closeAiModal);
     }
 
-    // --- LÓGICA DO MODAL DE NOTIFICAÇÕES ---
     const notifBtn = document.getElementById('orb-notif-btn');
     const notifModal = document.getElementById('notificationsModal');
     const closeNotifBtn = document.getElementById('closeNotificationsBtn');
@@ -813,17 +932,14 @@ function initializeEventListeners() {
         notifBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            // Fecha o menu orbital
             document.getElementById('orb-tools').classList.remove('expanded');
             
-            // Abre o modal de notificações com animação
             notifModal.classList.remove('hidden');
             requestAnimationFrame(() => {
                 notifModal.classList.add('show');
             });
         });
 
-        // Fechar pelo botão X
         if (closeNotifBtn) {
             closeNotifBtn.addEventListener('click', () => {
                 notifModal.classList.remove('show');
@@ -831,7 +947,6 @@ function initializeEventListeners() {
             });
         }
 
-        // Fechar clicando fora (no backdrop escuro)
         notifModal.addEventListener('click', (e) => {
             if (e.target === notifModal) {
                 notifModal.classList.remove('show');
@@ -840,7 +955,7 @@ function initializeEventListeners() {
         });
     }
     const notifList = document.getElementById('orb-notifications-list');
-    if (notifBtn) {
+    if (notifBtn && notifList) {
         notifBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             notifList.classList.toggle('hidden');

@@ -17,7 +17,8 @@ export async function fetchTasks() {
 }
 
 export async function fetchUsers() {
-    const response = await fetch('/api/getUsers');
+    // timestamp "?t=..." para o browser nunca usar cache nesta rota
+    const response = await fetch('/api/getUsers?t=' + new Date().getTime());
     if (!response.ok) throw new Error('Falha ao buscar usuários.');
     return await response.json();
 }
@@ -213,5 +214,19 @@ export async function editComment(taskId, commentId, text, authorEmail) {
         const err = await response.text();
         throw new Error(err);
     }
+    return await response.json();
+}
+export async function updateUser(userId, userPayload) {
+    const response = await fetch(`/api/updateUser/${encodeURIComponent(userId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userPayload)
+    });
+    
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Falha ao atualizar a conta de utilizador.');
+    }
+    
     return await response.json();
 }

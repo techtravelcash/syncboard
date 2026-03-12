@@ -1003,55 +1003,205 @@ export async function renderArchivedTasks() {
 
 export function renderUserManagementView() {
     const container = document.getElementById('userManagementView');
-    const allUsers = state.users.filter(u => u.name !== 'DEFINIR');
+    
+    // Filtra o utilizador de sistema e ORDENA alfabeticamente pelo Nome de Exibição
+    const allUsers = state.users
+        .filter(u => u.name !== 'DEFINIR')
+        .sort((a, b) => {
+            const nameA = (a.displayName || a.name || '').toLowerCase();
+            const nameB = (b.displayName || b.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
 
-    const rows = allUsers.map(user => `
-        <div class="flex items-center justify-between p-4 bg-white dark:bg-[#1E293B] border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-            <div class="flex items-center gap-4">
-                <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600">
+    const userCards = allUsers.map(user => {
+        const activeTasksCount = state.tasks.filter(t => 
+            t.status !== 'done' && 
+            t.responsible?.some(r => (typeof r === 'object' ? r.name : r) === user.name)
+        ).length;
+
+        const roleBadge = user.role 
+            ? `<span class="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-blue-200 dark:border-blue-800/50 shadow-sm">${user.role}</span>` 
+            : '';
+
+        return `
+        <div class="user-card-item group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-[24px] hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-500/30 relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-700"></div>
+
+            <div class="flex items-center gap-5 mb-4 sm:mb-0 relative z-10">
+                <div class="relative shrink-0">
+                    <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-14 h-14 rounded-full object-cover border-[3px] border-white dark:border-[#0F172A] shadow-md group-hover:scale-105 transition-transform duration-300">
+                    ${user.isAdmin 
+                        ? `<div class="absolute -bottom-1 -right-1 bg-purple-500 text-white rounded-full p-1.5 border-2 border-white dark:border-[#0F172A] shadow-sm" title="Administrador do Sistema">
+                            <i data-lucide="shield-check" class="w-3 h-3"></i>
+                           </div>` 
+                        : ''}
+                </div>
                 <div>
-                    <p class="font-bold ox-text-primary">${user.name}</p>
-                    <p class="text-xs ox-text-secondary">${user.email}</p>
+                    <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <p class="font-extrabold text-custom-darkest dark:text-white text-base leading-tight">${user.displayName || user.name}</p>
+                        ${roleBadge}
+                    </div>
+                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        <span class="flex items-center gap-1.5 bg-gray-50 dark:bg-white/5 px-2 py-1 rounded-md border border-gray-100 dark:border-white/5">
+                            <i data-lucide="mail" class="w-3.5 h-3.5 opacity-70"></i> ${user.email}
+                        </span>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                ${user.isAdmin ? '<span class="px-2 py-1 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-[10px] font-bold uppercase rounded-lg">Admin</span>' : '<span class="text-xs text-gray-400">Membro</span>'}
-                <button class="delete-user-btn text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-user-id="${user.id || user.email}">
-                    <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                </button>
+
+            <div class="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto border-t border-gray-100 dark:border-gray-700 sm:border-0 pt-4 sm:pt-0 relative z-10">
+                
+                <div class="flex flex-col justify-center items-center px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-transparent min-w-[120px]">
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 leading-none mb-1.5 text-center">Tarefas Ativas</span>
+                    <span class="text-xl font-black text-custom-darkest dark:text-white leading-none text-center">${activeTasksCount}</span>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                    <button type="button" class="edit-user-btn flex items-center justify-center w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-[1.05] active:scale-95 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-transparent dark:border-blue-500/10 shadow-sm" data-user-email="${user.email}" title="Editar Perfil">
+                        <i data-lucide="user-cog" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                    
+                    <button type="button" class="delete-user-btn flex items-center justify-center w-11 h-11 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 hover:scale-[1.05] active:scale-95 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-all border border-transparent dark:border-red-500/10 shadow-sm" data-user-id="${user.id || user.email}" title="Remover Acesso">
+                        <i data-lucide="user-x" class="w-5 h-5 pointer-events-none"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     container.innerHTML = `
-        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="md:col-span-2">
-                <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Equipa</h2>
-                <div class="bg-white dark:bg-[#1E293B] rounded-3xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
-                    ${rows}
+        <div class="max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in pb-12">
+            
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pt-4 pb-2">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-custom-darkest dark:text-white tracking-tight">
+                        Gestão de Utilizadores
+                    </h1>
+                    <p class="text-custom-dark dark:text-gray-400 mt-2 font-medium">Acessos e cargos</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                    
+                    <div class="relative w-full sm:w-64">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                        <input type="text" id="userSearchInput" placeholder="Procurar utilizador..." class="w-full h-[50px] bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-gray-700 rounded-2xl pl-11 pr-4 text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white placeholder-gray-400 shadow-sm">
+                    </div>
+
+                    <button id="openNewUserModalBtn" class="w-full sm:w-auto flex-shrink-0 h-[50px] bg-custom-darkest text-white dark:bg-white dark:text-custom-darkest px-6 rounded-2xl text-sm font-bold shadow-xl shadow-custom-darkest/10 dark:shadow-white/5 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 border border-transparent dark:border-white/10">
+                        <i data-lucide="plus" class="w-4 h-4 pointer-events-none"></i>
+                        <span class="hidden sm:inline pointer-events-none tracking-wide">Novo Membro</span>
+                    </button>
                 </div>
             </div>
-            <div>
-                <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Novo Membro</h2>
-                <form id="addUserForm" class="bg-white dark:bg-[#1E293B] p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-4">
+
+            <div class="space-y-4" id="user-list-container">
+                ${userCards}
+                
+                <div id="no-users-found" class="hidden flex-col items-center justify-center py-12 text-gray-400 opacity-60">
+                    <i data-lucide="users-2" class="w-16 h-16 mb-4"></i>
+                    <p class="font-medium">Nenhum membro encontrado.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="userFormModal" class="fixed inset-0 z-[1500] hidden items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
+            
+            <div class="absolute inset-0 close-user-modal"></div>
+            
+            <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-md p-8 relative z-10 flex flex-col shadow-2xl border border-white/20 dark:border-white/10 transform scale-95 opacity-0 transition-all duration-300" id="userFormModalContent">
+                
+                <button type="button" class="absolute top-6 right-6 p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-all opacity-60 hover:opacity-100 close-user-modal">
+                    <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+                </button>
+
+                <div class="mb-8">
+                    <h2 id="user-form-title" class="text-2xl font-extrabold text-custom-darkest dark:text-white leading-tight tracking-tight">Novo Membro</h2>
+                    <p id="user-form-subtitle" class="text-xs text-custom-dark dark:text-gray-400 font-medium mt-0.5 opacity-80">Adicionar ao SyncBoard</p>
+                </div>
+                
+                <form id="addUserForm" class="space-y-6">
+                    <input type="hidden" id="editUserId" value="">
+                    
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Nome</label>
-                        <input type="text" id="newUserName" required class="w-full bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:ring-custom-dark focus:border-custom-dark">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
+                            <i data-lucide="user" class="w-3 h-3"></i> Nome de Exibição
+                        </label>
+                        <input type="text" id="newUserName" required placeholder="Ex: Maria Silva" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
                     </div>
+
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-400 mb-1">Email</label>
-                        <input type="email" id="newUserEmail" required class="w-full bg-gray-50 dark:bg-black/20 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2 text-sm focus:ring-custom-dark focus:border-custom-dark">
+                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
+                            <i data-lucide="mail" class="w-3 h-3"></i> Email (Google)
+                        </label>
+                        <input type="email" id="newUserEmail" required placeholder="maria@empresa.com" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
                     </div>
-                    <div class="flex items-center gap-2 py-2">
-                        <input type="checkbox" id="newUserIsAdmin" class="rounded border-gray-300 text-custom-dark focus:ring-custom-dark">
-                        <label for="newUserIsAdmin" class="text-sm text-gray-600 dark:text-gray-300">Acesso Administrador</label>
+
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
+                            <i data-lucide="briefcase" class="w-3 h-3"></i> Cargo
+                        </label>
+                        <input type="text" id="newUserRole" placeholder="Ex: Frontend Developer..." class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
                     </div>
-                    <button type="submit" class="w-full bg-custom-darkest text-white font-bold py-3 rounded-xl hover:bg-opacity-90 transition-opacity">Adicionar</button>
+
+                    <div class="p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 mt-2">
+                        <div class="flex items-center justify-between">
+                            <div class="pr-4">
+                                <p class="text-xs font-bold text-custom-darkest dark:text-white flex items-center gap-1.5 opacity-80">
+                                    <i data-lucide="shield" class="w-4 h-4"></i> Privilégios Admin
+                                </p>
+                                <p class="text-[10px] text-custom-dark dark:text-gray-400 mt-1 leading-snug font-medium opacity-80">Permite editar projetos, gerir painéis e remover utilizadores.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 opacity-80 hover:opacity-100 transition-opacity">
+                                <input type="checkbox" id="newUserIsAdmin" class="sr-only peer">
+                                <div class="w-11 h-6 bg-black/20 dark:bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 flex flex-col gap-3">
+                        <button type="submit" id="submitUserBtn" class="w-full py-4 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 dark:shadow-white/5 transition-transform active:scale-95 flex items-center justify-center gap-2 group border border-transparent dark:border-white/10">
+                            <i data-lucide="save" class="w-4 h-4 group-hover:scale-110 transition-transform pointer-events-none"></i>
+                            <span class="tracking-wide pointer-events-none">Salvar Utilizador</span>
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     `;
+
     lucide.createIcons();
+
+    const searchInput = document.getElementById('userSearchInput');
+    const userItems = document.querySelectorAll('.user-card-item');
+    const noUsersMsg = document.getElementById('no-users-found');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            let hasVisible = false;
+
+            userItems.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(term)) {
+                    card.style.display = 'flex';
+                    hasVisible = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (!hasVisible && userItems.length > 0) {
+                noUsersMsg.classList.remove('hidden');
+                noUsersMsg.classList.add('flex');
+            } else {
+                noUsersMsg.classList.add('hidden');
+                noUsersMsg.classList.remove('flex');
+            }
+        });
+    }
 }
 
 // --- ROTEADOR UI (ATUALIZADO COM ANIMAÇÃO DE ENTRADA E SAÍDA) ---

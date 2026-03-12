@@ -31,7 +31,9 @@ module.exports = async function (context, req) {
         const userProfile = {
             id: newUser.email.toLowerCase(),
             email: newUser.email.toLowerCase(),
-            name: newUser.name,
+            name: newUser.displayName, // Quando criamos do zero, ambos recebem o mesmo valor
+            displayName: newUser.displayName,
+            role: newUser.role || '',
             picture: '',
             isAdmin: newUser.isAdmin === true
         };
