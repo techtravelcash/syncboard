@@ -1013,7 +1013,8 @@ export function renderUserManagementView() {
             return nameA.localeCompare(nameB);
         });
 
-    const userCards = allUsers.map(user => {
+    // O map agora recebe (user, index) para calcularmos o atraso da animação
+    const userCards = allUsers.map((user, index) => {
         const activeTasksCount = state.tasks.filter(t => 
             t.status !== 'done' && 
             t.responsible?.some(r => (typeof r === 'object' ? r.name : r) === user.name)
@@ -1024,7 +1025,7 @@ export function renderUserManagementView() {
             : '';
 
         return `
-        <div class="user-card-item group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-[24px] hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-500/30 relative overflow-hidden">
+        <div class="user-card-item animate-slide-up-enter group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-[24px] hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-500/30 relative overflow-hidden" style="animation-delay: ${index * 0.05}s">
             <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-700"></div>
 
             <div class="flex items-center gap-5 mb-4 sm:mb-0 relative z-10">
