@@ -801,6 +801,96 @@ function initializeEventListeners() {
         });
     });
 
+    // Evento para o botão de sinalização (Megafone) no cabeçalho da tarefa
+    const signalBtn = document.getElementById('modal-signal-btn');
+    if (signalBtn) {
+        signalBtn.addEventListener('click', () => {
+            const taskId = state.lastInteractedTaskId;
+            if (!taskId) return;
+
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const responsibleList = task.responsible || [];
+            if (responsibleList.length === 0) {
+                ui.showToast('Esta tarefa não possui responsáveis para sinalizar.', 'info');
+                return;
+            }
+
+            const modal = document.getElementById('signalConfirmModal');
+            const confirmBtn = document.getElementById('confirmSignalBtn');
+            const cancelBtn = document.getElementById('cancelSignalBtn');
+            const targetsContainer = document.getElementById('signal-targets-container');
+
+            // Renderiza os checkboxes dinamicamente
+            targetsContainer.innerHTML = responsibleList.map((r, index) => {
+                const name = typeof r === 'object' ? r.name : r;
+                // Deixa apenas o primeiro responsável (Principal) marcado por padrão
+                const checked = index === 0 ? 'checked' : '';
+                return `
+                    <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors border border-transparent hover:border-black/5 dark:hover:border-white/5">
+                        <div class="relative flex items-center shrink-0">
+                            <input type="checkbox" value="${name}" class="target-checkbox peer appearance-none w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md checked:bg-orange-500 checked:border-orange-500 transition-colors cursor-pointer" ${checked}>
+                            <i data-lucide="check" class="absolute inset-0 m-auto w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
+                        </div>
+                        <span class="text-sm font-bold text-custom-darkest dark:text-white truncate">${name}</span>
+                        ${index === 0 ? '<span class="ml-auto shrink-0 text-[9px] font-bold uppercase tracking-widest text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-md">Principal</span>' : ''}
+                    </label>
+                `;
+            }).join('');
+            
+            if(window.lucide) lucide.createIcons();
+
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            const closeModal = () => {
+                modal.classList.remove('show');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            cancelBtn.onclick = closeModal;
+
+            newConfirmBtn.onclick = async () => {
+                // Coleta quem o usuário selecionou
+                const checkedBoxes = targetsContainer.querySelectorAll('.target-checkbox:checked');
+                const selectedTargets = Array.from(checkedBoxes).map(cb => cb.value);
+
+                if (selectedTargets.length === 0) {
+                    ui.showToast('Selecione pelo menos um responsável.', 'info');
+                    return;
+                }
+
+                newConfirmBtn.innerHTML = '<i class="animate-spin w-5 h-5 mx-auto" data-lucide="loader-2"></i>';
+                newConfirmBtn.disabled = true;
+
+                try {
+                    signalBtn.innerHTML = '<i class="animate-spin w-6 h-6" data-lucide="loader-2"></i>';
+                    
+                    // Passa a lista selecionada para a API
+                    await api.signalResponsible(taskId, selectedTargets);
+                    ui.showToast('Responsáveis sinalizados com sucesso!', 'success');
+                    
+                } catch (err) {
+                    console.error(err);
+                    ui.showToast('Erro ao sinalizar', 'error'); 
+                } finally {
+                    setTimeout(() => {
+                        signalBtn.innerHTML = '<i data-lucide="megaphone" class="w-6 h-6"></i>';
+                        if(window.lucide) lucide.createIcons();
+                    }, 1000);
+                    
+                    newConfirmBtn.innerHTML = 'Sinalizar';
+                    newConfirmBtn.disabled = false;
+                    closeModal();
+                }
+            };
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => modal.classList.add('show'));
+        });
+    }
+
     document.getElementById('add-comment-btn').addEventListener('click', async () => {
         const input = document.getElementById('comment-input');
         const text = input.value.trim();
@@ -994,38 +1084,116 @@ function initializeEventListeners() {
 // --- ALERTA DE SINALIZAÇÃO ---
 function checkAndQueueAlerts(tasks) {
     if (!state.currentUser) return;
-    const myName = state.currentUser.userDetails;
-    if (!myName) return;
+    
+    // Cria um Set de identificadores do usuário para garantir que ele seja reconhecido
+    const myIdentifiers = [
+        state.currentUser.userDetails?.toLowerCase(),
+        state.currentUser.userId?.toLowerCase(),
+        state.currentUser.claims?.find(c => c.typ === 'name')?.val?.toLowerCase()
+    ].filter(Boolean);
+
+    // Opcional: Pegar o nome do BD caso exista
+    const dbUser = state.users.find(u => myIdentifiers.includes(u.email?.toLowerCase()));
+    if (dbUser && dbUser.name) myIdentifiers.push(dbUser.name.toLowerCase());
+
     tasks.forEach(task => {
-        if (task.pendingAlerts && task.pendingAlerts.includes(myName)) {
-            if (!alertQueue.find(t => t.id === task.id)) {
-                alertQueue.push(task);
+        if (task.pendingAlerts && task.pendingAlerts.length > 0) {
+            // Verifica se o usuário atual está na lista de pendingAlerts
+            const myAlert = task.pendingAlerts.find(alertItem => {
+                const target = typeof alertItem === 'object' ? alertItem.targetUser : alertItem;
+                return myIdentifiers.includes(target.toLowerCase());
+            });
+
+            if (myAlert && !alertQueue.find(t => t.task.id === task.id)) {
+                alertQueue.push({ task: task, alertData: myAlert });
             }
         }
     });
+    
     if (alertQueue.length > 0) processAlertQueue();
 }
 
 function processAlertQueue() {
     if (alertQueue.length === 0 || isAlertModalOpen) return;
-    const task = alertQueue[0];
+    
+    const { task, alertData } = alertQueue[0];
     isAlertModalOpen = true;
+    
     const modal = document.getElementById('alertModal');
-    document.getElementById('alert-task-id').textContent = task.id;
+    document.getElementById('alert-task-id').textContent = '#' + task.id;
     document.getElementById('alert-task-title').textContent = task.title;
     document.getElementById('alert-queue-count').textContent = alertQueue.length - 1;
+    
+    const signaledBy = (typeof alertData === 'object' && alertData.signaledBy) 
+        ? alertData.signaledBy.split(' ')[0] 
+        : 'Um colega';
+    document.getElementById('alert-signaled-by').textContent = signaledBy;
+
     const btn = document.getElementById('dismissAlertBtn');
     const newBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(newBtn, btn);
+    
+    // --- 1. RESET DO ESTADO DO BOTÃO ---
+    newBtn.innerHTML = '<i data-lucide="check-circle" class="w-6 h-6"></i> Recebido, vou olhar!';
+    newBtn.disabled = false;
+    // -----------------------------------
+    
     newBtn.addEventListener('click', async () => {
-        newBtn.textContent = 'Confirmando...';
+        newBtn.innerHTML = '<i class="animate-spin w-5 h-5" data-lucide="loader-2"></i> Confirmando...';
+        newBtn.disabled = true; // Bloqueia cliques duplos
+
         try {
             await api.dismissAlert(task.id);
-            alertQueue.shift();
-            modal.classList.add('hidden');
-            isAlertModalOpen = false;
-            if (alertQueue.length > 0) setTimeout(processAlertQueue, 500);
-        } catch (e) { newBtn.textContent = 'Erro ao confirmar'; }
+            alertQueue.shift(); // Remove da fila
+            
+            ui.updateNotificationBadge();
+            
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                isAlertModalOpen = false;
+                
+                // Abre a tarefa automaticamente
+                ui.highlightTask(task.id);
+                ui.renderTaskHistory(task.id);
+                
+                // --- 2. REMOVIDO: Não chamamos mais o próximo alerta aqui! ---
+                // Deixamos isso a cargo do Observador abaixo.
+            }, 300);
+        } catch (e) { 
+            newBtn.innerHTML = 'Erro ao confirmar, tente novamente'; 
+            newBtn.disabled = false;
+        }
     });
+
     modal.classList.remove('hidden');
+    requestAnimationFrame(() => modal.classList.add('show'));
+    if (window.lucide) lucide.createIcons();
+}
+
+// --- OBSERVADOR DE FLUXO DE ALERTAS ---
+// Fica a observar o modal do histórico de tarefas. 
+// Quando ele for fechado, dispara o próximo alerta da fila (se houver).
+const taskHistoryModalEl = document.getElementById('taskHistoryModal');
+if (taskHistoryModalEl) {
+    const modalObserver = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+            // Verifica se a classe CSS do modal foi alterada
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                
+                // Se o modal acabou de receber a classe 'hidden' (ou seja, fechou)
+                if (taskHistoryModalEl.classList.contains('hidden')) {
+                    
+                    // Verifica se ainda há alertas na fila e garante que não há nenhum alerta aberto
+                    if (alertQueue.length > 0 && !isAlertModalOpen) {
+                        // Aguarda 500ms para a animação de fecho respirar antes de atirar o próximo alerta
+                        setTimeout(processAlertQueue, 500);
+                    }
+                }
+            }
+        });
+    });
+    
+    // Inicia a observação dos atributos
+    modalObserver.observe(taskHistoryModalEl, { attributes: true });
 }

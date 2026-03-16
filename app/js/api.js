@@ -145,9 +145,11 @@ export async function deleteUser(userId) {
     }
 }
 
-export async function signalResponsible(taskId) {
+export async function signalResponsible(taskId, targets) {
     const response = await fetch(`/api/signalResponsible/${taskId}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targets }) // Envia os nomes selecionados
     });
     if (!response.ok) throw new Error('Falha ao sinalizar responsável.');
     return await response.json();

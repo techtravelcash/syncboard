@@ -414,6 +414,10 @@
                         <i data-lucide="calendar-plus" class="w-6 h-6"></i>
                     </a>
 
+                    <button id="modal-signal-btn" class="p-3 rounded-2xl hover:bg-orange-500/10 text-orange-500 hover:text-orange-600 transition-all opacity-80 hover:opacity-100" title="Chamar atenção dos Responsáveis">
+                        <i data-lucide="megaphone" class="w-6 h-6"></i>
+                    </button>
+
                     <button id="editTaskBtn" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-all" title="Editar">
                         <i data-lucide="file-pen-line" class="w-6 h-6"></i>
                     </button>
@@ -564,25 +568,65 @@
         </div>
     </div>
 
-    <div id="alertModal" class="fixed inset-0 z-[1800] hidden flex flex-col items-center justify-center bg-red-600/90 backdrop-blur-md">
-        <div class="bg-white dark:bg-[#1f2937] p-8 rounded-3xl shadow-2xl max-w-lg w-full text-center border-4 border-yellow-400 animate-pulse-border relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="alert-triangle" class="w-32 h-32 text-red-500"></i></div>
-            <div class="mb-6 flex justify-center relative">
-                <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center animate-bounce shadow-xl">
-                    <i data-lucide="siren" class="w-12 h-12 text-red-600"></i>
+    <div id="signalConfirmModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+        <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
+            
+            <div class="w-20 h-20 rounded-full bg-orange-500/10 dark:bg-orange-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-orange-500/20 shadow-inner">
+                <i data-lucide="megaphone" class="w-9 h-9 text-orange-600 dark:text-orange-400"></i>
+            </div>
+            
+            <h2 class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Quem deseja sinalizar?</h2>
+            
+            <p class="text-custom-dark dark:text-blue-100/70 mb-6 text-sm leading-relaxed font-medium">
+                Selecione os responsáveis que devem receber um alerta imediato na tela:
+            </p>
+            
+            <div id="signal-targets-container" class="mb-8 text-left space-y-2 max-h-40 overflow-y-auto custom-scrollbar p-3 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="cancelSignalBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-gray-500/10 dark:bg-white/5 hover:bg-gray-500/20 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-colors border border-black/5 dark:border-white/5">
+                    Cancelar
+                </button>
+                
+                <button type="button" id="confirmSignalBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-transform active:scale-95 flex items-center justify-center">
+                    Sinalizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertModal" class="fixed inset-0 bg-custom-darkest/40 dark:bg-black/60 flex items-center justify-center z-[1800] hidden modal-backdrop transition-opacity duration-300">
+        <div class="orb-glass-unified backdrop-blur-[12px] w-full max-w-md mx-4 p-10 text-center relative shadow-2xl border border-orange-500/30 dark:border-orange-500/20">
+            
+            <div class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                
+                <div class="absolute inset-0 rounded-full bg-orange-500/20 dark:bg-orange-500/30 border border-orange-500/30 animate-pulse"></div>
+                
+                <div class="relative w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-500/40">
+                    <i data-lucide="megaphone" class="w-8 h-8"></i>
                 </div>
+                
             </div>
-            <h2 class="text-3xl font-black text-red-600 mb-2 uppercase tracking-tight">Atenção!</h2>
-            <p class="text-gray-600 dark:text-gray-300 mb-6 font-medium">Sua atenção é necessária nesta tarefa:</p>
-            <div class="bg-gray-50 dark:bg-black/20 p-5 rounded-2xl mb-8 text-left border-l-8 border-red-500 shadow-inner">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">ID: <span id="alert-task-id">...</span></p>
-                <h3 id="alert-task-title" class="text-xl font-bold text-gray-900 dark:text-white leading-tight">...</h3>
+            
+            <h2 class="text-3xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Atenção Solicitada</h2>
+            
+            <p class="text-custom-dark dark:text-gray-300 mb-8 text-base leading-relaxed font-medium">
+                <span id="alert-signaled-by" class="font-bold text-orange-500">Alguém</span> marcou que precisa urgentemente da sua atenção na tarefa abaixo:
+            </p>
+            
+            <div class="bg-black/5 dark:bg-white/5 p-5 rounded-2xl mb-8 text-left border-l-[6px] border-orange-500 shadow-inner cursor-pointer hover:bg-black/10 transition-colors" id="alert-task-card">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Tarefa <span id="alert-task-id" class="text-custom-darkest dark:text-gray-300">...</span></p>
+                <h3 id="alert-task-title" class="text-lg font-bold text-gray-900 dark:text-white leading-tight line-clamp-2">...</h3>
             </div>
-            <button id="dismissAlertBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-2xl text-lg shadow-xl shadow-red-900/20 flex items-center justify-center gap-3 transition-transform hover:scale-105">
-                <i data-lucide="check-circle-2" class="w-6 h-6"></i>
-                <span>Confirmar Leitura</span>
+            
+            <button id="dismissAlertBtn" class="w-full py-4 rounded-2xl font-bold text-base bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-transform active:scale-95 flex justify-center items-center gap-3">
+                <i data-lucide="check-circle" class="w-6 h-6"></i> Recebido, vou olhar!
             </button>
-            <p class="mt-6 text-xs text-white/80 font-medium">Alertas na fila: <span id="alert-queue-count">0</span></p>
+
+            <p class="mt-5 text-xs text-custom-dark/50 dark:text-white/30 font-bold uppercase tracking-widest">
+                Outros alertas na fila: <span id="alert-queue-count">0</span>
+            </p>
         </div>
     </div>
 

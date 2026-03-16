@@ -4,7 +4,8 @@ const connectionString = process.env.CosmosDB;
 const client = new CosmosClient(connectionString);
 const database = client.database("TasksDB");
 const tasksContainer = database.container("Tasks");
-const usersContainer = database.container("Users"); // Referência à tabela de usuários
+const usersContainer = database.container("Users");
+const notificationsContainer = database.container("Notifications"); // <-- Referência às Notificações
 
 function getUser(request) {
     const header = request.headers['x-ms-client-principal'];
@@ -25,66 +26,64 @@ module.exports = async function (context, req) {
              return;
         }
 
-        const userEmail = user.userDetails; // Geralmente é o email no SWA
+        const userEmail = user.userDetails;
         let userNameToRemove = userEmail;
 
-        // 1. Tenta buscar o Nome Completo na coleção de Users usando o email
         try {
-            // O ID na coleção Users é o email em minúsculas (baseado no api/addUser e api/getRoles)
             const { resource: userProfile } = await usersContainer.item(userEmail.toLowerCase(), userEmail.toLowerCase()).read();
-            
             if (userProfile && userProfile.name) {
                 userNameToRemove = userProfile.name;
-                context.log(`Perfil encontrado. Nome resolvido de "${userEmail}" para "${userNameToRemove}"`);
-            } else {
-                context.log.warn(`Perfil não encontrado para ${userEmail}. Tentando usar claims ou o próprio email.`);
-                // Fallback: Tenta pegar da claim 'name' se o perfil não existir no banco
-                if (user.claims) {
-                    const nameClaim = user.claims.find(c => c.typ === 'name');
-                    if (nameClaim) userNameToRemove = nameClaim.val;
-                }
+            } else if (user.claims) {
+                const nameClaim = user.claims.find(c => c.typ === 'name');
+                if (nameClaim) userNameToRemove = nameClaim.val;
             }
         } catch (dbError) {
-            context.log.warn(`Erro ao buscar perfil do usuário: ${dbError.message}. Seguindo com valor padrão.`);
+            context.log.warn(`Erro ao buscar perfil do usuário: ${dbError.message}`);
         }
 
-        // 2. Busca a tarefa
         const { resource: existingTask } = await tasksContainer.item(taskId, taskId).read();
-        
         if (!existingTask) {
             context.res = { status: 404, body: "Tarefa não encontrada." };
             return;
         }
 
-        // 3. Verifica e remove o alerta
         if (existingTask.pendingAlerts && Array.isArray(existingTask.pendingAlerts)) {
             const originalLength = existingTask.pendingAlerts.length;
             
-            // Tenta remover pelo Nome Completo (Prioridade)
-            let newAlerts = existingTask.pendingAlerts.filter(name => name !== userNameToRemove);
-            
-            // Se não funcionou, tenta remover pelo email (Fallback de segurança)
-            if (newAlerts.length === originalLength && userNameToRemove !== userEmail) {
-                context.log(`Remoção por nome falhou. Tentando remover pelo email: ${userEmail}`);
-                newAlerts = existingTask.pendingAlerts.filter(name => name !== userEmail);
-            }
+            // Remove o alerta (suportando string antiga ou o novo formato de objeto)
+            let newAlerts = existingTask.pendingAlerts.filter(alertItem => {
+                const target = typeof alertItem === 'object' ? alertItem.targetUser : alertItem;
+                return target !== userNameToRemove && target !== userEmail;
+            });
 
             existingTask.pendingAlerts = newAlerts;
             
-            // Se houve alteração real na lista
             if (existingTask.pendingAlerts.length !== originalLength) {
                 context.log(`Alerta removido com sucesso.`);
                 
                 const { resource: replaced } = await tasksContainer.item(taskId, taskId).replace(existingTask);
                 
+                // --- NOVO: CRIAR A NOTIFICAÇÃO NA FILA NORMAL DO USUÁRIO ---
+                try {
+                    await notificationsContainer.items.create({
+                        targetUserEmail: userEmail, // Email do usuário que clicou em "vou olhar"
+                        taskId: taskId,
+                        message: "Atenção Solicitada",
+                        commentPreview: `Lembrete: Você foi sinalizado na tarefa #${taskId} - ${existingTask.title}`,
+                        createdAt: new Date().toISOString(),
+                        isRead: false // Deixamos false para o sininho ficar com a bolinha vermelha!
+                    });
+                } catch (notifErr) {
+                    context.log.warn(`Erro ao gerar notificação pós-alerta: ${notifErr.message}`);
+                }
+                // -------------------------------------------------------------
+
                 context.bindings.signalRMessage = {
                     target: 'taskUpdated',
                     arguments: [replaced]
                 };
                 context.res = { body: replaced };
             } else {
-                context.log(`AVISO: O usuário "${userNameToRemove}" (ou email) não estava na lista: ${JSON.stringify(existingTask.pendingAlerts)}`);
-                // Retorna 200 com a tarefa atual para destravar o frontend, mesmo que não tenha removido nada
                 context.res = { body: existingTask }; 
             }
         } else {

@@ -5,6 +5,7 @@ const connectionString = process.env.CosmosDB;
 const client = new CosmosClient(connectionString);
 const database = client.database("TasksDB");
 const container = database.container("Tasks");
+const usersContainer = database.container("Users"); // Referência à tabela de usuários
 const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL; // URL do seu webhook
 
 // Função auxiliar para identificar o usuário logado
@@ -42,16 +43,59 @@ module.exports = async function (context, req) {
             return;
         }
 
-        const responsibleNames = existingTask.responsible.map(r => (typeof r === 'object' ? r.name : r));
-        
-        if (!responsibleNames || responsibleNames.length === 0) {
-            context.res = { status: 400, body: "Esta tarefa não tem responsáveis para sinalizar." };
+        // --- LÊ OS ALVOS SELECIONADOS PELO FRONTEND ---
+        const reqBody = req.body || {};
+        const targetNames = reqBody.targets || [];
+
+        if (!targetNames || targetNames.length === 0) {
+            context.res = { status: 400, body: "Nenhum responsável selecionado para sinalizar." };
             return;
         }
 
+        // Medida de Segurança: Garante que só vai sinalizar quem de fato consta como responsável na Tarefa
+        const validTargets = targetNames.filter(name => 
+            existingTask.responsible && existingTask.responsible.some(r => (typeof r === 'object' ? r.name : r) === name)
+        );
+
+        if (validTargets.length === 0) {
+            context.res = { status: 400, body: "Os usuários selecionados não são responsáveis por esta tarefa." };
+            return;
+        }
+        // -----------------------------------------------
+
+        // --- NOVO: Busca o displayName ou name do banco de usuários ---
+        let senderName = user.userDetails; // Fallback de segurança (email)
+        try {
+            const { resource: userProfile } = await usersContainer.item(user.userDetails.toLowerCase(), user.userDetails.toLowerCase()).read();
+            if (userProfile) {
+                // Prioridade: displayName > name > email
+                senderName = userProfile.displayName || userProfile.name || senderName;
+            } else if (user.claims) {
+                const nameClaim = user.claims.find(c => c.typ === 'name');
+                if (nameClaim) senderName = nameClaim.val;
+            }
+        } catch (dbError) {
+            context.log.warn(`Erro ao buscar perfil do usuário: ${dbError.message}`);
+        }
+        // --------------------------------------------------------------
+
         const currentAlerts = existingTask.pendingAlerts || [];
-        const newAlerts = [...new Set([...currentAlerts, ...responsibleNames])];
-        existingTask.pendingAlerts = newAlerts;
+        
+        const newAlertObjects = validTargets.map(name => ({
+            targetUser: name,
+            signaledBy: senderName, // Salva o nome amigável de quem sinalizou
+            timestamp: new Date().toISOString()
+        }));
+
+        // Filtra para não duplicar alertas para a mesma pessoa
+        const mergedAlerts = [...currentAlerts];
+        newAlertObjects.forEach(newAlert => {
+            if (!mergedAlerts.some(a => (a.targetUser || a) === newAlert.targetUser)) {
+                mergedAlerts.push(newAlert);
+            }
+        });
+
+        existingTask.pendingAlerts = mergedAlerts;
 
         const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask);
 
@@ -62,10 +106,11 @@ module.exports = async function (context, req) {
             content: `**🚨 Atenção!**`,
             embeds: [{
                 title: `Tarefa [${taskId}] - ${existingTask.title}`,
-                description: `O usuário **${user.userDetails}** sinalizou esta tarefa e está a solicitando uma atenção especial dos responsáveis.`,
+                // Usa o senderName resolvido e a lista de alvos validados
+                description: `O usuário **${senderName}** sinalizou esta tarefa e está solicitando uma atenção especial dos responsáveis.`,
                 color: 0xEF4444, // Vermelho para alerta
                 fields: [
-                    { name: "Responsáveis Sinalizados", value: responsibleNames.join(', '), inline: false },
+                    { name: "Responsáveis Sinalizados", value: validTargets.join(', '), inline: false },
                     { name: "Projeto", value: existingTask.project || "N/A", inline: true }
                 ],
                 timestamp: new Date().toISOString()
