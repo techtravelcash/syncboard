@@ -973,24 +973,53 @@ export async function renderArchivedTasks() {
             return;
         }
 
-        const rows = tasks.map(task => `
-            <div class="bg-white dark:bg-[#1E293B] p-5 rounded-2xl mb-3 border border-gray-100 dark:border-gray-700 flex justify-between items-center opacity-75 hover:opacity-100 transition-opacity">
-                <div>
-                    <h3 class="font-bold ox-text-secondary line-through decoration-gray-400">${task.title}</h3>
-                    <p class="text-xs text-gray-400 mt-1">Concluída em ${formatDate(task.updatedAt || new Date())} • ${task.project}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button class="restore-btn text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2.5 rounded-xl transition-colors" data-task-id="${task.id}" title="Restaurar para Fila">
-                        <i data-lucide="undo-2" class="w-4 h-4 pointer-events-none"></i>
-                    </button>
-                    <button class="delete-btn text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 p-2.5 rounded-xl transition-colors" data-task-id="${task.id}" title="Excluir Permanentemente">
-                        <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
-                    </button>
+        const rows = tasks.map((task, index) => {
+            const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
+            
+            // Layout espelhado da Lista, mas com grayscale (tudo cinza) e line-through (riscado)
+            return `
+            <div class="animate-slide-up-enter grayscale opacity-75 hover:opacity-100 transition-all duration-300" style="animation-delay: ${index * 0.05}s">
+                <div class="task-list-row list-row group" data-task-id="${task.id}">
+                    <div class="w-1 h-12 rounded-full bg-gray-400 shrink-0"></div>
+                    
+                    <div class="flex-grow min-w-0 flex flex-col justify-center">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full bg-gray-400">${task.project || 'Geral'}</span>
+                            <span class="text-sm font-mono text-gray-500 font-bold line-through">${task.id}</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">Arquivado</span>
+                        </div>
+                        <h3 class="font-bold text-gray-500 dark:text-gray-400 truncate line-through decoration-gray-400">${task.title}</h3>
+                        <p class="text-xs text-gray-400 truncate mt-0.5 line-through decoration-gray-400/50">${respNames || 'Sem responsável'}</p>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center gap-4 shrink-0 mr-4">
+                        <div class="text-xs text-gray-400 flex items-center gap-1" title="Concluída em">
+                            <i data-lucide="archive" class="w-3 h-3"></i> ${formatDate(task.updatedAt || new Date())}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button class="restore-btn p-2 rounded-xl text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" data-task-id="${task.id}" title="Restaurar para Fila">
+                            <i data-lucide="undo-2" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                        <button class="delete-btn p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-task-id="${task.id}" title="Excluir Permanentemente">
+                            <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
 
-        container.innerHTML = `<div class="max-w-3xl mx-auto"><h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white">Arquivo Morto</h2>${rows}</div>`;
+        // Mantém a estrutura global consistente com a tela de listas
+        container.innerHTML = `
+            <div class="pt-6 pb-32">
+                <div class="max-w-4xl mx-auto space-y-1">
+                    <h2 class="text-2xl font-bold mb-6 text-custom-darkest dark:text-white px-2">Arquivo Morto</h2>
+                    ${rows}
+                </div>
+            </div>
+        `;
         lucide.createIcons();
 
     } catch (e) {

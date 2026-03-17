@@ -460,11 +460,15 @@ function initializeEventListeners() {
         const restoreBtn = e.target.closest('.restore-btn');
         if (restoreBtn) {
             e.stopPropagation();
+            const taskId = restoreBtn.dataset.taskId;
             try {
-                await api.updateTask(restoreBtn.dataset.taskId, { status: 'todo' });
-                ui.showToast('Tarefa restaurada', 'success');
+                // Ao atualizar para "todo", a tarefa sai do arquivo e volta pra fila
+                await api.updateTask(taskId, { status: 'todo' });
+                ui.showToast(`Tarefa #${taskId} restaurada com sucesso!`, 'success');
                 ui.renderArchivedTasks();
-            } catch (err) { ui.showToast('Erro ao restaurar', 'error'); }
+            } catch (err) { 
+                ui.showToast('Erro ao restaurar a tarefa', 'error'); 
+            }
             return;
         }
         const deleteBtn = e.target.closest('.delete-btn');

@@ -17,16 +17,30 @@ export function connectToSignalR(onTasksUpdatedCallback) {
     connection.on('taskUpdated', (updatedTask) => {
         console.log('SignalR: Tarefa atualizada!', updatedTask);
         const index = state.tasks.findIndex(t => t.id === updatedTask.id);
+        
         if (index !== -1) {
+            // Se a tarefa já está na lista local, apenas atualiza
             state.tasks[index] = updatedTask;
+        } else {
+            // Se a tarefa não estava na lista (ex: estava arquivada) e foi restaurada (status diferente de 'done')
+            if (updatedTask.status !== 'done') {
+                state.tasks.push(updatedTask);
+            }
         }
+        
         updateNotificationBadge();
-        updateActiveView();
-        onTasksUpdatedCallback();
+        updateActiveView(); // Isso fará a tela atualizar instantaneamente
+        
+        if (typeof onTasksUpdatedCallback === 'function') {
+            onTasksUpdatedCallback();
+        }
 
-        const isHistoryModalOpen = !document.getElementById('taskHistoryModal').classList.contains('hidden');
-        if (isHistoryModalOpen && updatedTask.id === state.lastInteractedTaskId) {
-            renderTaskHistory(updatedTask.id);
+        const historyModal = document.getElementById('taskHistoryModal');
+        if (historyModal) {
+            const isHistoryModalOpen = !historyModal.classList.contains('hidden');
+            if (isHistoryModalOpen && updatedTask.id === state.lastInteractedTaskId) {
+                renderTaskHistory(updatedTask.id);
+            }
         }
     });
 
