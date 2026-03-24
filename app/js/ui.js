@@ -222,18 +222,15 @@ export const createTaskElement = (task) => {
     
     const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
 
-    // --- NOVO: BADGE DO HOMOLOGADOR ---
+    // --- BADGE DO HOMOLOGADOR ---
     let homologadorBadge = '';
     
-    // Agora o badge aparece tanto na homologação quanto na publicação
     if ((task.status === 'homologation' || task.status === 'publication') && task.homologador) {
         const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
         const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
         
-        // Verifica se já foi aprovado para publicação
         const isApproved = task.status === 'publication';
         
-        // Definição dinâmica de cores e estilos
         const badgeBg = isApproved 
             ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/20' 
             : 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20';
@@ -241,7 +238,6 @@ export const createTaskElement = (task) => {
         const iconName = isApproved ? 'check-circle' : 'shield-check';
         const iconColor = isApproved ? 'text-green-500' : 'text-orange-500';
         
-        // Mantém a animação pulsante apenas quando está pendente
         const pingEffect = isApproved ? '' : '<span class="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-30 group-hover/homol:animate-ping"></span>';
         
         const avatarBorder = isApproved ? 'border-green-200 dark:border-green-800' : 'border-orange-200 dark:border-orange-800';
@@ -270,7 +266,6 @@ export const createTaskElement = (task) => {
             </div>
         `;
     }
-    // -------------------------------------------
 
     let actionButtons = '';
     if (task.status === 'homologation') {
@@ -293,6 +288,26 @@ export const createTaskElement = (task) => {
         </div>
     `;
 
+    // --- NOVA LÓGICA DA BARRA DE PROGRESSO INTERATIVA ---
+    const progress = task.progress || 0; 
+    const missingText = task.missingToComplete || "Nada especificado.";
+    const barColorClass = progress === 100 ? 'bg-green-500' : 'bg-blue-500';
+
+    const progressBarHtml = `
+        <div class="mt-4 mb-1 w-full group/progress cursor-pointer progress-update-btn transition-transform active:scale-[0.98]" data-task-id="${task.id}" title="Clique para atualizar o progresso">
+            <div class="flex justify-between items-center mb-1.5 pointer-events-none">
+                <span class="text-[9px] font-bold uppercase tracking-widest text-custom-dark/70 dark:text-gray-400">Progresso</span>
+                <span class="text-[10px] font-bold text-custom-darkest dark:text-white">${progress}%</span>
+            </div>
+            
+            <div class="h-1.5 w-full bg-black/5 dark:bg-white/10 rounded-full flex overflow-hidden shadow-inner">
+                <div class="h-full ${barColorClass} transition-all duration-1000 ease-out shadow-sm pointer-events-none" style="width: ${progress}%"></div>
+                
+                <div class="h-full hover:bg-black/10 dark:hover:bg-white/20 transition-colors" style="width: ${100 - progress}%" ${progress < 100 ? `title="Falta: ${missingText}"` : ''}></div>
+            </div>
+        </div>
+    `;
+
     taskCard.innerHTML = `
         ${projectStrip}
         ${quickActions}
@@ -300,6 +315,8 @@ export const createTaskElement = (task) => {
         <div class="task-body flex flex-col h-full">
             <h3 class="text-sm ox-text-primary leading-snug break-words pr-1">${task.title}</h3>
             ${homologadorBadge}
+            
+            ${progressBarHtml}
             
             <div class="flex items-end justify-between mt-auto pt-3 border-t border-dashed border-gray-200 dark:border-white/5">
                 <div class="flex items-center gap-3 min-h-[24px]">
@@ -313,6 +330,7 @@ export const createTaskElement = (task) => {
         </div>
     `;
 
+    // --- EVENT LISTENERS ---
     const expandBtn = taskCard.querySelector('.expand-btn');
     if(expandBtn) {
         expandBtn.addEventListener('click', (e) => {
@@ -337,10 +355,21 @@ export const createTaskElement = (task) => {
         });
     }
 
+    // Evento de clique da Barra de Progresso
+    const progressBtn = taskCard.querySelector('.progress-update-btn');
+    if (progressBtn) {
+        progressBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Impede de abrir o modal grande do cartão
+            
+            // É essencial ter importado a função openProgressUpdateModal no topo ou certificar-se que ela existe no escopo!
+            if (typeof openProgressUpdateModal === 'function') {
+                openProgressUpdateModal(task);
+            }
+        });
+    }
+
     return taskCard;
 };
-
-
 
 // --- LOGICA DE FILTRO ---
 
@@ -2679,4 +2708,122 @@ export function setupSortOrbEvents() {
             orb.classList.remove('expanded');
         }
     });
+}
+
+// --- MODAL DE ATUALIZAÇÃO DE PROGRESSO ---
+export function openProgressUpdateModal(task) {
+    // Evita abrir vários
+    if (document.getElementById('progressUpdateModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'progressUpdateModal';
+    modal.className = 'fixed inset-0 bg-custom-darkest/40 dark:bg-black/60 flex items-center justify-center z-[2000] animate-fade-in px-4';
+    
+    modal.innerHTML = `
+        <div class="orb-glass-unified backdrop-blur-[12px] w-full max-w-sm p-8 text-center relative shadow-2xl border border-white/20 dark:border-white/10 transform scale-95 opacity-0 transition-all duration-300" id="progressModalContent">
+            
+            <div class="w-16 h-16 rounded-full bg-blue-500/10 dark:bg-blue-500/20 flex items-center justify-center mx-auto mb-4 border border-blue-500/20 shadow-inner">
+                <i data-lucide="bar-chart-horizontal" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
+            </div>
+
+            <h2 class="text-xl font-extrabold text-custom-darkest dark:text-white mb-6 tracking-tight">Atualizar Progresso</h2>
+            
+            <div class="mb-5 text-left relative">
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-custom-dark dark:text-gray-400 mb-2">Porcentagem (%)</label>
+                <input type="number" id="progressInput" min="0" max="100" value="${task.progress || 0}" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3 text-custom-darkest dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-xl font-bold text-center transition-all">
+            </div>
+            
+            <div class="mb-8 text-left transition-opacity duration-300" id="missingTextContainer">
+                <label class="block text-[10px] font-bold uppercase tracking-widest text-custom-dark dark:text-gray-400 mb-2 flex items-center justify-between">
+                    <span>O que falta para 100%?</span>
+                    <i data-lucide="help-circle" class="w-3 h-3 opacity-50"></i>
+                </label>
+                <textarea id="missingInput" rows="2" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3 text-custom-darkest dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-sm custom-scrollbar placeholder-custom-dark/40 dark:placeholder-white/30 resize-none transition-all" placeholder="Ex: Falta integrar a API de pagamentos...">${task.missingToComplete || ''}</textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="cancelProgressBtn" class="py-3.5 px-4 rounded-xl font-bold text-sm bg-gray-500/10 hover:bg-gray-500/20 text-custom-darkest dark:text-white transition-colors border border-black/5 dark:border-white/5">Cancelar</button>
+                <button type="button" id="saveProgressBtn" class="py-3.5 px-4 rounded-xl font-bold text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/25 transition-transform active:scale-95 flex items-center justify-center gap-2"><i data-lucide="check" class="w-4 h-4"></i> Salvar</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    if (window.lucide) lucide.createIcons({ root: modal });
+    
+    // Animação de entrada
+    requestAnimationFrame(() => {
+        const content = document.getElementById('progressModalContent');
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    });
+
+    const progressInput = document.getElementById('progressInput');
+    const missingContainer = document.getElementById('missingTextContainer');
+    const missingInput = document.getElementById('missingInput');
+
+    // Lógica UX: Desativar a caixa "o que falta" se o progresso for 100%
+    progressInput.addEventListener('input', (e) => {
+        let val = parseInt(e.target.value);
+        if (val > 100) e.target.value = 100;
+        if (val < 0) e.target.value = 0;
+        
+        if (parseInt(e.target.value) === 100) {
+            missingContainer.style.opacity = '0.3';
+            missingInput.disabled = true;
+            missingInput.value = 'Tarefa Concluída!';
+        } else {
+            missingContainer.style.opacity = '1';
+            missingInput.disabled = false;
+            if (missingInput.value === 'Tarefa Concluída!') missingInput.value = '';
+        }
+    });
+
+    // Função de fecho suave
+    const closeModal = () => {
+        const content = document.getElementById('progressModalContent');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    document.getElementById('cancelProgressBtn').onclick = closeModal;
+    
+    // Lógica de Guardar
+    document.getElementById('saveProgressBtn').onclick = async () => {
+        const newProgress = parseInt(progressInput.value) || 0;
+        const newMissing = missingInput.value.trim();
+        
+        // Validação Inteligente
+        if (newProgress < 100 && newMissing === '') {
+            missingInput.classList.add('ring-2', 'ring-red-500', 'border-red-500');
+            showToast('Diga-nos o que falta para completar a tarefa!', 'error');
+            setTimeout(() => missingInput.classList.remove('ring-2', 'ring-red-500', 'border-red-500'), 2000);
+            return;
+        }
+        
+        // Atualiza a Task no State Local
+        task.progress = newProgress;
+        task.missingToComplete = newProgress === 100 ? '' : newMissing;
+        
+        // Envia para o backend (usando o import dinâmico que usa no ui.js)
+        try {
+            const api = await import('./api.js');
+            // Nota: Certifique-se que o seu updateTask na cloud aceita estes novos campos no JSON
+            await api.updateTask(task.id, { 
+                progress: task.progress, 
+                missingToComplete: task.missingToComplete 
+            });
+            
+            showToast('Progresso atualizado com sucesso!', 'success');
+            
+            // Re-renderiza o quadro
+            updateActiveView(); 
+            closeModal();
+            
+        } catch (error) {
+            console.error(error);
+            showToast('Erro ao atualizar o progresso.', 'error');
+        }
+    };
 }
