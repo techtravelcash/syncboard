@@ -2797,7 +2797,7 @@ export function openProgressUpdateModal(task) {
         // Validação Inteligente
         if (newProgress < 100 && newMissing === '') {
             missingInput.classList.add('ring-2', 'ring-red-500', 'border-red-500');
-            showToast('Diga-nos o que falta para completar a tarefa!', 'error');
+            showToast('Informe o que falta para completar a tarefa!', 'error');
             setTimeout(() => missingInput.classList.remove('ring-2', 'ring-red-500', 'border-red-500'), 2000);
             return;
         }
