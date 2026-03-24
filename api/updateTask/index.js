@@ -41,9 +41,60 @@ module.exports = async function (context, req) {
 
         const oldStatus = existingTask.status;
 
-        if (Object.keys(updatedData).some(key => key !== 'status')) {
-            if (!existingTask.history) existingTask.history = [];
-            existingTask.history.push({ status: 'edited', timestamp: new Date().toISOString() });
+        // --- NOVO SISTEMA DE LOGS / HISTÓRICO ---
+        if (!existingTask.history) existingTask.history = [];
+        
+        let changes = [];
+        
+        // 1. Mudança de Status
+        if (updatedData.status && updatedData.status !== oldStatus) {
+            changes.push(`Status alterado para <span class="font-bold text-white">${statusLabels[updatedData.status] || updatedData.status}</span>`);
+        }
+
+        // 2. Mudança de Homologador
+        const oldHomolEmail = existingTask.homologador ? (typeof existingTask.homologador === 'object' ? existingTask.homologador.email : existingTask.homologador) : null;
+        const newHomolEmail = updatedData.homologador ? (typeof updatedData.homologador === 'object' ? updatedData.homologador.email : updatedData.homologador) : null;
+        if (newHomolEmail && newHomolEmail !== oldHomolEmail) {
+            const homolName = typeof updatedData.homologador === 'object' ? updatedData.homologador.name : updatedData.homologador;
+            changes.push(`Homologador designado: <span class="font-bold text-white">${homolName}</span>`);
+        }
+
+        // 3. Detecção de outros campos modificados
+        const fieldsMap = {
+            title: 'Título',
+            description: 'Descrição',
+            priority: 'Prioridade',
+            dueDate: 'Prazo',
+            project: 'Projeto',
+            projectColor: 'Cor do Projeto'
+        };
+
+        let editedFields = [];
+        for (const key in fieldsMap) {
+            if (updatedData[key] !== undefined && updatedData[key] !== existingTask[key]) {
+                editedFields.push(fieldsMap[key]);
+            }
+        }
+
+        // Detecção em arrays complexos ou anexos
+        if (updatedData.responsible && JSON.stringify(updatedData.responsible) !== JSON.stringify(existingTask.responsible)) {
+            editedFields.push('Responsáveis');
+        }
+        if (updatedData.attachments && JSON.stringify(updatedData.attachments) !== JSON.stringify(existingTask.attachments)) {
+            editedFields.push('Anexos');
+        }
+
+        if (editedFields.length > 0) {
+            changes.push(`Editou: <span class="text-white/80">${editedFields.join(', ')}</span>`);
+        }
+
+        // Se encontrou alguma alteração que deve ir pro log
+        if (changes.length > 0) {
+            existingTask.history.push({
+                action: 'edited',
+                description: changes.join('<br>'),
+                timestamp: new Date().toISOString()
+            });
         }
 
         if (updatedData.attachments && !Array.isArray(updatedData.attachments)) {

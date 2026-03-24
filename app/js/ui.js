@@ -1650,13 +1650,41 @@ export function renderTaskHistory(taskId, fromNotification = false) {
         if (historyItems.length === 0) {
              historyEl.innerHTML = '<p class="text-xs text-white/30 italic">Nenhuma alteração registrada.</p>';
         } else {
-            historyEl.innerHTML = historyItems.map(item => `
-                <div class="relative pl-4 pb-4 border-l border-white/10 last:border-0 last:pb-0">
-                    <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-white/20 border border-white/10"></div>
-                    <p class="text-xs text-white/70">Mudou para <span class="font-bold text-white">${item.status}</span></p>
-                    <p class="text-[10px] text-white/30">${formatDateTime(item.timestamp)}</p>
+            historyEl.innerHTML = historyItems.map(item => {
+                let logText = '';
+                let icon = 'activity'; // Ícone padrão
+                
+                // Trata o modelo novo e o modelo legado
+                if (item.action === 'created') {
+                    logText = item.description;
+                    icon = 'plus-circle';
+                } else if (item.action === 'edited') {
+                    logText = item.description;
+                    icon = 'edit-3';
+                } else {
+                    // Fallback para logs antigos
+                    if (item.status === 'todo') {
+                        logText = 'Tarefa criada (Fila)';
+                        icon = 'plus-circle';
+                    } else if (item.status === 'edited') {
+                        logText = 'Tarefa editada';
+                        icon = 'edit-3';
+                    } else {
+                        logText = `Mudou status para <span class="font-bold text-white">${item.status}</span>`;
+                        icon = 'git-commit';
+                    }
+                }
+
+                return `
+                <div class="relative pl-7 pb-5 border-l border-white/10 last:border-0 last:pb-0 group">
+                    <div class="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-[#1E293B] border border-white/20 flex items-center justify-center text-white/60 shadow-sm group-hover:text-blue-400 group-hover:border-blue-400/50 transition-colors">
+                        <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
+                    </div>
+                    <p class="text-xs text-white/80 leading-relaxed">${logText}</p>
+                    <p class="text-[10px] font-mono text-white/30 mt-1 uppercase tracking-wider">${formatDateTime(item.timestamp)}</p>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 

@@ -58,7 +58,11 @@ module.exports = async function (context, req) {
             status: 'todo',
             createdAt: new Date().toISOString(),
             createdBy: user.userDetails,
-            history: [{ status: 'todo', timestamp: new Date().toISOString() }],
+            history: [{ 
+                action: 'created', 
+                description: `Tarefa criada por <span class="font-bold text-white">${user.userDetails}</span>`, 
+                timestamp: new Date().toISOString() 
+            }],
             order: -Date.now(),
             dueDate: taskData.dueDate || null,
             attachments: taskData.attachments || []
