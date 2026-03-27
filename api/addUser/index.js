@@ -23,7 +23,7 @@ module.exports = async function (context, req) {
 
     try {
         const newUser = req.body;
-        if (!newUser || !newUser.email || !newUser.name) {
+        if (!newUser || !newUser.email || !newUser.displayName) {
             context.res = { status: 400, body: "Nome e e-mail são obrigatórios." };
             return;
         }
