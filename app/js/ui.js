@@ -118,8 +118,10 @@ export function showToast(message, type = 'success') {
 
 // --- ANEXOS ---
 
-function renderAttachmentList(containerId, attachments) {
+// Adicionamos o parâmetro 'isEditable' que por padrão é falso
+function renderAttachmentList(containerId, attachments, isEditable = false) {
     const container = document.getElementById(containerId);
+    if (!container) return; // Segurança extra
     container.innerHTML = '';
     
     if (attachments && attachments.length > 0) {
@@ -132,9 +134,16 @@ function renderAttachmentList(containerId, attachments) {
             item.className = 'flex items-center justify-between p-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
             
             const downloadLink = !isLocalFile ? `
-                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Baixar">
-                    <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Ver">
+                    <i data-lucide="eye" class="w-4 h-4"></i>
                 </a>
+            ` : '';
+
+            // Renderiza o botão de lixeira APENAS se isEditable for verdadeiro
+            const removeBtnHtml = isEditable ? `
+                <button type="button" class="remove-attachment-btn text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-index="${index}" data-blob-name="${blobName}" title="Remover">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
             ` : '';
 
             item.innerHTML = `
@@ -146,19 +155,18 @@ function renderAttachmentList(containerId, attachments) {
                 </div>
                 <div class="flex items-center gap-1">
                     ${downloadLink}
-                    <button type="button" class="remove-attachment-btn text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-index="${index}" data-blob-name="${blobName}" title="Remover">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    ${removeBtnHtml}
                 </div>
             `;
             container.appendChild(item);
         });
-        lucide.createIcons();
+        if(window.lucide) lucide.createIcons();
     }
 }
 
 export function renderModalAttachments(files) {
-    renderAttachmentList('attachment-list', files);
+    // Quando estamos no formulário de Adicionar/Editar, passamos 'true' para mostrar a lixeira
+    renderAttachmentList('attachment-list', files, true);
 }
 
 // --- RENDERIZAÇÃO: CARD DE TAREFA ---
@@ -1666,7 +1674,8 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     // Anexos
     const attachContainer = document.getElementById('modal-info-attachments-container');
     if (task.attachments?.length > 0 && attachContainer) {
-        renderAttachmentList('modal-info-attachments', task.attachments);
+        // Passamos false para garantir que o modo é APENAS LEITURA (sem botão de excluir)
+        renderAttachmentList('modal-info-attachments', task.attachments, false);
         attachContainer.classList.remove('hidden');
     } else if (attachContainer) {
         attachContainer.classList.add('hidden');

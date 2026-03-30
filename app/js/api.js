@@ -95,17 +95,23 @@ export async function fetchArchivedTasks() {
 }
 
 export async function uploadAttachment(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
+    // Enviamos o arquivo direto no body e passamos os detalhes pelo Header
     const response = await fetch('/api/tasks/attachments', {
         method: 'POST',
-        body: formData,
+        headers: {
+            'x-file-name': encodeURIComponent(file.name),
+            'x-file-type': file.type || 'application/octet-stream',
+            // Dizemos ao backend: "Isso é um fluxo de dados cru"
+            'Content-Type': 'application/octet-stream' 
+        },
+        body: file, // Aqui vai o arquivo purinho!
     });
 
     if (!response.ok) {
-        throw new Error('Falha no upload do anexo.');
+        const errorMsg = await response.text();
+        throw new Error(`Falha no upload do anexo: ${errorMsg}`);
     }
+    
     return await response.json();
 }
 

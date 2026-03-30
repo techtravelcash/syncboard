@@ -6,6 +6,7 @@ import { connectToSignalR } from './signalr.js';
 // --- Variáveis Globais ---
 let kanbanSortableInstances = [];
 let localFiles = [];
+let filesToDelete = [];
 let alertQueue = [];
 let isAlertModalOpen = false;
 
@@ -417,6 +418,7 @@ function initializeEventListeners() {
         document.getElementById('modalTitle').textContent = 'Nova Tarefa';
         taskForm.reset();
         localFiles = [];
+        filesToDelete = [];
         ui.renderModalAttachments(localFiles);
         document.getElementById('no-due-date-checkbox').checked = false;
         document.getElementById('taskDueDate').disabled = false;
@@ -652,6 +654,13 @@ function initializeEventListeners() {
         const removeBtn = e.target.closest('.remove-attachment-btn');
         if (removeBtn) {
             const index = parseInt(removeBtn.dataset.index, 10);
+            const blobName = removeBtn.dataset.blobName; // O ui.js já insere este atributo!
+            
+            // Se for um ficheiro que já está na Azure, colocamos na fila de eliminação
+            if (blobName) {
+                filesToDelete.push(blobName);
+            }
+            
             localFiles.splice(index, 1);
             ui.renderModalAttachments(localFiles);
         }
@@ -676,6 +685,16 @@ function initializeEventListeners() {
                     uploadedAttachments.push(file);
                 }
             }
+
+            // --- NOVO: Apaga definitivamente os anexos da Azure ---
+            for (const blob of filesToDelete) {
+                try {
+                    await api.deleteAttachment(blob);
+                } catch (err) {
+                    console.error(`Não foi possível apagar o ficheiro órfão: ${blob}`, err);
+                }
+            }
+            filesToDelete = []; // Limpa o cesto de lixo
 
             const tags = document.querySelectorAll('#responsible-input-container > div span');
             const responsiblePayload = Array.from(tags).map(span => {
@@ -794,6 +813,7 @@ function initializeEventListeners() {
         document.getElementById('taskStatus').value = task.status;
 
         localFiles = task.attachments ? [...task.attachments] : [];
+        filesToDelete = [];
         ui.renderModalAttachments(localFiles);
         ui.setupResponsibleInput(task.responsible || []);
         ui.setupProjectSuggestions();
