@@ -180,7 +180,7 @@ function updateDragAndDropState() {
                     }
 
                     // PREPARAR DADOS PARA ATUALIZAÇÃO DA TAREFA
-                    let updatePayload = { status: newStatus };
+                    let updatePayload = { status: newStatus, oldStatus: oldStatus };
                     
                     // SE SAIR DA HOMOLOGAÇÃO PARA OUTRA COLUNA: Remove o homologador
                     let removedHomologador = false;
@@ -281,7 +281,8 @@ function openHomologadorModal(task, oldStatus, newStatus) {
             task.status = newStatus;
             task.homologador = homologadorData;
 
-            await api.updateTask(task.id, { status: newStatus, homologador: homologadorData });
+            // Enviamos o oldStatus para gerar o log duplo (Status alterado + Homologador designado)
+            await api.updateTask(task.id, { status: newStatus, oldStatus: oldStatus, homologador: homologadorData });
             
             ui.renderKanbanView(); 
             updateDragAndDropState(); 
