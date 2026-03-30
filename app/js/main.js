@@ -181,6 +181,12 @@ function updateDragAndDropState() {
 
                     // PREPARAR DADOS PARA ATUALIZAÇÃO DA TAREFA
                     let updatePayload = { status: newStatus, oldStatus: oldStatus };
+
+                    // --- Forçar 100% no progresso se for Publicação ou Concluído ---
+                    if (newStatus === 'publication' || newStatus === 'done') {
+                        updatePayload.progress = 100;
+                        task.progress = 100; // Atualiza na memória local
+                    }
                     
                     // SE SAIR DA HOMOLOGAÇÃO PARA OUTRA COLUNA: Remove o homologador
                     let removedHomologador = false;
@@ -446,7 +452,8 @@ function initializeEventListeners() {
         if (approveBtn) {
             e.stopPropagation();
             try {
-                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication' });
+                // Adicionamos o progress: 100 aqui
+                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication', progress: 100 });
                 ui.showToast('Enviado para Publicação!', 'success');
             } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
             return;
@@ -455,7 +462,8 @@ function initializeEventListeners() {
         if (publishBtn) {
             e.stopPropagation();
             try {
-                await api.updateTask(publishBtn.dataset.taskId, { status: 'done' });
+                // E também garantimos os 100% se for direto para concluído
+                await api.updateTask(publishBtn.dataset.taskId, { status: 'done', progress: 100 });
                 ui.showToast('Tarefa publicada e concluída!', 'success');
             } catch (err) { ui.showToast('Erro ao concluir', 'error'); }
             return;
@@ -765,14 +773,17 @@ function initializeEventListeners() {
                 modalApproveBtn.disabled = true;
                 if (window.lucide) lucide.createIcons();
 
-                await api.updateTask(taskId, { status: 'publication' });
+                await api.updateTask(taskId, { status: 'publication', progress: 100 });
                 ui.showToast('Tarefa aprovada para Publicação!', 'success');
                 
                 const taskIndex = state.tasks.findIndex(t => t.id === taskId);
-                if(taskIndex !== -1) state.tasks[taskIndex].status = 'publication';
+                if(taskIndex !== -1) {
+                    state.tasks[taskIndex].status = 'publication';
+                    state.tasks[taskIndex].progress = 100; // Reflete na UI instantaneamente
+                }
                 
                 ui.renderTaskHistory(taskId); 
-                ui.updateActiveView(); 
+                ui.updateActiveView();
                 
             } catch (err) {
                 console.error(err);
