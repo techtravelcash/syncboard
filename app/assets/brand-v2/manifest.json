@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "direction": "Fluxo",
+  "source_archive": "SyncboardNT-Kit-Visual-TC443-v2.zip",
+  "source_sha256": "15de4adc74dadb15730b5b1bec2eb1daecfb9aa11f7a2ab49a9cd713814b9a72",
+  "assets": {
+    "logo-primary-light.svg": "c20d4702168d311c932e1fe7f12e84cef1736761f73354d4e2d79f6335b003b0",
+    "favicon.svg": "42b715f80360ca0569c9d55fab6263bfa20b1972101128cddbc00f1c4dda5472",
+    "mark-small-mono.svg": "fe1fa7cdcefed10541d776b901a75229eac35727fc32e4914c05df4b534e23ac",
+    "mark-primary.svg": "80123d7a3840477f18bdc36e16927407b1223e891aecc33491a2af531874e557",
+    "mark-small-mono-dark.svg": "90963756217baa8d12609628ba939cdb8501982ba54e81ac8ee4e69dcf43cc1a",
+    "mark-small.svg": "42b715f80360ca0569c9d55fab6263bfa20b1972101128cddbc00f1c4dda5472",
+    "nt-custom.svg": "47e28e083e4b37de43506c800c2e7d25a405f73762d9f823d139447ca2064117",
+    "mark-primary-light.svg": "80123d7a3840477f18bdc36e16927407b1223e891aecc33491a2af531874e557",
+    "logo-primary-mono-dark.svg": "0357e29dde8fb718ec23ebe16630050c6ba6dbd6d38fffbddf4f32933e1dc703",
+    "logo-primary-mono-light.svg": "d5cd45f20defe56d8dbb23cef83804c1bfe51322d0d1082795cc108f464130b0",
+    "logo-primary-dark.svg": "f2d214bbf6f4e2563ffa6d51ce261f5788c528a2886c26d1e46a4c4472ed0889",
+    "mark-primary-mono-dark.svg": "a4d826b8ade30d2b60bb74e25a03b7feb3790bed12270233ea17a067091d8332",
+    "mark-primary-mono.svg": "81d28ddfe3b420a003d4474f2955a816f1bcd3ee26e39ce9bd516c450c10625c",
+    "README.md": "6616671f807d64cb3d6de107513b7176d103e3c2cd53b9196a219e99fc363972",
+    "brand-tokens.json": "c810a9b1eed2feac38e3215a077cbd87bc219f4c7f4c051172d718e293c233b2"
+  }
+}

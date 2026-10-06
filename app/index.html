@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncBoard</title>
-    <link rel="icon" type="image/png" href="https://i.imgur.com/AoaA8WI.png">
+    <title>SyncBoard NT</title>
+    <meta name="syncboard-ui-release" content="tc444-v2-pilot-1">
+    <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -17,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc444-1">
     
     <script>
         tailwind.config = {
@@ -181,10 +183,10 @@
 
         <div class="project-title-area fixed top-2 left-[90px] z-10 hidden md:block pointer-events-none">
             <div class="flex items-center gap-4">
-                <img src="https://i.imgur.com/AoaA8WI.png" class="w-12 h-12 object-contain drop-shadow-md" alt="Logo Orbital">
+                <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark w-12 h-12" alt="SyncBoard NT" width="48" height="48">
                 
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-custom-darkest dark:text-white drop-shadow-sm">Tecnologia</h1>
+                    <h1 class="text-3xl font-extrabold tracking-tight text-custom-darkest dark:text-white drop-shadow-sm">SyncBoard NT</h1>
                     <div class="text-custom-dark/60 dark:text-custom-light/60 text-sm flex items-center gap-2 font-semibold mt-1">
                         <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                         <span id="current-view-label">Quadro Kanban</span>
@@ -194,8 +196,8 @@
         </div>
 
         <div id="loader-container" class="fixed inset-0 z-[2000] flex justify-center items-center bg-custom-darkest">
-                <img src="https://i.imgur.com/AoaA8WI.png" class="w-16 h-16 animate-bounce">
-                <div class="text-xl font-bold text-custom-darkest dark:text-white animate-pulse">Carregando Syncboard...</div>
+                <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark w-16 h-16" alt="" width="64" height="64">
+                <div class="sb-loader-copy text-xl font-bold" role="status">Carregando SyncBoard NT...</div>
             </div>
         </div>
 

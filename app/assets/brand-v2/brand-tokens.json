@@ -1,0 +1,78 @@
+{
+  "version": 2,
+  "direction": {
+    "name": "Fluxo",
+    "ink": "#111827",
+    "accent": "#D6F46A",
+    "surface": "#F5F7FA",
+    "action": "#244FDB",
+    "muted": "#526174"
+  },
+  "interface": {
+    "fontFamily": "Plus Jakarta Sans, system-ui, sans-serif",
+    "fontSize": {
+      "body": 16,
+      "control": 14,
+      "metadata": 12,
+      "title": 28
+    },
+    "spacing": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32
+    ],
+    "radius": {
+      "control": 7,
+      "card": 9,
+      "panel": 12
+    },
+    "focus": {
+      "color": "#244FDB",
+      "width": 3,
+      "offset": 3
+    },
+    "motion": {
+      "durationMs": 120,
+      "respectReducedMotion": true
+    },
+    "status": {
+      "Fila": {
+        "text": "#495A70",
+        "background": "#EDF1F6"
+      },
+      "Parado": {
+        "text": "#8C5000",
+        "background": "#FFF1DD"
+      },
+      "Andamento": {
+        "text": "#214CC8",
+        "background": "#EAF0FF"
+      },
+      "Homologação": {
+        "text": "#713AA3",
+        "background": "#F2EAFB"
+      },
+      "Publicação": {
+        "text": "#17674D",
+        "background": "#E4F3ED"
+      },
+      "Erro": {
+        "text": "#A62A24",
+        "background": "#FFF0EE"
+      }
+    }
+  },
+  "logo": {
+    "cube": "isometric-3x3",
+    "markMinimumPx": 32,
+    "reducedMarkMinimumPx": 16,
+    "wordmarkMinimumPx": 176,
+    "clearSpaceIn96ViewBox": 12,
+    "nt": "custom-vector"
+  },
+  "focus": "#244FDB",
+  "borderStrong": "#7B8798"
+}

@@ -1,0 +1,39 @@
+/* Isolated TC-444 component review. This file is never loaded by the workboard. */
+body.sb-pilot { margin: 0; background: var(--sb-canvas); }
+.sb-pilot-header { background: var(--sb-ink); color: #F5F7FA; }
+.sb-pilot-header-inner, .sb-pilot-main { max-width: 1160px; margin: 0 auto; padding: 24px; }
+.sb-pilot-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.sb-pilot-header img { width: 222px; height: 48px; }
+.sb-pilot-main { padding-top: 48px; padding-bottom: 64px; }
+.sb-pilot-intro { display: flex; align-items: flex-start; gap: 24px; justify-content: space-between; margin-bottom: 32px; }
+.sb-pilot-eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--sb-muted); margin: 0 0 8px; }
+.sb-pilot h1 { margin: 0 0 12px; font-size: 28px; line-height: 1.25; letter-spacing: -.035em; }
+.sb-pilot h2 { margin: 0 0 8px; font-size: 20px; line-height: 1.4; letter-spacing: -.02em; }
+.sb-pilot h3 { font-size: 16px; }
+.sb-pilot p { margin-top: 0; }
+.sb-pilot-description { max-width: 720px; color: var(--sb-muted); }
+.sb-pilot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.sb-pilot-wide { grid-column: 1 / -1; }
+.sb-pilot-stack { display: grid; gap: 16px; }
+.sb-pilot-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.sb-pilot-section-copy { color: var(--sb-muted); font-size: 14px; margin-bottom: 24px; }
+.sb-pilot-logo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.sb-pilot-logo-sample { padding: 24px; background: #FFFFFF; color: #111827; border: 1px solid #DCE2EA; border-radius: 9px; min-width: 0; }
+.sb-pilot-logo-sample--dark { background: #111827; color: #F5F7FA; border-color: #3B4A60; }
+.sb-pilot-logo-sample p { font-size: 12px; margin: 0 0 16px; }
+.sb-pilot-logo { width: 176px; height: auto; max-width: 100%; display: block; }
+.sb-pilot-symbols { display: flex; align-items: center; gap: 24px; margin-top: 24px; }
+.sb-pilot-symbols figure { display: grid; justify-items: center; align-items: center; margin: 0; gap: 8px; }
+.sb-pilot-symbols figcaption { font-size: 12px; }
+.sb-pilot-color { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
+.sb-pilot-color span { width: 24px; height: 24px; border-radius: 7px; border: 1px solid var(--sb-border-strong); background: var(--swatch); }
+.sb-pilot-footer { color: var(--sb-muted); font-size: 12px; margin-top: 32px; }
+.sb-pilot-dialog-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin-top: 24px; }
+.sb-pilot .sb-modal h2 { margin: 0 0 12px; }
+@media (max-width: 767px) {
+  .sb-pilot-grid, .sb-pilot-logo-grid { grid-template-columns: 1fr; }
+  .sb-pilot-intro { flex-direction: column; }
+  .sb-pilot-header-inner, .sb-pilot-main { padding: 24px 16px; }
+  .sb-pilot .sb-panel { padding: 16px; }
+}
+#pilot-theme-note { margin-bottom: 24px; }

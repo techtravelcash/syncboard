@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Componentes Fluxo v2 · SyncBoard NT</title>
+  <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/fluxo-v2.css?v=tc444-1">
+  <link rel="stylesheet" href="css/ui-v2-pilot.css?v=tc444-1">
+  <script src="js/ui-v2-pilot.js?v=tc444-1" defer></script>
+</head>
+<body class="sb-scope sb-pilot" data-ui-release="tc444-v2-pilot-1">
+  <header class="sb-pilot-header">
+    <div class="sb-pilot-header-inner">
+      <img src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="222" height="48">
+      <a class="sb-button sb-button--accent" href="/">Voltar ao SyncBoard NT</a>
+    </div>
+  </header>
+  <main class="sb-pilot-main" id="pilot-main">
+    <div class="sb-pilot-intro">
+      <div>
+        <p class="sb-pilot-eyebrow">TC-444 · Piloto para homologação</p>
+        <h1>Uma base clara para o trabalho.</h1>
+        <p class="sb-pilot-description">Marca e componentes da identidade Fluxo v2. Esta amostra é isolada: os controles abaixo demonstram aparência e interação, sem criar ou alterar tarefas.</p>
+      </div>
+      <button type="button" class="sb-button sb-button--secondary" id="pilot-theme" aria-pressed="false">Testar tema escuro</button>
+    </div>
+    <div class="sb-notice" id="pilot-theme-note" hidden>O tema escuro é uma proposta de compatibilidade para validação. A aprovação da identidade v2 ainda não homologa o tema completo.</div>
+    <div class="sb-pilot-grid">
+      <section class="sb-panel sb-pilot-wide" aria-labelledby="brand-heading">
+        <h2 id="brand-heading">01 / A marca em cada escala</h2>
+        <p class="sb-pilot-section-copy">Vetores originais da v2, sem redesenho. Assinatura a partir de 176 px; cubo completo a partir de 32 px.</p>
+        <div class="sb-pilot-logo-grid">
+          <div class="sb-pilot-logo-sample">
+            <p>Fundo claro · Assinatura 176 px</p>
+            <img class="sb-pilot-logo" src="assets/brand-v2/logo-primary-light.svg" alt="SyncBoard NT no fundo claro" width="176" height="38">
+            <div class="sb-pilot-symbols">
+              <figure><img src="assets/brand-v2/mark-small.svg" alt="Cubo simplificado" width="16" height="16"><figcaption>16 px</figcaption></figure>
+              <figure><img src="assets/brand-v2/mark-small.svg" alt="Cubo simplificado" width="24" height="24"><figcaption>24 px</figcaption></figure>
+              <figure><img src="assets/brand-v2/mark-primary.svg" alt="Cubo modular" width="32" height="32"><figcaption>32 px</figcaption></figure>
+            </div>
+          </div>
+          <div class="sb-pilot-logo-sample sb-pilot-logo-sample--dark">
+            <p>Fundo escuro · Assinatura 176 px</p>
+            <img class="sb-pilot-logo" src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT no fundo escuro" width="176" height="38">
+            <div class="sb-pilot-symbols">
+              <figure><img src="assets/brand-v2/mark-small.svg" alt="Cubo simplificado" width="16" height="16"><figcaption>16 px</figcaption></figure>
+              <figure><img src="assets/brand-v2/mark-small.svg" alt="Cubo simplificado" width="24" height="24"><figcaption>24 px</figcaption></figure>
+              <figure><img src="assets/brand-v2/mark-primary.svg" alt="Cubo modular" width="32" height="32"><figcaption>32 px</figcaption></figure>
+            </div>
+          </div>
+        </div>
+        <div class="sb-pilot-row" style="margin-top:24px">
+          <span class="sb-pilot-color"><span style="--swatch:#111827"></span>Azul profundo #111827</span>
+          <span class="sb-pilot-color"><span style="--swatch:#D6F46A"></span>Lima #D6F46A</span>
+          <span class="sb-pilot-color"><span style="--swatch:#244FDB"></span>Cobalto #244FDB</span>
+        </div>
+      </section>
+      <section class="sb-panel" aria-labelledby="actions-heading">
+        <h2 id="actions-heading">02 / Ações e escolhas</h2>
+        <p class="sb-pilot-section-copy">Ação principal, alternativa, destaque e risco. Estados com texto, além de cor.</p>
+        <div class="sb-pilot-stack">
+          <div class="sb-pilot-row">
+            <button type="button" class="sb-button" id="pilot-feedback">Testar feedback</button>
+            <button type="button" class="sb-button sb-button--secondary" id="pilot-dialog-open">Abrir confirmação</button>
+          </div>
+          <div class="sb-pilot-row">
+            <button type="button" class="sb-button" disabled>Indisponível</button>
+            <button type="button" class="sb-button" disabled aria-busy="true"><span class="sb-spinner" aria-hidden="true"></span>Carregando…</button>
+          </div>
+          <div class="sb-pilot-row" aria-label="Filtros de demonstração">
+            <button type="button" class="sb-chip" aria-pressed="true" data-pilot-chip>Projeto de exemplo</button>
+            <button type="button" class="sb-chip" aria-pressed="false" data-pilot-chip>Responsável de exemplo</button>
+          </div>
+          <div class="sb-card sb-pilot-row"><span class="sb-avatar" role="img" aria-label="Avatar de exemplo, iniciais AB">AB</span><p class="sb-meta">Avatar sem foto · 40 px<br>Metadados com tamanho mínimo de 12 px</p></div>
+        </div>
+      </section>
+      <section class="sb-panel" aria-labelledby="fields-heading">
+        <h2 id="fields-heading">03 / Campos legíveis</h2>
+        <p class="sb-pilot-section-copy">Rótulo persistente, ajuda, erro e foco visível. Nenhum dado é enviado.</p>
+        <div class="sb-pilot-stack">
+          <div class="sb-field"><label class="sb-label" for="pilot-title">Título de exemplo</label><input class="sb-input" id="pilot-title" placeholder="Digite para testar o campo" autocomplete="off" aria-describedby="pilot-title-help"><p class="sb-help" id="pilot-title-help">Teste acentos, texto longo e navegação por teclado.</p></div>
+          <div class="sb-field"><label class="sb-label" for="pilot-description">Descrição de exemplo</label><textarea class="sb-textarea" id="pilot-description" placeholder="Teste texto em várias linhas"></textarea></div>
+          <div class="sb-field"><label class="sb-label" for="pilot-select">Estado de exemplo</label><select class="sb-select" id="pilot-select"><option>Fila</option><option>Parado</option><option>Andamento</option><option>Homologação</option><option>Publicação</option></select></div>
+          <div class="sb-field"><label class="sb-label" for="pilot-error">Campo com erro de exemplo</label><input class="sb-input" id="pilot-error" aria-invalid="true" aria-describedby="pilot-error-message"><p class="sb-error" id="pilot-error-message">Exemplo: preencha este campo antes de continuar.</p></div>
+        </div>
+      </section>
+      <section class="sb-panel sb-pilot-wide" aria-labelledby="status-heading">
+        <h2 id="status-heading">04 / Cada etapa tem seu significado</h2>
+        <p class="sb-pilot-section-copy">Publicação continua sendo uma etapa ativa. Parado não presume impedimento técnico. Cor de projeto permanece um dado independente.</p>
+        <div class="sb-pilot-row">
+          <span class="sb-badge" data-status="todo">○ Fila</span><span class="sb-badge" data-status="stopped">Ⅱ Parado</span><span class="sb-badge" data-status="inprogress">→ Andamento</span><span class="sb-badge" data-status="homologation">◇ Homologação</span><span class="sb-badge" data-status="publication">↗ Publicação</span><span class="sb-badge" data-status="error">! Erro</span>
+        </div>
+      </section>
+      <section class="sb-panel" aria-labelledby="empty-heading">
+        <h2 id="empty-heading">05 / Ausência sem ambiguidade</h2>
+        <p class="sb-pilot-section-copy">Componente de estado vazio, sem números ou tarefas inventadas.</p>
+        <div class="sb-empty"><img src="assets/brand-v2/mark-small.svg" alt="" width="24" height="24"><h3>Nenhum item para exibir</h3><p class="sb-meta">Exemplo de apresentação quando a consulta não retorna itens.</p></div>
+      </section>
+      <section class="sb-panel" aria-labelledby="feedback-heading">
+        <h2 id="feedback-heading">06 / Carregamento e falha</h2>
+        <p class="sb-pilot-section-copy">Exemplos visuais de estados, sem executar consultas.</p>
+        <div class="sb-pilot-stack"><div class="sb-notice"><span class="sb-spinner" aria-hidden="true"></span> Carregando informações…</div><div class="sb-notice sb-notice--error"><strong>Não foi possível carregar.</strong><br>Seu conteúdo não é apresentado como uma lista vazia.</div><div class="sb-field"><label class="sb-label" for="pilot-disabled">Campo desabilitado</label><input class="sb-input" id="pilot-disabled" value="Exemplo de conteúdo indisponível" disabled></div></div>
+      </section>
+    </div>
+    <p class="sb-pilot-footer">SyncBoard NT · Fluxo v2 · TC-444 · Revisão tc444-v2-pilot-1<br>A navegação e as demais telas serão trabalhadas após a validação deste piloto. O lettering vetorial aprovado foi preservado; a grafia textual é SyncBoard NT.</p>
+  </main>
+  <dialog class="sb-modal" id="pilot-dialog" aria-labelledby="pilot-dialog-title" aria-describedby="pilot-dialog-description">
+    <h2 id="pilot-dialog-title">Confirmar uma ação de exemplo?</h2>
+    <p id="pilot-dialog-description">Este diálogo demonstra hierarquia e foco. Não há tarefa, arquivo ou dado real envolvido.</p>
+    <div class="sb-pilot-dialog-actions"><button type="button" class="sb-button sb-button--secondary" id="pilot-dialog-cancel" autofocus>Cancelar</button><button type="button" class="sb-button sb-button--danger" id="pilot-dialog-confirm">Confirmar exemplo</button></div>
+  </dialog>
+  <div class="sb-toast" id="pilot-toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+</body>
+</html>
