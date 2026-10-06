@@ -28,12 +28,13 @@
   --sb-homologation-text: #713AA3; --sb-homologation-bg: #F2EAFB;
   --sb-publication-text: #17674D; --sb-publication-bg: #E4F3ED;
   --sb-error-text: #A62A24; --sb-error-bg: #FFF0EE;
+  --sb-error-border: #A62A24;
 }
 /* Compatibility proposal only. These dark surfaces still need human review. */
 .dark .sb-scope, .sb-scope.dark {
   --sb-canvas: #111827; --sb-surface: #1B2536; --sb-text: #F5F7FA;
   --sb-muted: #B5C1D0; --sb-border: #3B4A60; --sb-border-strong: #91A1B8;
-  --sb-focus: #9BB3FF;
+  --sb-focus: #9BB3FF; --sb-error-border: #FFB6AD;
 }
 .sb-scope { font: 400 16px/1.6 var(--sb-font); color: var(--sb-text); }
 .sb-scope *, .sb-scope *::before, .sb-scope *::after { box-sizing: border-box; }
@@ -68,7 +69,7 @@
 .sb-textarea { resize: vertical; min-height: 104px; }
 .sb-input::placeholder, .sb-textarea::placeholder { color: var(--sb-muted); opacity: 1; }
 .sb-input:disabled, .sb-select:disabled, .sb-textarea:disabled { cursor: not-allowed; background: var(--sb-canvas); }
-.sb-input[aria-invalid='true'], .sb-select[aria-invalid='true'], .sb-textarea[aria-invalid='true'] { border: 2px solid var(--sb-error-text); }
+.sb-input[aria-invalid='true'], .sb-select[aria-invalid='true'], .sb-textarea[aria-invalid='true'] { border: 2px solid var(--sb-error-border); }
 .sb-help, .sb-meta { font-size: 12px; line-height: 1.5; color: var(--sb-muted); margin: 0; }
 .sb-error { font-size: 12px; line-height: 1.5; color: var(--sb-error-text); margin: 0; }
 .dark .sb-error { color: #FFB6AD; }

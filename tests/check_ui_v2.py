@@ -67,7 +67,7 @@ def main():
     status_ratios={name:contrast(v['text'],v['background']) for name,v in tokens['interface']['status'].items()}
     for name,ratio in status_ratios.items():
         assert ratio>=4.5, f'Status contrast: {name} {ratio}'
-    pairs={'action white':contrast('#FFFFFF','#244FDB'),'accent ink':contrast('#111827','#D6F46A'),'muted on white':contrast('#526174','#FFFFFF'),'dark muted':contrast('#B5C1D0','#1B2536')}
+    pairs={'action white':contrast('#FFFFFF','#244FDB'),'accent ink':contrast('#111827','#D6F46A'),'muted on white':contrast('#526174','#FFFFFF'),'dark muted':contrast('#B5C1D0','#1B2536'),'dark invalid-field border':contrast('#FFB6AD','#1B2536')}
     assert all(v>=4.5 for v in pairs.values())
     results.append({'status_contrast':status_ratios,'text_contrast':pairs})
     code=(ROOT/'app/js/ui-v2-pilot.js').read_text()
