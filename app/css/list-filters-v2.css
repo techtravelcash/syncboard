@@ -1,0 +1,90 @@
+/* TC-448 / UI-V2-05. Presentation only; list/filter identities and callbacks are retained. */
+body.sb-app { --sb-filter-height: 0px; }
+.sb-app #orb-filter.sb-task-filter-band {
+  position: fixed; top: var(--sb-header-height); right: 0; left: var(--sb-sidebar-width); bottom: auto;
+  z-index: 980; display: grid; grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.4fr) minmax(180px, .8fr);
+  align-items: end; gap: 12px 16px; width: auto; height: auto; padding: 16px 28px 12px;
+  background: var(--sb-surface); border-bottom: 1px solid var(--sb-border); color: var(--sb-text);
+  max-height: min(44dvh, 360px); overflow: auto;
+}
+.sb-app #main-content { top: calc(var(--sb-header-height) + var(--sb-filter-height)); height: calc(100dvh - var(--sb-header-height) - var(--sb-filter-height)); }
+.sb-task-filter-band > *, .sb-filter-selection > span, .sb-sort-selection > span { min-width: 0; }
+.sb-list-search { gap: 4px; }
+.sb-app #orb-filter .sb-filter-selection, .sb-app #orb-sort .sb-sort-selection { width: 100%; min-height: 64px; text-align: left; justify-content: flex-start; }
+.sb-filter-selection > span { flex: 1; overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.sb-sort-selection > span { overflow-wrap: anywhere; font-size: 14px; line-height: 1.5; }
+.sb-filter-selection-label { display: block; font-size: 12px; color: var(--sb-muted); font-weight: 500; }
+.sb-filter-feedback { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sb-filter-feedback .sb-button { min-height: 36px; padding: 6px 12px; font-size: 12px; }
+.sb-filter-feedback .sb-button:disabled { background: transparent; border-color: var(--sb-border); }
+.sb-app #orb-filter .sb-shell-panel { position: fixed; top: calc(var(--sb-header-height) + 12px); left: auto; right: 28px; width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - var(--sb-header-height) - 28px); }
+.sb-app #orb-sort-options { margin-top: 16px; }
+.sb-app #orb-sort-options .radial-content { border: 1px solid var(--sb-border); border-radius: var(--sb-radius-control); gap: 8px; }
+.sb-app #orb-sort-options .radial-content::after { content: none; }
+.sb-app #orb-sort-options .radial-content.active { color: var(--sb-accent); background: var(--sb-ink); border-color: var(--sb-ink); }
+.sb-sort-option-label { font-weight: 700; }
+.sb-sort-direction { margin-left: auto; font-size: 12px; }
+.sb-app #orb-sort-options .sort-indicator { position: static; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: 0; color: inherit; background: transparent; border: 0; }
+.sb-app #orb-sort-options .radial-content.active .sort-indicator { transform: none; opacity: 1; }
+.sb-app #listView .sb-list-results { max-width: 1320px; margin: 0 auto; padding-bottom: 24px; }
+.sb-list-results-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 16px; }
+.sb-list-results-heading h2 { margin: 0; font-size: 20px; line-height: 1.4; }
+.sb-list-results-heading p { margin: 0; font-size: 14px; color: var(--sb-muted); }
+.sb-list-rows { display: grid; gap: 12px; }
+.sb-app #listView .sb-task-list-row {
+  display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, .75fr) auto; align-items: center; gap: 20px;
+  margin: 0; padding: 20px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card);
+  color: var(--sb-text); background: var(--sb-surface); box-shadow: none; opacity: 1; transform: none; backdrop-filter: none; animation: none;
+}
+.sb-app #listView .sb-task-list-row:hover { border-color: var(--sb-border-strong); transform: none; box-shadow: none; z-index: auto; }
+.sb-app #listView .sb-task-list-row:focus-within { border-color: var(--sb-focus); }
+.sb-list-task-main, .sb-list-task-details, .sb-list-task-details > div { min-width: 0; }
+.sb-list-task-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.sb-list-task-id { font-size: 12px; font-weight: 700; color: var(--sb-muted); overflow-wrap: anywhere; }
+.sb-list-project { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12px; color: var(--sb-muted); overflow-wrap: anywhere; }
+.sb-list-project-dot { display: inline-block; width: 8px; height: 8px; border: 1px solid var(--sb-border-strong); border-radius: 50%; flex: 0 0 8px; }
+.sb-app #listView .sb-list-task-main h3 { margin: 0 0 8px; font-size: 16px; line-height: 1.5; font-weight: 700; color: var(--sb-text); white-space: normal; overflow-wrap: anywhere; }
+.sb-list-owners, .sb-list-reviewer { margin: 0; font-size: 12px; line-height: 1.6; color: var(--sb-muted); white-space: normal; overflow-wrap: anywhere; }
+.sb-list-owners > span { font-weight: 600; }
+.sb-list-reviewer { margin-top: 6px; }
+.sb-list-reviewer svg { display: inline; vertical-align: middle; width: 14px; height: 14px; margin-right: 4px; }
+.sb-list-task-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px 20px; margin: 0; }
+.sb-list-task-details dt { font-size: 12px; line-height: 1.4; color: var(--sb-muted); margin-bottom: 4px; }
+.sb-list-task-details dd { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.sb-list-task-details progress { appearance: none; display: block; width: 100%; max-width: 120px; height: 5px; margin-top: 6px; border: 0; border-radius: 3px; overflow: hidden; color: var(--sb-action); background: var(--sb-border); }
+.sb-list-task-details progress::-webkit-progress-bar { background: var(--sb-border); }
+.sb-list-task-details progress::-webkit-progress-value { background: var(--sb-action); }
+.sb-list-task-details progress::-moz-progress-bar { background: var(--sb-action); }
+.sb-list-task-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; max-width: 104px; }
+.sb-list-task-actions .delete-list-btn:hover { color: var(--sb-error-text); background: var(--sb-error-bg); border-color: var(--sb-error-border); }
+.sb-list-task-actions .info-btn:hover { color: var(--sb-action); background: var(--sb-inprogress-bg); }
+.sb-list-attachments { flex-basis: 100%; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 12px; color: var(--sb-muted); }
+.sb-list-attachments svg { width: 14px; height: 14px; }
+.sb-list-empty { max-width: 600px; margin: 24px auto; text-align: center; }
+.sb-list-empty-icon { width: 40px; height: 40px; margin: 0 auto 16px; color: var(--sb-muted); }
+.sb-list-empty h2 { margin: 0 0 8px; font-size: 20px; }
+.sb-list-empty p { color: var(--sb-muted); margin: 0; }
+@media (max-width: 1199px) {
+  .sb-app #orb-filter.sb-task-filter-band { grid-template-columns: minmax(150px, .8fr) minmax(250px, 1.2fr); padding: 12px 16px; }
+  .sb-task-filter-band #orb-sort { grid-column: 1; }
+  .sb-task-filter-band .sb-filter-feedback { grid-column: 2; }
+  .sb-app #listView .sb-task-list-row { grid-template-columns: minmax(180px, 1fr) minmax(220px, .8fr); gap: 16px; }
+  .sb-list-task-actions { grid-column: 1 / -1; max-width: none; padding-top: 12px; border-top: 1px solid var(--sb-border); }
+  .sb-list-attachments { flex-basis: auto; margin-right: auto; }
+}
+@media (max-width: 767px) {
+  .sb-app #orb-filter.sb-task-filter-band { grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; }
+  .sb-list-search, .sb-filter-anchor { grid-column: 1 / -1; }
+  .sb-app #orb-filter .sb-filter-selection, .sb-app #orb-sort .sb-sort-selection { min-height: 52px; padding: 8px; }
+  .sb-task-filter-band .sb-filter-feedback { flex-direction: column; align-items: flex-end; gap: 2px; }
+  .sb-task-filter-band .sb-filter-feedback .sb-button { min-height: 44px; }
+  .sb-app #orb-filter .sb-shell-panel { position: fixed; top: 80px; left: 12px; right: 12px; width: auto; max-width: none; max-height: calc(100dvh - 96px); }
+  .sb-app #listView .sb-task-list-row { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+  .sb-list-task-details { padding-top: 12px; border-top: 1px solid var(--sb-border); }
+}
+@media (prefers-reduced-motion: reduce) { .sb-app #listView .sb-task-list-row { transition: none; } }
+
+/* Neutralize inherited orbital icon geometry and hover effects. */
+body.sb-app #orb-sort:not(.expanded):hover { box-shadow: none !important; transform: none !important; }
+.sb-app #orb-sort-options .radial-content svg { width: 20px !important; height: 20px !important; transform: none; flex-shrink: 0; }
+.sb-app #orb-sort-options .sort-indicator svg { width: 16px !important; height: 16px !important; }

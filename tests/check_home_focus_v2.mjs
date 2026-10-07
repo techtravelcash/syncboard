@@ -38,7 +38,7 @@ for (const view of ['home','list']) for (const focusKind of ['metric','row','out
  const createMetric=()=>({home:true,generation:++generation,dataset:{filter:'homologation'},closest(){return this},focus(){assert.equal(classes.get('homeView').has('hidden'),false,'restore must happen after unhide');metricFocuses++;active=this}});
  currentMetric=createMetric();homeNode.querySelectorAll=()=>[currentMetric];
  active=focusKind==='metric'?currentMetric:focusKind==='row'?{home:true,closest:()=>null}:body;
- const context={state:{currentView:view},document:{get activeElement(){return active},getElementById:id=>nodes.get(id),querySelectorAll:()=>[]},renderHomeView(){currentMetric=createMetric()},renderListView(){},renderKanbanView(){},renderArchivedTasks(){},renderUserManagementView(){},setTimeout:()=>{},requestAnimationFrame:fn=>fn()};
+ const context={state:{currentView:view},document:{get activeElement(){return active},getElementById:id=>nodes.get(id),querySelectorAll:()=>[]},renderHomeView(){currentMetric=createMetric()},updateFilterBadge(){},renderListView(){},renderKanbanView(){},renderArchivedTasks(){},renderUserManagementView(){},setTimeout:()=>{},requestAnimationFrame:fn=>fn()};
  vm.runInNewContext(controllerSource,context);context.updateActiveView();
  assert.equal(metricFocuses,view==='home'&&focusKind==='metric'?1:0,JSON.stringify({view,focusKind}));
  if(view==='home'&&focusKind==='metric') {assert.equal(active,currentMetric);context.updateActiveView();assert.equal(metricFocuses,2);assert.equal(active,currentMetric);}

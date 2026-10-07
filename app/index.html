@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncBoard NT</title>
-    <meta name="syncboard-ui-release" content="tc447-kanban-1">
+    <meta name="syncboard-ui-release" content="tc448-list-1">
     <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
-    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc447-kanban-1">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc448-list-1">
     
-    <link rel="stylesheet" href="css/shell-v2.css?v=tc447-kanban-1">
-    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc447-kanban-1">
-    <link rel="stylesheet" href="css/home-v2.css?v=tc447-kanban-1">
-    <link rel="stylesheet" href="css/kanban-v2.css?v=tc447-kanban-1">
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc448-list-1">
+    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc448-list-1">
+    <link rel="stylesheet" href="css/home-v2.css?v=tc448-list-1">
+    <link rel="stylesheet" href="css/kanban-v2.css?v=tc448-list-1">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -45,8 +45,9 @@
             }
         }
     </script>
+    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc448-list-1">
 </head>
-<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc447-kanban-1">
+<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc448-list-1">
     <div id="loader-container" role="status" aria-live="polite">
       <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
@@ -76,22 +77,6 @@
         <div><small>SyncBoard NT</small><h1 id="current-view-label" tabindex="-1">Início</h1></div>
       </div>
       <div class="sb-shell-actions">
-        <div id="orb-filter" class="sb-shell-anchor hidden">
-          <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Buscar e filtrar tarefas"><i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Filtros</span></button>
-          <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
-            <div class="sb-shell-panel-head"><h2 id="shell-filter-title">Buscar e filtrar</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar filtros"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
-            <label class="sb-label" for="search-input">Busca</label><input type="search" id="search-input" class="sb-input" placeholder="Buscar tarefas...">
-            <div class="sb-shell-filter-group"><h3>Projetos</h3><div id="orb-project-filters"></div></div>
-            <div class="sb-shell-filter-group"><h3>Responsáveis</h3><div id="orb-responsible-filters"></div></div>
-          </section>
-        </div>
-        <div id="orb-sort" class="sb-shell-anchor hidden">
-          <button type="button" id="shell-sort-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-sort-panel" aria-controls="shell-sort-panel" aria-expanded="false" aria-label="Ordenar lista de tarefas"><i data-lucide="arrow-up-down" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Ordenar</span></button>
-          <section id="shell-sort-panel" class="sb-shell-panel" hidden aria-labelledby="shell-sort-title">
-            <div class="sb-shell-panel-head"><h2 id="shell-sort-title">Ordenação</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar ordenação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
-            <div id="orb-sort-options"></div>
-          </section>
-        </div>
         <button type="button" id="addTaskBtn" title="Nova Tarefa" aria-label="Nova Tarefa"><i data-lucide="plus" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Nova Tarefa</span></button>
         <div id="orb-tools" class="sb-shell-anchor">
           <button type="button" id="shell-account-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="orb-avatar-container"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></span><span id="notification-orb-badge" class="hidden" aria-label="Há notificações não lidas"></span></button>
@@ -106,6 +91,31 @@
         </div>
       </div>
     </header>
+    <div id="orb-filter" class="sb-task-filter-band hidden" role="region" aria-label="Busca, filtros e ordenação de tarefas">
+      <div class="sb-list-search sb-field"><label class="sb-label" for="search-input">Buscar tarefas</label><input type="search" id="search-input" class="sb-input" placeholder="Título ou ID da tarefa" autocomplete="off"></div>
+      <div class="sb-shell-anchor sb-filter-anchor">
+        <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button sb-filter-selection" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Escolher projeto e responsável" aria-describedby="selected-project-label selected-responsible-label task-filter-count">
+          <i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i>
+          <span><span class="sb-filter-selection-label">Projeto</span><span id="selected-project-label">Todos</span></span>
+          <span><span class="sb-filter-selection-label">Responsável</span><span id="selected-responsible-label">Todos</span></span>
+          <i data-lucide="chevron-down" class="sb-shell-icon" aria-hidden="true"></i>
+        </button>
+        <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
+          <div class="sb-shell-panel-head"><h2 id="shell-filter-title">Filtrar tarefas</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar filtros"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+          <div class="sb-shell-filter-group"><h3>Projetos</h3><div id="orb-project-filters"></div></div>
+          <div class="sb-shell-filter-group"><h3>Responsáveis</h3><div id="orb-responsible-filters"></div></div>
+        </section>
+      </div>
+      <div id="orb-sort" class="sb-shell-anchor hidden">
+        <button type="button" id="shell-sort-toggle" class="sb-shell-icon-button sb-sort-selection" data-shell-toggle="shell-sort-panel" aria-controls="shell-sort-panel" aria-expanded="false" aria-label="Ordenar lista de tarefas" aria-describedby="selected-sort-label"><i data-lucide="arrow-up-down" class="sb-shell-icon" aria-hidden="true"></i><span><span class="sb-filter-selection-label">Ordenação</span><span id="selected-sort-label">Criação · decrescente</span></span></button>
+        <section id="shell-sort-panel" class="sb-shell-panel" hidden aria-labelledby="shell-sort-title">
+          <div class="sb-shell-panel-head"><h2 id="shell-sort-title">Ordenação</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar ordenação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+          <p class="sb-meta">Selecione novamente o critério ativo para inverter a direção.</p>
+          <div id="orb-sort-options"></div>
+        </section>
+      </div>
+      <div class="sb-filter-feedback"><span id="task-filter-count" class="sb-meta" aria-live="polite">Sem filtros ativos</span><button id="clear-task-filters" type="button" class="sb-button sb-button--secondary" disabled>Limpar filtros</button></div>
+    </div>
     <div id="orb-nav-label" hidden aria-hidden="true"><svg><path id="curvePath" d=""/></svg></div>
     <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out" tabindex="-1" aria-busy="true">
       <div id="homeView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
@@ -595,6 +605,6 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
-    <script type="module" src="js/main.js?v=tc447-kanban-1"></script>
+    <script type="module" src="js/main.js?v=tc448-list-1"></script>
 </body>
 </html>

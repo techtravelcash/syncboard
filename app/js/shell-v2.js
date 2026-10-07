@@ -20,7 +20,7 @@ export function closeShellPanels(restoreFocus = true) {
   document.querySelectorAll('[data-shell-toggle]').forEach(button => button.setAttribute('aria-expanded', 'false'));
   const backdrop = document.getElementById('shell-backdrop');
   if (backdrop) backdrop.hidden = true;
-  for (const id of ['shell-topbar', 'main-content']) {
+  for (const id of ['shell-topbar', 'orb-filter', 'main-content']) {
     const element = document.getElementById(id);
     if (element) element.inert = false;
   }
@@ -41,7 +41,7 @@ function openPanel(panel, trigger) {
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
     document.getElementById('shell-backdrop').hidden = false;
-    for (const id of ['shell-topbar', 'main-content']) document.getElementById(id).inert = true;
+    for (const id of ['shell-topbar', 'orb-filter', 'main-content']) document.getElementById(id).inert = true;
   }
   focusable(panel)[0]?.focus();
 }
@@ -57,6 +57,12 @@ export function initializeShell() {
   if (shellReady) return;
   shellReady = true;
   mobileQuery = window.matchMedia('(max-width: 767px)');
+  const filterBand = document.querySelector('.sb-task-filter-band');
+  if (filterBand) {
+    const sizeFilterBand = () => document.body.style.setProperty('--sb-filter-height', `${filterBand.getBoundingClientRect().height}px`);
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(sizeFilterBand).observe(filterBand);
+    sizeFilterBand();
+  }
   closeShellPanels(false);
   mobileQuery.addEventListener('change', () => closeShellPanels(false));
   syncShellView('home');

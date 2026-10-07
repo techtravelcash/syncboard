@@ -478,7 +478,11 @@ export function renderKanbanView() {
     lucide.createIcons();
 }
 
-// --- RENDERIZAÇÃO: LISTA (MODIFICADO PARA ORB LATERAL E ANIMAÇÃO) ---
+// --- RENDERIZAÇÃO: LISTA / FLUXO V2 ---
+
+function escapeListV2Text(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
+}
 
 export function renderListView() {
     const container = document.getElementById('listView');
@@ -529,46 +533,19 @@ export function renderListView() {
             { key: 'status', label: 'Status', icon: 'activity' }
         ];
 
-        // CONFIGURAÇÃO DO ARCO (Efeito Vertical Stretched)
-        const startAngle = 145; 
-        const endAngle = 215;
-        
-        const total = sortOptions.length;
-        const step = total > 1 ? (endAngle - startAngle) / (total - 1) : 0;
-
-        sortOptions.forEach((opt, index) => {
-            const isActive = state.sortBy === opt.key;
-            
-            let arrowIcon = '';
-            if (isActive) {
-                arrowIcon = state.sortDirection === 'asc' 
-                    ? '<i data-lucide="arrow-up" class="w-2.5 h-2.5 stroke-[3]"></i>' 
-                    : '<i data-lucide="arrow-down" class="w-2.5 h-2.5 stroke-[3]"></i>';
-            }
-
-            const activeClass = isActive ? 'active' : '';
-            const angle = startAngle + (index * step);
-            
+        sortOptions.forEach(opt => {
+            const isActive = sortBy === opt.key;
+            const directionLabel = sortDir === 'asc' ? 'crescente' : 'decrescente';
             const btnWrapper = document.createElement('div');
             btnWrapper.className = 'radial-btn';
-            
-            // Define a rotação (com pivô deslocado no CSS)
-            btnWrapper.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-            btnWrapper.style.transitionDelay = `${index * 0.03}s`; 
-
             btnWrapper.innerHTML = `
-                <div class="radial-content ${activeClass}" 
-                     style="transform: rotate(-${angle}deg)" 
-                     data-sort="${opt.key}"
-                     data-label="${opt.label}">
-                     
-                    <i data-lucide="${opt.icon}" class="w-5 h-5"></i>
-                    
-                    <div class="sort-indicator">
-                        ${arrowIcon}
-                    </div>
-                </div>
-            `;
+                <div class="radial-content ${isActive ? 'active' : ''}" data-sort="${opt.key}"
+                     data-label="${opt.label}${isActive ? `, ${directionLabel}. Selecione para inverter` : ''}">
+                    <i data-lucide="${opt.icon}" class="w-5 h-5" aria-hidden="true"></i>
+                    <span class="sb-sort-option-label">${opt.label}</span>
+                    <span class="sb-sort-direction">${isActive ? directionLabel : ''}</span>
+                    <span class="sort-indicator" aria-hidden="true">${isActive ? `<i data-lucide="${sortDir === 'asc' ? 'arrow-up' : 'arrow-down'}" class="w-4 h-4"></i>` : ''}</span>
+                </div>`;
 
             const actualBtn = btnWrapper.querySelector('.radial-content');
             actualBtn.onclick = (e) => {
@@ -586,12 +563,19 @@ export function renderListView() {
             orbOptions.appendChild(btnWrapper);
         });
         
+        const selectedSortLabel = document.getElementById('selected-sort-label');
+        if (selectedSortLabel) selectedSortLabel.textContent = `${sortOptions.find(opt => opt.key === sortBy)?.label || 'Ordem do quadro'} · ${sortDir === 'asc' ? 'crescente' : 'decrescente'}`;
         lucide.createIcons();
     }
 
     // Se não houver tarefas
     if (activeTasks.length === 0) {
-        container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-20"><i data-lucide="clipboard-list" class="w-16 h-16 mb-4"></i><p>Nenhuma tarefa encontrada.</p></div>`;
+        const hasActiveTasks = state.tasks.some(task => task.status !== 'done');
+        container.innerHTML = `<section class="sb-panel sb-list-empty" aria-labelledby="list-empty-title">
+            <i data-lucide="${hasActiveTasks ? 'search' : 'clipboard-list'}" class="sb-list-empty-icon" aria-hidden="true"></i>
+            <h2 id="list-empty-title">${hasActiveTasks ? 'Nenhuma tarefa corresponde aos filtros' : 'Nenhuma tarefa ativa'}</h2>
+            <p>${hasActiveTasks ? 'Ajuste a busca, o projeto ou o responsável, ou use Limpar filtros para ver as tarefas ativas.' : 'As tarefas concluídas ficam em Arquivados. Novas tarefas aparecerão aqui.'}</p>
+        </section>`;
         lucide.createIcons();
         container.onscroll = null; // Limpa evento
         return;
@@ -606,87 +590,47 @@ export function renderListView() {
         'done': 'Concluído'
     };
 
-    // 3. Gerar HTML das Linhas
-    const rows = activeTasks.map((task, index) => {
-        const respNames = (task.responsible || []).map(r => typeof r === 'object' ? r.name : r).join(', ');
-        
-        const statusColor = task.status === 'stopped' ? 'red-500' : 
-                          task.status === 'homologation' ? 'orange-500' : 
-                          task.status === 'inprogress' ? 'blue-500' : 
-                          task.status === 'publication' ? 'purple-500' : 'gray-300';
-        
+    // Presentation only: do not normalize or mutate stored task values.
+    const rows = activeTasks.map(task => {
+        const esc = escapeListV2Text;
+        const respNames = (task.responsible || []).map(r => typeof r === 'object' ? (r?.name || r?.email || 'Nome não informado') : (r || 'Nome não informado')).join(', ');
         const statusLabel = statusMap[task.status] || 'Desconhecido';
-
-        // NOVO: Badge do Homologador na Lista
-        let homologadorHtml = '';
-        if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
-            const hName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
-            const isApproved = task.status === 'publication';
-            const colorClass = isApproved 
-                ? 'text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20' 
-                : 'text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20';
-            const icon = isApproved ? 'check-circle' : 'shield-check';
-            
-            homologadorHtml = `
-                <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-lg border ${colorClass} text-[10px] font-bold ml-1" title="Homologador: ${hName}">
-                    <i data-lucide="${icon}" class="w-3 h-3"></i>
-                    <span>${hName.split(' ')[0]}</span>
-                </div>
-            `;
-        }
-
+        const projectColor = task.projectColor || '#7B8798';
+        const progress = task.progress !== null && task.progress !== undefined && task.progress !== '' && Number.isFinite(Number(task.progress)) ? Number(task.progress) : null;
+        const homologadorName = typeof task.homologador === 'object' ? (task.homologador?.name || task.homologador?.email) : task.homologador;
+        const homologadorHtml = homologadorName && ['homologation', 'publication'].includes(task.status)
+            ? `<p class="sb-list-reviewer"><i data-lucide="${task.status === 'publication' ? 'check-circle' : 'shield-check'}" aria-hidden="true"></i>Homologador: ${esc(homologadorName)}</p>` : '';
         return `
-        <div class="animate-slide-up-enter" style="animation-delay: ${index * 0.05}s">
-            <div class="task-list-row list-row group" data-task-id="${task.id}">
-                <div class="w-1 h-12 rounded-full bg-${statusColor} shrink-0"></div>
-                
-                <div class="flex-grow min-w-0 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#ccc'}">${task.project || 'Geral'}</span>
-                        <span class="text-sm font-mono ox-text-secondary font-bold">${task.id}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full border border-gray-200 dark:border-white/5">${statusLabel}</span>
-                        ${homologadorHtml}
-                    </div>
-                    <h3 class="font-bold ox-text-primary truncate">${task.title}</h3>
-                    <p class="text-xs ox-text-secondary truncate mt-0.5">${respNames || 'Sem responsável'}</p>
+            <article class="task-list-row list-row sb-task-list-row" data-task-id="${esc(task.id)}" aria-labelledby="list-task-${esc(task.id)}">
+                <div class="sb-list-task-main">
+                    <div class="sb-list-task-meta"><span class="sb-list-task-id">${esc(task.id)}</span><span class="sb-badge" data-status="${esc(task.status)}">${esc(statusLabel)}</span><span class="sb-list-project"><span class="sb-list-project-dot" data-project-color="${esc(projectColor)}" aria-hidden="true"></span>${esc(task.project || 'Geral')}</span></div>
+                    <h3 id="list-task-${esc(task.id)}">${esc(task.title)}</h3>
+                    <p class="sb-list-owners"><span>Responsáveis:</span> ${esc(respNames || 'Sem responsável')}</p>
+                    ${homologadorHtml}
                 </div>
-                
-                <div class="hidden md:flex items-center gap-4 shrink-0 mr-4">
-                    <div class="text-xs ox-text-secondary flex items-center gap-1" title="Criado em">
-                        <i data-lucide="clock" class="w-3 h-3"></i> ${formatDate(task.createdAt)}
-                    </div>
-
-                    ${task.dueDate ? `<div class="text-xs ox-text-secondary flex items-center gap-1" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.dueDate)}</div>` : ''}
-                    ${task.attachments?.length ? `<div class="text-xs ox-text-tertiary"><i data-lucide="paperclip" class="w-3 h-3"></i></div>` : ''}
+                <dl class="sb-list-task-details">
+                    <div><dt>Prioridade</dt><dd>${esc(task.priority || 'Não informada')}</dd></div>
+                    <div><dt>Prazo</dt><dd>${task.dueDate ? esc(formatDate(task.dueDate)) : 'Sem prazo'}</dd></div>
+                    <div><dt>Progresso</dt><dd>${progress === null ? 'Não informado' : `<span>${esc(task.progress)}%${progress < 0 || progress > 100 ? ' (fora da faixa)' : ''}</span><progress max="100" value="${Math.max(0, Math.min(100, progress))}" aria-label="Progresso de ${esc(task.id)}">${esc(task.progress)}%</progress>`}</dd></div>
+                    <div><dt>Criação</dt><dd>${esc(formatDate(task.createdAt) || 'Não informada')}</dd></div>
+                </dl>
+                <div class="sb-list-task-actions">
+                    ${task.attachments?.length ? `<span class="sb-list-attachments"><i data-lucide="paperclip" aria-hidden="true"></i>${task.attachments.length} ${task.attachments.length === 1 ? 'anexo' : 'anexos'}</span>` : ''}
+                    <button type="button" class="delete-list-btn sb-shell-icon-button" data-task-id="${esc(task.id)}" title="Excluir ${esc(task.id)}" aria-label="Excluir ${esc(task.id)}"><i data-lucide="trash-2" class="sb-shell-icon" aria-hidden="true"></i></button>
+                    <button type="button" class="info-btn sb-shell-icon-button" data-task-id="${esc(task.id)}" aria-label="Abrir detalhes de ${esc(task.id)}"><i data-lucide="chevron-right" class="sb-shell-icon" aria-hidden="true"></i></button>
                 </div>
-                
-                <div class="flex items-center gap-1 shrink-0">
-                    <button class="delete-list-btn p-2 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-task-id="${task.id}" title="Excluir">
-                        <i data-lucide="trash-2" class="w-5 h-5 pointer-events-none"></i>
-                    </button>
-                    <button class="info-btn p-2 rounded-xl text-gray-300 hover:text-custom-dark hover:bg-gray-100 dark:hover:bg-white/10 transition-colors" data-task-id="${task.id}">
-                        <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        `;
+            </article>`;
     }).join('');
 
-    // Renderiza APENAS a lista
-    container.innerHTML = `
-        <div class="pt-6 pb-32">
-            <div class="max-w-4xl mx-auto space-y-1">
-                ${rows}
-            </div>
-        </div>
-    `;
-    
-    // Liga os efeitos
-    setTimeout(() => {
-        requestAnimationFrame(updateListScrollEffect);
-        container.onscroll = () => requestAnimationFrame(updateListScrollEffect);
-    }, 100);
+    container.innerHTML = `<section class="sb-list-results" aria-label="Tarefas ativas">
+        <div class="sb-list-results-heading"><h2>Tarefas</h2><p>${activeTasks.length} ${activeTasks.length === 1 ? 'tarefa' : 'tarefas'}</p></div>
+        <div class="sb-list-rows">${rows}</div>
+    </section>`;
+    container.querySelectorAll('.sb-list-project-dot').forEach(dot => {
+        dot.style.backgroundColor = dot.dataset.projectColor;
+    });
+    // Keep rows stable and fully opaque while scrolling.
+    container.onscroll = null;
 
     // --- EVENTOS ---
 
@@ -1031,6 +975,8 @@ export function updateActiveView() {
         }
     });
 
+    updateFilterBadge();
+
     // --- VISIBILIDADE DO ORB DE FILTRO ---
     if (filterOrb) {
         if (state.currentView === 'kanban' || state.currentView === 'list') {
@@ -1121,23 +1067,29 @@ export function updateActiveView() {
 function updateFilterBadge() {
     const filterOrb = document.getElementById('orb-filter');
     if (!filterOrb) return;
-
-    let badge = filterOrb.querySelector('.filter-badge');
-    if (!badge) {
-        badge = document.createElement('div');
-        badge.className = 'filter-badge hidden';
-        filterOrb.appendChild(badge);
-    }
-
-    let activeCount = 0;
-    if (state.selectedProject && state.selectedProject !== 'all') activeCount++;
-    if (state.selectedResponsible && state.selectedResponsible !== 'all') activeCount++;
-
-    if (activeCount > 0) {
-        badge.textContent = activeCount;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
+    const projectSelected = state.selectedProject && state.selectedProject !== 'all';
+    const responsibleSelected = state.selectedResponsible && state.selectedResponsible !== 'all';
+    const activeCount = Number(Boolean(projectSelected)) + Number(Boolean(responsibleSelected)) + Number(Boolean(state.searchQuery));
+    const projectLabel = document.getElementById('selected-project-label');
+    const responsibleLabel = document.getElementById('selected-responsible-label');
+    const countLabel = document.getElementById('task-filter-count');
+    if (projectLabel) projectLabel.textContent = projectSelected ? state.selectedProject : 'Todos';
+    if (responsibleLabel) responsibleLabel.textContent = responsibleSelected ? state.selectedResponsible : 'Todos';
+    if (countLabel) countLabel.textContent = activeCount ? `${activeCount} ${activeCount === 1 ? 'filtro ativo' : 'filtros ativos'}` : 'Sem filtros ativos';
+    const clearButton = document.getElementById('clear-task-filters');
+    if (clearButton) {
+        clearButton.disabled = !activeCount;
+        // Route clearing through the already-installed filter/search callbacks.
+        clearButton.onclick = () => {
+            document.querySelector('#orb-project-filters .filter-chip')?.click();
+            document.querySelector('#orb-responsible-filters .filter-chip')?.click();
+            const search = document.getElementById('search-input');
+            if (search) {
+                search.value = '';
+                search.dispatchEvent(new Event('input', { bubbles: true }));
+                search.focus();
+            }
+        };
     }
 }
 
@@ -1145,7 +1097,7 @@ export function populateProjectFilter() {
     const container = document.getElementById('orb-project-filters');
     if (!container) return; 
 
-    const projects = [...new Set(state.tasks.map(t => t.project).filter(Boolean))].sort();
+    const projects = [...new Set([...state.tasks.map(t => t.project), ...(state.selectedProject && state.selectedProject !== 'all' ? [state.selectedProject] : [])].filter(Boolean))].sort();
 
     container.innerHTML = '';
 
@@ -1153,6 +1105,7 @@ export function populateProjectFilter() {
     const isAllActive = !state.selectedProject || state.selectedProject === 'all';
     allChip.className = `filter-chip ${isAllActive ? 'active' : ''}`;
     allChip.textContent = 'Todos';
+    allChip.dataset.value = 'all';
     
     allChip.onclick = (e) => {
         e.stopPropagation();
@@ -1168,6 +1121,7 @@ export function populateProjectFilter() {
         const isActive = state.selectedProject === p;
         chip.className = `filter-chip ${isActive ? 'active' : ''}`;
         chip.textContent = p;
+        chip.dataset.value = p;
         
         chip.onclick = (e) => {
             e.stopPropagation();
@@ -1186,7 +1140,7 @@ export function populateResponsibleFilter() {
     const container = document.getElementById('orb-responsible-filters');
     if (!container) return;
 
-    const responsibles = [...new Set(state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)).filter(Boolean))].sort();
+    const responsibles = [...new Set([...state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)), ...(state.selectedResponsible && state.selectedResponsible !== 'all' ? [state.selectedResponsible] : [])].filter(Boolean))].sort();
     
     container.innerHTML = '';
     
@@ -1194,6 +1148,7 @@ export function populateResponsibleFilter() {
     const isAllActive = !state.selectedResponsible || state.selectedResponsible === 'all';
     allChip.className = `filter-chip ${isAllActive ? 'active' : ''}`;
     allChip.textContent = 'Todos';
+    allChip.dataset.value = 'all';
     
     allChip.onclick = (e) => {
         e.stopPropagation();
@@ -1209,6 +1164,7 @@ export function populateResponsibleFilter() {
         const isActive = state.selectedResponsible === r;
         chip.className = `filter-chip ${isActive ? 'active' : ''}`;
         chip.textContent = r;
+        chip.dataset.value = r;
         
         chip.onclick = (e) => {
             e.stopPropagation();
