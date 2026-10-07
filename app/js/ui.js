@@ -1626,6 +1626,11 @@ export function setupRichTextEditor() {
 
     // 4. Lógica de Menção Inteligente (@)
     editor.addEventListener('keyup', (e) => {
+        // Do not reopen suggestions after dismissal or keyboard selection.
+        if (e.key === 'Escape' || e.key === 'Enter') {
+            suggestionBox.style.display = 'none';
+            return;
+        }
         const selection = window.getSelection();
         if (!selection.rangeCount) return;
 
@@ -1724,13 +1729,9 @@ export function setupRichTextEditor() {
         textNode.textContent = before;
         
         // 2. HTML da Pílula
-        const mentionHtml = `
-            <span class="mention-tag" contenteditable="false" data-email="${email}" 
-                  style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38BDF8; padding: 2px 8px 2px 2px; border-radius: 99px; font-size: 0.85em; font-weight: 600; vertical-align: middle; user-select: none; margin: 0 2px;">
-                <img src="${pic}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
-                @${name}
-            </span>&nbsp;
-        `;
+        // The editor preserves whitespace: template indentation would become visible
+        // newlines and move the caret below the mention. Keep only the trailing NBSP.
+        const mentionHtml = `<span class="mention-tag" contenteditable="false" data-email="${email}" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.3); color: #38BDF8; padding: 2px 8px 2px 2px; border-radius: 99px; font-size: 0.85em; font-weight: 600; vertical-align: middle; user-select: none; margin: 0 2px;"><img src="${pic}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">@${name}</span>&nbsp;`;
 
         // 3. Insere a Pílula e o resto do texto
         const fragment = document.createRange().createContextualFragment(mentionHtml);
@@ -1751,7 +1752,7 @@ export function setupRichTextEditor() {
 
         // 4. Move o cursor para depois do espaço
         const newRange = document.createRange();
-        newRange.setStartAfter(lastNode); // Posição após o &nbsp;
+        newRange.setStart(lastNode, lastNode.textContent.length); // Dentro do espaço após a menção
         newRange.collapse(true);
         
         const sel = window.getSelection();
