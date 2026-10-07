@@ -50,7 +50,7 @@
         }
     </script>
     <link rel="stylesheet" href="css/list-filters-v2.css?v=tc455-fidelity-2">
-    <link rel="stylesheet" href="css/fidelity-v2.css?v=tc463-menu-1">
+    <link rel="stylesheet" href="css/fidelity-v2.css?v=tc464-context-1">
     <link rel="stylesheet" href="css/fidelity-secondary-v2.css?v=tc455-fidelity-2">
     <link rel="stylesheet" href="css/task-fidelity-v2.css?v=tc455-fidelity-2">
     <link rel="stylesheet" href="css/cube-feedback.css?v=tc461-1">
@@ -69,7 +69,31 @@
         <a class="sb-shell-brand" href="/" aria-label="SyncBoard NT, início"><img class="fidelity-brand-lockup" src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="176" height="38"><img class="fidelity-brand-symbol" src="assets/brand-v2/mark-primary.svg" alt="" width="40" height="40"></a>
         <button type="button" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-close aria-label="Fechar navegação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button>
       </div>
-      <div class="fidelity-workspace"><span class="fidelity-workspace-icon" aria-hidden="true">NT</span><div><strong>SyncBoard NT</strong><small>Espaço de trabalho</small></div></div>
+      <!-- Current single-workspace context. Board label follows the existing Quadro page title. -->
+      <div class="fidelity-context" id="fidelity-context">
+        <div class="fidelity-context-rows">
+          <button type="button" class="fidelity-context-trigger" id="workspace-context-trigger" aria-expanded="false" aria-controls="workspace-context-panel">
+            <span class="fidelity-context-icon" aria-hidden="true">NT</span>
+            <span class="fidelity-context-copy"><small>Workspace</small><strong>SyncBoard NT</strong></span>
+            <i data-lucide="chevron-down" class="fidelity-context-chevron" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="fidelity-context-trigger" id="board-context-trigger" aria-expanded="false" aria-controls="board-context-panel">
+            <span class="fidelity-context-icon fidelity-context-icon--board" aria-hidden="true"><i data-lucide="columns-3"></i></span>
+            <span class="fidelity-context-copy"><small>Board</small><strong>Quadro de trabalho</strong></span>
+            <i data-lucide="chevron-down" class="fidelity-context-chevron" aria-hidden="true"></i>
+          </button>
+        </div>
+        <section class="fidelity-context-panel" id="workspace-context-panel" aria-labelledby="workspace-context-heading" hidden>
+          <h2 id="workspace-context-heading">Workspace atual</h2>
+          <div class="fidelity-context-current"><span class="fidelity-context-icon" aria-hidden="true">NT</span><span>SyncBoard NT</span><span class="fidelity-context-check" aria-label="Atual">✓</span></div>
+          <p>Somente o workspace atual está disponível. A troca de workspaces será implementada em uma etapa futura.</p>
+        </section>
+        <section class="fidelity-context-panel" id="board-context-panel" aria-labelledby="board-context-heading" hidden>
+          <h2 id="board-context-heading">Board em SyncBoard NT</h2>
+          <div class="fidelity-context-current"><span class="fidelity-context-icon fidelity-context-icon--board" aria-hidden="true"><i data-lucide="columns-3"></i></span><span>Quadro de trabalho</span><span class="fidelity-context-check" aria-label="Atual">✓</span></div>
+          <p>Somente o quadro atual está disponível. A troca de boards será implementada em uma etapa futura.</p>
+        </section>
+      </div>
       <nav id="view-switcher-orb" aria-label="Visualizações">
       <section aria-labelledby="work-menu-title"><h2 id="work-menu-title" class="sb-shell-kicker">Trabalho</h2>
       <div class="sb-shell-nav">
@@ -593,6 +617,7 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
+    <script type="module" src="js/context-selector.js?v=tc464-context-1"></script>
     <script type="module" src="js/main.js?v=tc459-ai-agent-1"></script>
     <script type="module" src="js/task-fidelity-v2.js?v=tc455-task-1"></script>
 </body>
