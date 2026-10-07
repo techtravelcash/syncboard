@@ -94,3 +94,9 @@ Não existem resultados visuais em navegador autorizado para este candidato. Ess
 Marcador `tc452-people-1`. Foram preservados os140 IDs anteriores, com cinco novos títulos/ajudas. O gate do shell permite explicitamente esses rótulos, type=button em fechar/receber e a remoção de um ícone decorativo; mantém os callbacks e payloads exatos. Texto de email, fila e prévia usa14px, alinhado à escala v2.
 
 Criar/verificar `rollback/ui-v2-people-baseline-20261007` no parent exato antes de ativar. Publicar um commit atômico com expected-head lease, conferir Azure para o mesmo SHA e fazer o QA disponível sem escrita artificial em contas ou alertas. Retorno por novo commit de reversão, nunca reset/force-push; preservar trabalho posterior não relacionado. Entrega em Homologação para Elmo com limitações explícitas.
+
+## Recuperação de inicialização: claims de foto ausentes
+
+Após o QA inicial da revisão5c, duas recargas reais falharam em `updateUserProfileUI`, linha109: `claims.find` tentou ler uma coleção ausente. A consulta de diretório fica em outra linha; a leitura sem guarda de claims já existia no baseline92159. A recuperação trata somente claims opcionais de foto: coleção ausente/nula/não-array ou entradas sem tipo usam a inicial já prevista. Claims válidos mantêm ambos os tipos suportados e a chamada de foto anterior. Sessão, roles, diretório, API, rotas e autorização não foram relaxados.
+
+`node tests/check_profile_claims_recovery.mjs` executa o bootstrap real com o renderer real do perfil, cobrindo metadados ausentes/malformados, fotos válidas e falhas obrigatórias preservadas. Marcador de recuperação: `tc452-people-2`. A disponibilidade ao vivo deve ser revalidada antes de republicar o relatório; os resultados da revisão anterior continuam históricos. Referência do provedor: https://learn.microsoft.com/en-us/azure/static-web-apps/user-information .

@@ -106,7 +106,8 @@ function updateUserProfileUI() {
     if (roleDisplay) roleDisplay.textContent = displayRole;
 
     // 3. Trata a fotografia de perfil
-    const picClaim = state.currentUser.claims.find(c => c.typ === 'picture' || c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture');
+    const profileClaims = Array.isArray(state.currentUser.claims) ? state.currentUser.claims : [];
+    const picClaim = profileClaims.find(c => c?.typ === 'picture' || c?.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture');
     const photoUrl = picClaim ? picClaim.val : null;
 
     if (photoUrl) {

@@ -51,8 +51,9 @@ normalized=normalized.replace('        const placeholder = peopleAvatar(displayN
 normalized=normalized.replace('? alertData.signaledBy\n',"? alertData.signaledBy.split(' ')[0] \n")
 a='            // Renderiza os checkboxes dinamicamente';b='            if(window.lucide) lucide.createIcons();'
 normalized=normalized.replace(part(normalized,a,b),part(oldmain,a,b))
+normalized=normalized.replace("    const profileClaims = Array.isArray(state.currentUser.claims) ? state.currentUser.claims : [];\n    const picClaim = profileClaims.find(c => c?.typ === 'picture' || c?.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture');\n","    const picClaim = state.currentUser.claims.find(c => c.typ === 'picture' || c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/picture');\n")
 assert normalized==oldmain,'Changes outside approved profile/recipient/sender presentation'
-checks.append('Main is byte-identical after four presentation substitutions: auth checks, admin writes, API arguments, queue identity/dedupe, callbacks and notifications remain unchanged')
+checks.append('Main is byte-identical after four presentation substitutions and the explicit optional-photo-claims guard: auth checks, admin writes, API arguments, queue identity/dedupe, callbacks and notifications remain unchanged')
 ui=(ROOT/'app/js/ui.js').read_text();oldui=original('app/js/ui.js')
 normalized=ui.replace("import { personCard, notificationCard } from './people-v2.js';\n",'')
 for start,end in [('export function renderUserManagementView()','// --- ROTEADOR UI'),('export async function updateNotificationBadge()','// --- AUTOCOMPLETE E INPUTS')]:
