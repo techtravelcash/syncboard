@@ -5,13 +5,13 @@
   "owned_runtime_hashes": {
     "app/js/main.js": "5249f8cf780e9341996a5c9e39abf2c8ae59dff74d2e9c507ff30aa6d97fef04",
     "app/js/shell-v2.js": "4c9f8d8a33b697d2a0468c523494c3c9f89431eb8f0d96cedb75ea015d54eb98",
-    "app/js/fidelity-v2.js": "52084fafc05c2439ac6e30dc044f7d47f00ba6568a5f57d6fd99a2a17adcbbac",
-    "app/css/fidelity-v2.css": "0d8ae862da16301196523d454c75b363491fcff093f76bf6fa9717697235c132",
+    "app/js/fidelity-v2.js": "96b98ab4ac1880e00ef734504672f07c1f972ac622369bbf561a9e3eef677d91",
+    "app/css/fidelity-v2.css": "97701823318a3196d94930e44a572280665e8052c7f7854657be4afdaebe66de",
     "app/js/fidelity-secondary-v2.js": "248ad5442336bd45c582f90561664d6c229e4b9b73291c23116bec47efe3edb4",
     "app/css/fidelity-secondary-v2.css": "31a32c5d9a2772c8e602845f5712e4aa0598133f1c7041b1776d0d0c5b9f18d0",
     "app/fragments/taskModal-fidelity-v2.html": "be395a39e5be39afe9fcf95b61494e6feb90c520e01c4afae674ce2ff1f027eb",
     "app/fragments/taskHistoryModal-fidelity-v2.html": "c2a2b5dd132b90fed75095f3c65175d8528399b6cd65685e469a9af22c1ecc5b",
-    "app/css/task-fidelity-v2.css": "3c8c0bbb5299b9c58a9582e181877aa9a3620e56c375f04f66b82163ccbb547c",
+    "app/css/task-fidelity-v2.css": "257ef27923c58f14e990b6b86e2db9fcfb1df8594ff4c7a42ae2258093244973",
     "app/js/task-fidelity-v2.js": "07f926db6b7a510a27c608ecc415dde56c0b3a0f4b293b8f854bcf5911f0dd3b"
   },
   "ui_slices": [

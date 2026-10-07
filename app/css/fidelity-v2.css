@@ -137,8 +137,8 @@ html.dark body.sb-fidelity-v2 #kanbanView .fidelity-priority-high, html.dark bod
 }
 @media (max-width: 1200px) {
   body.sb-fidelity-v2 { --sb-sidebar-width: 185px; --fidelity-gutter: 24px; --fidelity-top: 25px; }
-  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-lockup { display: none; }
-  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-symbol { display: block; }
+  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-lockup { display: block; width: 147px; height: auto; }
+  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-symbol { display: none; }
   body.sb-fidelity-v2 #kanbanView { gap: 14px; }
 }
 @media (max-width: 1000px) {
@@ -148,7 +148,7 @@ html.dark body.sb-fidelity-v2 #kanbanView .fidelity-priority-high, html.dark bod
 @media (max-width: 680px) {
   body.sb-fidelity-v2 { --sb-sidebar-width: 0px; --sb-header-height: 57px; --fidelity-gutter: 18px; --fidelity-top: 26px; }
   body.sb-fidelity-v2 #orb-nav.sb-shell-sidebar { width: min(296px, calc(100vw - 32px)); }
-  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-lockup { display: block; }
+  body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-lockup { display: block; width: 176px; }
   body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-symbol { display: none; }
   body.sb-fidelity-v2 .fidelity-breadcrumb { display: none; }
   body.sb-fidelity-v2 .fidelity-mobile-brand { display: block; width: 148px; height: auto; }

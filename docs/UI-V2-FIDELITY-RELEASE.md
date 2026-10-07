@@ -2,7 +2,7 @@
 
 ## Status of this commit
 
-This is an authenticated, opt-in **preview** at `/ui-v2-fidelity-preview.html`, using the same existing production data and callbacks as the app. Its marker is `tc455-fidelity-preview-2`. The normal `index.html` remains byte-identical to the recovered production baseline `20c48df793c91dd303abdfb0229701b64a905914` (`tc452-people-2`). Opening the preview does not create demo records. Actions inside it are real production actions; QA must use read-only flows and Cancel unless a genuine authorized workflow transition is due.
+This is an authenticated, opt-in **preview** at `/ui-v2-fidelity-preview.html`, using the same existing production data and callbacks as the app. Its marker is `tc455-fidelity-preview-3`. The normal `index.html` remains byte-identical to the recovered production baseline `20c48df793c91dd303abdfb0229701b64a905914` (`tc452-people-2`). Opening the preview does not create demo records. Actions inside it are real production actions; QA must use read-only flows and Cancel unless a genuine authorized workflow transition is due.
 
 The owner rejected the preceding rollout's visual fidelity. Prior functional checks did not establish visual acceptance. TC-455 is the explicit reconstruction task; human validation by Elmo and publication of the task remain separate from a technical deployment.
 
@@ -53,3 +53,13 @@ If this preview commit causes a regression, create a normal revert commit over t
 The first live preview exposed a presentation event-boundary defect: the body received `data-fidelity-view` for styling, then a broad selector also bound it as a navigation control. A bubbled click on the profile opener repeated navigation and immediately closed its panel. The default page did not set that preview attribute. Both control queries now require `button[data-fidelity-view]`.
 
 The composed fixture now reflects dataset attributes, includes the body in document-level queries, and follows the real render-before-listener bootstrap order. With the original87ac source it reproduced unwanted navigation/close on heading/account clicks; with the two-selector repair it passes while intended navigation and all previous suites remain active. Actual profile/menu/form recheck is required in preview2 before any default activation.
+
+## Preview-3 typography/copy correction
+
+The desktop sidebar retains the complete approved V2 lockup at widths up to 1200px, sized to 147px inside the 185px rail; the mobile drawer uses 176px. This is a deliberate full-name desktop-identity adaptation: archived V2 switches to its 40px symbol at 681–1200px. SVG bytes are unchanged.
+
+Unknown card progress now reads “Progresso não informado” on one line. Zero remains an explicit0%, and known values retain their original rendering and update target. The display-only substitution does not assign progress or change payloads. `node tests/check_fidelity_copy.mjs` exercises undefined/null/empty,0,38 and100 through the real card renderer, verifies the existing progress action, and checks the wordmark rules.
+
+The integrated gate and all eight composed suites remain required. Live screenshots and the independent remaining-view comparison are still required before default activation. This correction does not claim that visual acceptance has passed.
+
+Live preview2 review also found the loaded edit title clipping in its inherited one-line textarea until typing. A scoped `@supports (field-sizing: content)` block lets supporting browsers size the initial value up to the existing 144px maximum. Inside that block, `height: auto !important` prevents an old inline height from a prior edit from clipping the next loaded or AI-applied title. Unsupported browsers retain the original oninput resizing and scrollable fallback; this is CSS-only and does not modify title data, form callbacks or submit logic. Live title and DevOps alignment rechecks are required.

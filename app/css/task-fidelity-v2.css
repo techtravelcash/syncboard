@@ -43,6 +43,10 @@ body.sb-app.sb-fidelity-v2 #taskForm .sb-fidelity-reference-control { position: 
 body.sb-app.sb-fidelity-v2 #taskForm .sb-task-reference-icon { top: 0; bottom: 0; height: auto; left: 0; padding-left: 12px; }
 body.sb-app.sb-fidelity-v2 #taskForm #taskAzureLink { min-height: 44px; width: 100%; padding-left: 36px; font-size: 13px; }
 body.sb-app.sb-fidelity-v2 #taskForm #taskTitle { font-size: 26px; line-height: 1.3; letter-spacing: -.7px; max-height: 144px; min-height: 44px; width: 100%; margin: 0; padding: 6px 9px; }
+/* Supported engines must ignore a stale inline height left by legacy oninput. */
+@supports (field-sizing: content) {
+  body.sb-app.sb-fidelity-v2 #taskForm #taskTitle { field-sizing: content; height: auto !important; }
+}
 body.sb-app.sb-fidelity-v2 #taskForm #openAiModalBtn { font-size: 12px; min-height: 36px; margin: 8px 0 0; }
 body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-main { padding: 24px var(--sb-task-main-inset) 28px; overflow: visible; }
 body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-sidebar { width: auto; overflow: visible; min-width: 0; border-left: 1px solid var(--sb-border); border-top: 0; }
