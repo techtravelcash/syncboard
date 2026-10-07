@@ -42,7 +42,7 @@ export function syncFidelityShell(state, filteredTasks) {
   setText('fidelity-page-title', title);
   setText('fidelity-page-subtitle', subtitle);
   document.body.dataset.fidelityView = state.currentView;
-  document.querySelectorAll('[data-fidelity-view]').forEach(button => {
+  document.querySelectorAll('button[data-fidelity-view]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.fidelityView === state.currentView));
     if (button.dataset.fidelityView === state.currentView) button.setAttribute('aria-current', 'page');
     else button.removeAttribute('aria-current');
@@ -115,7 +115,7 @@ export function initializeFidelityControls(state, {refresh}) {
     selectExisting('project', button.dataset.fidelityProject);
     document.querySelector('#view-switcher-orb [data-view="kanban"]')?.click();
   });
-  document.querySelectorAll('[data-fidelity-view]').forEach(button => button.addEventListener('click', () => document.querySelector(`#view-switcher-orb [data-view="${button.dataset.fidelityView}"]`)?.click()));
+  document.querySelectorAll('button[data-fidelity-view]').forEach(button => button.addEventListener('click', () => document.querySelector(`#view-switcher-orb [data-view="${button.dataset.fidelityView}"]`)?.click()));
   document.getElementById('fidelity-notifications-toggle')?.addEventListener('click', () => document.getElementById('orb-notif-btn')?.click());
   // Native details controls stay keyboard accessible; only one action disclosure is open.
   document.addEventListener('toggle', event => {

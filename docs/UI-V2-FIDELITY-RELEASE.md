@@ -2,7 +2,7 @@
 
 ## Status of this commit
 
-This is an authenticated, opt-in **preview** at `/ui-v2-fidelity-preview.html`, using the same existing production data and callbacks as the app. Its marker is `tc455-fidelity-preview-1`. The normal `index.html` remains byte-identical to the recovered production baseline `20c48df793c91dd303abdfb0229701b64a905914` (`tc452-people-2`). Opening the preview does not create demo records. Actions inside it are real production actions; QA must use read-only flows and Cancel unless a genuine authorized workflow transition is due.
+This is an authenticated, opt-in **preview** at `/ui-v2-fidelity-preview.html`, using the same existing production data and callbacks as the app. Its marker is `tc455-fidelity-preview-2`. The normal `index.html` remains byte-identical to the recovered production baseline `20c48df793c91dd303abdfb0229701b64a905914` (`tc452-people-2`). Opening the preview does not create demo records. Actions inside it are real production actions; QA must use read-only flows and Cancel unless a genuine authorized workflow transition is due.
 
 The owner rejected the preceding rollout's visual fidelity. Prior functional checks did not establish visual acceptance. TC-455 is the explicit reconstruction task; human validation by Elmo and publication of the task remain separate from a technical deployment.
 
@@ -47,3 +47,9 @@ Capture and inspect real screenshots with their viewport, zoom, theme and marker
 Verified backup ref: `rollback/ui-v2-before-fidelity-preview-20261007` at `20c48df793c91dd303abdfb0229701b64a905914`, tree `c187a315a4572a2d74a2b66322e90854947be445`. Before every main update, verify the actual current head and use a non-forced expected-head lease. Never reset or force-push main.
 
 If this preview commit causes a regression, create a normal revert commit over the then-current main, review conflicts and preserve subsequent legitimate changes, deploy through the same Azure workflow, and verify the exact recovery commit online. Reverting this preview returns the20c startup recovery intact. The old18-commit rollback rehearsal started at5c and does not cover this release.
+
+## Preview-2 recovery
+
+The first live preview exposed a presentation event-boundary defect: the body received `data-fidelity-view` for styling, then a broad selector also bound it as a navigation control. A bubbled click on the profile opener repeated navigation and immediately closed its panel. The default page did not set that preview attribute. Both control queries now require `button[data-fidelity-view]`.
+
+The composed fixture now reflects dataset attributes, includes the body in document-level queries, and follows the real render-before-listener bootstrap order. With the original87ac source it reproduced unwanted navigation/close on heading/account clicks; with the two-selector repair it passes while intended navigation and all previous suites remain active. Actual profile/menu/form recheck is required in preview2 before any default activation.

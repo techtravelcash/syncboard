@@ -42,3 +42,21 @@ The new composed fixture extends the existing parser with descendant selectors, 
 ## Limits
 
 This is synthetic DOM/API regression evidence. It does not establish pixels, computed geometry, native form validity, focus traps, real pointer dragging, responsive screenshots, accessibility-tree behavior, SSO, backend behavior or functional acceptance of existing pending changes. In particular, the inherited Sem data checkbox characterization remains unchanged and does not become a functional acceptance claim. HTTPS browser review remains separate and was not attempted by this gate.
+
+## Bootstrap/BODY navigation regression
+
+The original composed fixture missed a real startup-order bug in preview commit `87acb43d483e4bdf1558db29b2ec75fe632567c5`. Production renders before application listeners are installed. That first render reflects `body.dataset.fidelityView` into a `data-fidelity-view` attribute, so a document-wide `[data-fidelity-view]` query includes BODY. Registering a navigation click handler on that BODY makes an unrelated bubbled click navigate again and call `closeShellPanels`, including after an account-trigger click.
+
+The supplemental composed fixture now models these three details explicitly:
+
+- `dataset` is a live attribute reflection, rather than an independent object.
+- Document queries can match BODY itself; Element queries still search descendants only.
+- The real initial view renderer executes before the real application-listener installation, matching bootstrap order.
+
+It also models native non-reentrant `HTMLElement.click()` dispatch so this bug yields the actual unwanted navigation/close, instead of a synthetic recursion error. Intended test navigation looks up only `button[data-fidelity-view]`.
+
+The new regression clicks four targets from the actual preview DOM: page heading, account trigger, passive account-menu profile text, and task-form title field. For each, it requires no navigation callback, no navigation-triggered close callback, unchanged view, and no extra view-render event. Account-panel geometry/focus and the complete form lifecycle are outside this assertion; the regression specifically covers those clicks bubbling into navigation.
+
+RED was reproduced before any application change: each click on unchanged `87acb43` caused exactly one extra view update, `shell-view(list)`, and `close-shell`. The failing assertion was `Unrelated/account clicks must not navigate or close shell panels through a BODY navigation listener`. Original hash-locked tests and their behavioral bodies were not changed. The application selector correction and final GREEN verification are tracked separately below.
+
+GREEN was independently confirmed after both application navigation queries were narrowed to `button[data-fidelity-view]`: `node tests/check_fidelity_composed.mjs` passes all eight suites, including all four unrelated-click cases, existing intended navigation, five-filter results, Home focus, and drag guards. The tightened fixture was unchanged between the recorded RED for heading/account clicks and the selector correction; the two additional passive menu/form targets were then added and the full gate passed again. No original hash-locked test or application source was edited by the test-runner work.

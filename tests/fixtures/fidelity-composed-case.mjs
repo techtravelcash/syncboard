@@ -2,6 +2,19 @@
 // This is deliberately one context and the actual merged preview markup. It
 // adds DOM mechanics needed by real shell navigation, rather than alternate app
 // predicates/renderers/callbacks. No CSS/layout/native validation is simulated.
+// DOMStringMap is a live reflection of data-* attributes, including BODY.
+// Without this, the shell's first render cannot expose accidental nav matches.
+const dataAttribute = key => 'data-' + String(key).replace(/[A-Z]/g, letter => '-' + letter.toLowerCase());
+Object.defineProperty(Element.prototype, 'dataset', {get(){
+  if (!this.reflectedDataset) this.reflectedDataset = new Proxy({}, {
+    get: (_, key) => typeof key === 'string' ? this.attrs[dataAttribute(key)] : undefined,
+    set: (_, key, value) => { this.attrs[dataAttribute(key)] = String(value); return true; },
+    deleteProperty: (_, key) => { delete this.attrs[dataAttribute(key)]; return true; },
+    ownKeys: () => Object.keys(this.attrs).filter(key => key.startsWith('data-')).map(key => key.slice(5).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())),
+    getOwnPropertyDescriptor: (_, key) => dataAttribute(key) in this.attrs ? {enumerable:true, configurable:true} : undefined
+  });
+  return this.reflectedDataset;
+}});
 const baseMatches = Element.prototype.matches;
 Element.prototype.matches = function(selector) {
   const parts = selector.trim().split(/\s+(?![^\[]*\])/);
@@ -56,7 +69,15 @@ Element.prototype.dispatchEvent = function(event) {
   }
   return true;
 };
-Element.prototype.click = function() { this.dispatchEvent({type:'click', bubbles:true}); };
+// Native HTMLElement.click() suppresses a recursively re-entered click on the
+// same element. Keep this mechanic so an accidental BODY listener reports its
+// spurious navigation instead of failing only with a synthetic stack overflow.
+Element.prototype.click = function() {
+  if (this.clickInProgress) return;
+  this.clickInProgress = true;
+  try { this.dispatchEvent({type:'click', bubbles:true}); }
+  finally { this.clickInProgress = false; }
+};
 
 const composed = setup(source, true);
 const {context:ctx, doc:document, body, calls} = composed;
@@ -65,7 +86,9 @@ const actualPreview = read('app/ui-v2-fidelity-preview.html');
 const bodyMarkup = actualPreview.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
 assert.ok(bodyMarkup, 'Use the real merged preview body');
 body.innerHTML = bodyMarkup[1].replace(/<script\b[\s\S]*?<\/script>/gi, '');
-document.querySelector = selector => body.querySelector(selector);
+// Document queries include BODY itself; Element queries include descendants only.
+document.querySelectorAll = selector => [...(body.matches(selector) ? [body] : []), ...body.querySelectorAll(selector)];
+document.querySelector = selector => document.querySelectorAll(selector)[0] || null;
 document.createElement = tag => { const node = new Element(tag); node.ownerDocument = document; return node; };
 const docListeners = new Map(), dispatched = [];
 document.addEventListener = (type, callback) => { if (!docListeners.has(type)) docListeners.set(type, []); docListeners.get(type).push(callback); };
@@ -106,13 +129,38 @@ const dataBefore = snapshot(ctx.state.tasks);
 ctx.populateProjectFilter();ctx.populateResponsibleFilter();
 const mainSource = read('app/js/main.js');
 vm.runInContext('function installComposedListeners() {\n' + between(mainSource, 'function initializeEventListeners() {', "    const kanbanView = document.getElementById('kanbanView');").slice('function initializeEventListeners() {'.length) + '\n}',ctx);
-ctx.installComposedListeners();ctx.updateActiveView();
+// Follow real bootstrap ordering: first render synchronizes BODY metadata before
+// initializeEventListeners installs the shell's fidelity navigation callbacks.
+assert.ok(mainSource.indexOf('        ui.updateActiveView();') < mainSource.indexOf('        initializeEventListeners();'), 'Production bootstrap renders before installing application listeners');
+ctx.updateActiveView();
+assert.equal(body.getAttribute('data-fidelity-view'),'list','dataset assignment reflects a real BODY attribute');
+assert.ok(document.querySelectorAll('[data-fidelity-view]').includes(body),'Document attribute query includes the reflected BODY match');
+assert.ok(!body.querySelectorAll('[data-fidelity-view]').includes(body),'Element attribute query excludes its own root');
+ctx.installComposedListeners();
+
+// These are unrelated click targets in the actual preview DOM. Their bubbling
+// events must never route through navigation or invoke its close-shell callback.
+// This checks account-trigger bubbling; it does not simulate account-panel focus.
+const accountTrigger=document.querySelector('button[data-shell-toggle="shell-account-panel"]');
+assert.ok(accountTrigger,'Actual account-panel trigger is present');
+const nonNavigationClicks=[['page heading',n('fidelity-page-title')],['account trigger',accountTrigger],['account menu text',n('user-name-display')],['task form field',n('taskTitle')]].map(([target,element])=>{
+  calls.length=0;
+  const beforeView=ctx.state.currentView, beforeUpdates=dispatched.length;
+  element.click();
+  return {target, navigationOrClose:calls.filter(call=>['shell-view','close-shell'].includes(call[0])), viewChanged:ctx.state.currentView!==beforeView, extraViewUpdates:dispatched.length-beforeUpdates};
+});
+assert.deepEqual(nonNavigationClicks,[
+  {target:'page heading',navigationOrClose:[],viewChanged:false,extraViewUpdates:0},
+  {target:'account trigger',navigationOrClose:[],viewChanged:false,extraViewUpdates:0},
+  {target:'account menu text',navigationOrClose:[],viewChanged:false,extraViewUpdates:0},
+  {target:'task form field',navigationOrClose:[],viewChanged:false,extraViewUpdates:0}
+], 'Unrelated/account clicks must not navigate or close shell panels through a BODY navigation listener');
 const listIds = () => n('listView').querySelectorAll('.list-row').map(row => row.dataset.taskId);
 const laneIds = () => n('kanbanView').querySelectorAll('.kanban-task-list').map(lane => [lane.dataset.columnId, lane.children.map(card => card.dataset.taskId)]);
 const change = (type, value) => { const control=n(`fidelity-${type}-filter`);control.value=value;control.dispatchEvent({type:'change'}); };
 const search = value => { n('search-input').value=value;n('search-input').dispatchEvent({type:'input'}); };
 const navigate = view => {
-  const previewButton=document.querySelectorAll('[data-fidelity-view]').find(button=>button.dataset.fidelityView===view);
+  const previewButton=document.querySelectorAll('button[data-fidelity-view]').find(button=>button.dataset.fidelityView===view);
   assert.ok(previewButton, `Actual preview navigation ${view}`);
   previewButton.click();
   assert.equal(ctx.state.currentView,view, 'Preview navigation routes through real original handler');
@@ -201,6 +249,7 @@ assert.ok(dispatched.filter(type=>type==='sb:fidelity-view-updated').length>10);
 assert.equal(sortableHistory.filter(instance=>!instance.destroyed).length,0);
 console.log(JSON.stringify({status:'passed',checks:[
   'One context: actual merged preview DOM plus real shell filters, original search/project/responsible/navigation callbacks, secondary List, Home, Kanban and drag controller',
+  'Production render-before-listener order, reflected BODY dataset attributes and document-root queries; unrelated/account/menu/form clicks never navigate or close shell panels',
   'Five-filter intersection and each independent exclusion retain exact IDs/order and detail callback order; zero-result and restore paths',
   'View switching retains filters/results; Home personal model and heading survive shell integration',
   'Repeated real Home-controller blur/focus recovery; real modal close returns to current row or selected metric; quick List return keeps sort visible',
