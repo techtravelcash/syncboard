@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncBoard NT</title>
-    <meta name="syncboard-ui-release" content="tc449-task-space-1">
+    <meta name="syncboard-ui-release" content="tc450-collaboration-1">
     <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,13 +18,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
-    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc450-collaboration-1">
     
-    <link rel="stylesheet" href="css/shell-v2.css?v=tc449-task-space-1">
-    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc449-task-space-1">
-    <link rel="stylesheet" href="css/home-v2.css?v=tc449-task-space-1">
-    <link rel="stylesheet" href="css/kanban-v2.css?v=tc449-task-space-1">
-    <link rel="stylesheet" href="css/task-space-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc450-collaboration-1">
+    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc450-collaboration-1">
+    <link rel="stylesheet" href="css/home-v2.css?v=tc450-collaboration-1">
+    <link rel="stylesheet" href="css/kanban-v2.css?v=tc450-collaboration-1">
+    <link rel="stylesheet" href="css/task-space-v2.css?v=tc450-collaboration-1">
+    <link rel="stylesheet" href="css/collaboration-v2.css?v=tc450-collaboration-1">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -46,9 +47,9 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc450-collaboration-1">
 </head>
-<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc449-task-space-1">
+<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc450-collaboration-1">
     <div id="loader-container" role="status" aria-live="polite">
       <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
@@ -191,9 +192,10 @@
                                 <label for="task-attachment-input" class="cursor-pointer text-[10px] font-bold uppercase tracking-wider text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-lg hover:bg-blue-500/20">
                                     <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
                                 </label>
-                                <input type="file" id="task-attachment-input" multiple class="hidden">
+                                <input type="file" id="task-attachment-input" multiple class="sb-collab-file-input" aria-label="Adicionar anexos" aria-describedby="attachment-selection-help">
                             </div>
                             
+                            <p id="attachment-selection-help" class="sb-collab-help">Ao salvar, o sistema tentará enviar os arquivos selecionados. Um arquivo com link não confirma que as alterações foram salvas.</p>
                             <div id="attachment-list" class="grid grid-cols-2 gap-3 empty:hidden"></div>
                             
                             <div id="empty-attachments-placeholder" class="hidden text-center py-8 border-2 border-dashed border-black/5 dark:border-white/5 rounded-xl">
@@ -403,12 +405,12 @@
                             <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-60">Comentários</h3>
                         </div>
 
-                        <div id="comments-feed" class="flex-1 overflow-y-auto px-8 py-2 space-y-4 custom-scrollbar"></div>
+                        <div id="comments-feed" aria-label="Comentários da tarefa" class="flex-1 overflow-y-auto px-8 py-2 space-y-4 custom-scrollbar"></div>
 
                         <div class="p-6 mt-auto">
                             <div class="relative">
-                                <textarea id="comment-input" class="chat-input-integrated w-full pl-5 pr-14 py-4 text-sm resize-none custom-scrollbar shadow-sm" placeholder="Escreva um comentário..." rows="1" style="min-height: 54px; max-height: 120px;"></textarea>
-                                <button id="add-comment-btn" class="absolute right-3 bottom-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-full hover:scale-110 active:scale-95 transition-all shadow-md">
+                                <textarea id="comment-input" aria-label="Escrever comentário" class="chat-input-integrated w-full pl-5 pr-14 py-4 text-sm resize-none custom-scrollbar shadow-sm" placeholder="Escreva um comentário..." rows="1" style="min-height: 54px; max-height: 120px;"></textarea>
+                                <button id="add-comment-btn" aria-label="Enviar comentário" class="absolute right-3 bottom-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-full hover:scale-110 active:scale-95 transition-all shadow-md">
                                     <i data-lucide="send" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -456,16 +458,16 @@
         </div>
     </div>
 
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+    <div id="deleteConfirmModal" role="dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
         <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
             
             <div class="w-20 h-20 rounded-full bg-red-500/10 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-red-500/20 shadow-inner">
                 <i id="modal-icon" data-lucide="trash-2" class="w-9 h-9 text-red-600 dark:text-red-400"></i>
             </div>
             
-            <h2 class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Tem a certeza?</h2>
+            <h2 id="confirm-dialog-title" class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Tem a certeza?</h2>
             
-            <p class="text-custom-dark dark:text-blue-100/70 mb-8 text-sm leading-relaxed font-medium">
+            <p id="confirm-dialog-description" class="text-custom-dark dark:text-blue-100/70 mb-8 text-sm leading-relaxed font-medium">
                 Esta ação é irreversível e removerá o item permanentemente do quadro.
             </p>
             
@@ -600,6 +602,6 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
-    <script type="module" src="js/main.js?v=tc449-task-space-1"></script>
+    <script type="module" src="js/main.js?v=tc450-collaboration-1"></script>
 </body>
 </html>

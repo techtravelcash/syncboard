@@ -94,8 +94,11 @@ export function showToast(message, type = 'success') {
         info:    'bg-white text-custom-darkest border-l-4 border-custom-dark shadow-xl'
     };
 
-    toast.className = `min-w-[300px] p-4 rounded-r-xl shadow-2xl flex items-center gap-3 toast-enter ${styles[type]}`;
+    toast.className = `sb-collab-toast min-w-[300px] p-4 rounded-r-xl shadow-2xl flex items-center gap-3 toast-enter ${styles[type]}`;
     
+    toast.dataset.kind = type;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+
     let icon = '';
     if(type === 'success') icon = 'check-circle-2';
     if(type === 'error') icon = 'alert-circle';
@@ -129,32 +132,36 @@ function renderAttachmentList(containerId, attachments, isEditable = false) {
         attachments.forEach((file, index) => {
             const isLocalFile = file instanceof File;
             const fileName = isLocalFile ? file.name : (file.name || 'documento');
+            const displayFileName = escapeHomeText(fileName);
             const blobName = !isLocalFile && file.url ? decodeURIComponent(file.url.split('/').pop()) : '';
 
             const item = document.createElement('div');
-            item.className = 'flex items-center justify-between p-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
+            item.className = 'sb-collab-attachment flex items-center justify-between p-2 bg-white dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-lg group hover:border-custom-medium/50 transition-colors';
             
             const downloadLink = !isLocalFile ? `
-                <a href="${file.url}" target="_blank" class="text-blue-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Ver">
+                <a href="${file.url}" target="_blank" class="sb-collab-attachment-link text-blue-500 hover:text-blue-400 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Abrir anexo" aria-label="Abrir anexo">
                     <i data-lucide="eye" class="w-4 h-4"></i>
                 </a>
             ` : '';
 
             // Renderiza o botão de lixeira APENAS se isEditable for verdadeiro
             const removeBtnHtml = isEditable ? `
-                <button type="button" class="remove-attachment-btn text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-index="${index}" data-blob-name="${blobName}" title="Remover">
+                <button type="button" class="remove-attachment-btn text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" data-index="${index}" data-blob-name="${blobName}" title="Remover anexo do formulário" aria-label="Remover anexo do formulário">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             ` : '';
 
             item.innerHTML = `
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="bg-gray-100 dark:bg-gray-700 p-1.5 rounded-md text-gray-500 dark:text-gray-300">
+                <div class="sb-collab-file-info flex items-center gap-3 overflow-hidden">
+                    <div class="sb-collab-file-icon bg-gray-100 dark:bg-gray-700 p-1.5 rounded-md text-gray-500 dark:text-gray-300">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                     </div>
-                    <span class="text-xs font-medium truncate text-custom-darkest dark:text-gray-200">${fileName}</span>
+                    <div class="sb-collab-file-copy">
+                        <span class="sb-collab-file-name text-xs font-medium text-custom-darkest dark:text-gray-200">${displayFileName}</span>
+                        <span class="sb-collab-file-state">${isLocalFile ? 'Selecionado neste formulário' : (containerId === 'modal-info-attachments' ? 'Vinculado à tarefa' : 'Arquivo com link')}</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1">
+                <div class="sb-collab-file-actions flex items-center gap-1">
                     ${downloadLink}
                     ${removeBtnHtml}
                 </div>
@@ -1383,7 +1390,7 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     if (historyEl) {
         const historyItems = (task.history || []).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         if (historyItems.length === 0) {
-             historyEl.innerHTML = '<p class="text-xs text-white/30 italic">Nenhuma alteração registrada.</p>';
+             historyEl.innerHTML = '<p class="sb-collab-empty text-xs text-white/30 italic">Nenhuma alteração registrada.</p>';
         } else {
             historyEl.innerHTML = historyItems.map(item => {
                 let logText = '';
@@ -1411,12 +1418,12 @@ export function renderTaskHistory(taskId, fromNotification = false) {
                 }
 
                 return `
-                <div class="relative pl-7 pb-5 border-l border-white/10 last:border-0 last:pb-0 group">
-                    <div class="absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-[#1E293B] border border-white/20 flex items-center justify-center text-white/60 shadow-sm group-hover:text-blue-400 group-hover:border-blue-400/50 transition-colors">
+                <div class="sb-collab-history-item relative pl-7 pb-5 border-l border-white/10 last:border-0 last:pb-0 group">
+                    <div class="sb-collab-history-icon absolute -left-[13px] top-0 w-6 h-6 rounded-full bg-[#1E293B] border border-white/20 flex items-center justify-center text-white/60 shadow-sm group-hover:text-blue-400 group-hover:border-blue-400/50 transition-colors">
                         <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
                     </div>
-                    <p class="text-xs text-white/80 leading-relaxed">${logText}</p>
-                    <p class="text-[10px] font-mono text-white/30 mt-1 uppercase tracking-wider">${formatDateTime(item.timestamp)}</p>
+                    <div class="sb-collab-history-description text-xs text-white/80 leading-relaxed">${logText}</div>
+                    <p class="sb-collab-meta text-[10px] text-white/30 mt-1">${formatDateTime(item.timestamp) || 'Data não informada'}</p>
                 </div>
                 `;
             }).join('');
@@ -1428,7 +1435,7 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     const comments = (task.comments || []).map((c, i) => ({...c, index: i})).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     if (comments.length === 0) {
-        commentsEl.innerHTML = '<div class="text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda.</div>';
+        commentsEl.innerHTML = '<div class="sb-collab-empty text-center text-white/20 py-10 italic text-sm">Nenhum comentário ainda. Use o campo abaixo para começar.</div>';
     } else {
         commentsEl.innerHTML = comments.map(c => {
             const rawAuthor = typeof c.author === 'object' ? (c.author.email || c.author.name || '') : (c.author || '');
@@ -1436,11 +1443,14 @@ export function renderTaskHistory(taskId, fromNotification = false) {
             if (!user) user = state.users.find(u => u.name && rawAuthor && u.name.toLowerCase() === rawAuthor.toLowerCase());
 
             const authorName = user ? user.name : (typeof c.author === 'object' ? (c.author.name || c.author.email || 'Usuário') : c.author);
+            const displayAuthor = escapeHomeText(authorName || 'Autor não informado');
+            const commentDate = formatDateTime(c.timestamp) || 'Data não informada';
+            const editedLabel = c.editedAt ? `<span class="sb-collab-meta sb-collab-edited">Editado em ${formatDateTime(c.editedAt)}</span>` : '';
             const picUrl = user ? user.picture : null;
             const initial = (authorName || 'U').charAt(0).toUpperCase();
             const avatarHtml = picUrl 
-                ? `<div class="w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${authorName}"></div>`
-                : `<div class="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${authorName}">${initial}</div>`;
+                ? `<div class="sb-collab-comment-avatar w-8 h-8 rounded-full border border-white/10 bg-cover bg-center shrink-0" style="background-image: url('${picUrl}')" title="${displayAuthor}"></div>`
+                : `<div class="sb-collab-comment-avatar w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0" title="${displayAuthor}">${escapeHomeText(initial)}</div>`;
 
             const normalize = (value) => (value || '').toString().trim().toLowerCase();
             const emailClaim = (state.currentUser?.claims || []).find(claim =>
@@ -1482,9 +1492,9 @@ export function renderTaskHistory(taskId, fromNotification = false) {
 
             if (isMe) {
                 const commentKey = c.id || c.index;
-                return `<div class="flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="flex flex-col items-end min-w-0 max-w-full"><div class="flex items-center gap-2 mb-1"><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span><span class="text-xs font-bold text-white/90 truncate">Você</span><button class="edit-comment-btn text-amber-300/80 hover:text-amber-200 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" data-comment-key="${commentKey}" data-comment-text="${encodeURIComponent(c.text)}" title="Editar"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="delete-comment-btn text-red-400/90 hover:text-red-300 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div><div class="p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}</div></div>${avatarHtml}</div>`;
+                return `<div class="sb-collab-comment sb-collab-comment--own flex gap-3 justify-end group items-end animate-fade-in pl-8 mb-2"><div class="sb-collab-comment-main flex flex-col items-end min-w-0 max-w-full"><div class="sb-collab-comment-meta flex items-center gap-2 mb-1"><span class="sb-collab-meta text-[9px] text-white/30 shrink-0">${commentDate}</span>${editedLabel}<span class="sb-collab-comment-author text-xs font-bold text-white/90">Você · ${displayAuthor}</span><button class="edit-comment-btn text-amber-300/80 hover:text-amber-200 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" data-comment-key="${commentKey}" data-comment-text="${encodeURIComponent(c.text)}" title="Editar comentário" aria-label="Editar comentário"><i data-lucide="pencil" class="w-3 h-3"></i></button><button class="delete-comment-btn text-red-400/90 hover:text-red-300 transition-colors p-1" data-task-id="${taskId}" data-comment-index="${c.index}" title="Excluir comentário" aria-label="Excluir comentário"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div><div class="sb-collab-comment-body p-3 rounded-l-xl rounded-tr-xl border bg-blue-600/20 border-blue-500/30 text-sm text-gray-200 shadow-sm relative group-hover:border-blue-400/50 transition-colors break-words">${c.text}</div></div>${avatarHtml}</div>`;
             } else {
-                return `<div class="flex gap-3 group items-end animate-fade-in pr-8 mb-2">${avatarHtml}<div class="flex flex-col items-start min-w-0 max-w-full"><div class="flex items-baseline gap-2 mb-1"><span class="text-xs font-bold text-white/90 truncate">${authorName}</span><span class="text-[9px] text-white/30 shrink-0">${formatDateTime(c.timestamp)}</span></div><div class="p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">${c.text}</div></div></div>`;
+                return `<div class="sb-collab-comment flex gap-3 group items-end animate-fade-in pr-8 mb-2">${avatarHtml}<div class="sb-collab-comment-main flex flex-col items-start min-w-0 max-w-full"><div class="sb-collab-comment-meta flex items-baseline gap-2 mb-1"><span class="sb-collab-comment-author text-xs font-bold text-white/90">${displayAuthor}</span><span class="sb-collab-meta text-[9px] text-white/30 shrink-0">${commentDate}</span>${editedLabel}</div><div class="sb-collab-comment-body p-3 rounded-r-xl rounded-tl-xl border bg-white/5 border-white/10 text-sm text-gray-200 shadow-sm relative group-hover:border-white/20 transition-colors break-words">${c.text}</div></div></div>`;
             }
         }).join('');
         setTimeout(() => { if(commentsEl) commentsEl.scrollTop = commentsEl.scrollHeight; }, 100);
@@ -1500,28 +1510,29 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     if(inputContainer) {
         inputContainer.innerHTML = `
             <div class="rich-editor-wrapper relative group">
-                <div class="editor-toolbar">
-                    <button type="button" class="editor-tool-btn" data-cmd="bold" title="Negrito">
+                <div class="editor-toolbar" role="group" aria-label="Formatação do comentário">
+                    <button type="button" class="editor-tool-btn" data-cmd="bold" title="Negrito" aria-label="Negrito">
                         <i data-lucide="bold" class="w-4 h-4"></i>
                     </button>
-                    <button type="button" class="editor-tool-btn" data-cmd="italic" title="Itálico">
+                    <button type="button" class="editor-tool-btn" data-cmd="italic" title="Itálico" aria-label="Itálico">
                         <i data-lucide="italic" class="w-4 h-4"></i>
                     </button>
-                    <button type="button" class="editor-tool-btn" data-cmd="underline" title="Sublinhado">
+                    <button type="button" class="editor-tool-btn" data-cmd="underline" title="Sublinhado" aria-label="Sublinhado">
                         <i data-lucide="underline" class="w-4 h-4"></i>
                     </button>
                     <div class="w-px h-4 bg-white/10 mx-1"></div>
-                    <button type="button" class="editor-tool-btn" data-cmd="insertUnorderedList" title="Lista">
+                    <button type="button" class="editor-tool-btn" data-cmd="insertUnorderedList" title="Lista" aria-label="Lista">
                         <i data-lucide="list" class="w-4 h-4"></i>
                     </button>
                 </div>
 
-                <div id="comment-input-rich" contenteditable="true" class="editor-content custom-scrollbar" placeholder="Escreva um comentário (use @ para mencionar)..."></div>
+                <div id="comment-input-rich" role="textbox" aria-multiline="true" aria-label="Escrever comentário" aria-describedby="comment-editor-help" contenteditable="true" class="editor-content custom-scrollbar" placeholder="Escreva um comentário (use @ para mencionar)..."></div>
 
-                <button id="add-comment-btn" class="absolute bottom-3 right-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md z-10">
+                <button id="add-comment-btn" aria-label="Enviar comentário" title="Enviar comentário" class="absolute bottom-3 right-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md z-10">
                     <i data-lucide="send" class="w-4 h-4"></i>
                 </button>
             </div>
+            <p id="comment-editor-help" class="sb-collab-help">Enter envia; Shift + Enter cria uma linha. Use @ para mencionar. O texto não enviado pode se perder ao fechar ou atualizar a tarefa.</p>
         `;
     }
 
@@ -1795,16 +1806,16 @@ export function setupRichTextEditor() {
             if (users.length > 0) {
                 // Renderiza Lista
                 suggestionBox.innerHTML = users.map(u => `
-                    <div class="mention-item" 
+                    <button type="button" class="mention-item"
                          style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; color: white; border-radius: 8px; transition: background 0.2s;"
                          onmouseover="this.style.backgroundColor='rgba(56, 189, 248, 0.2)'" 
                          onmouseout="this.style.backgroundColor='transparent'"
                          data-email="${u.email}" 
                          data-name="${u.name}" 
                          data-pic="${u.picture || ''}">
-                        <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" style="width: 24px; height: 24px; rounded-full; object-fit: cover; border-radius: 50%;">
+                        <img src="${u.picture || 'https://i.imgur.com/6b6psVE.png'}" alt="" style="width: 24px; height: 24px; rounded-full; object-fit: cover; border-radius: 50%;">
                         <span style="font-size: 0.9rem; font-weight: 500;">${u.name}</span>
-                    </div>
+                    </button>
                 `).join('');
 
                 // Posiciona popup

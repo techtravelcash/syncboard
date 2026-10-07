@@ -43,7 +43,9 @@ def main():
     kanban_label_ids = Counter({('h2', 'id', 'homologadorTitle'): 1, ('p', 'id', 'homologadorDescription'): 1})
     # TC-449 adds only help/title label IDs; field/data/event contracts remain exact.
     task_label_ids = Counter({('p','id','task-link-help'):1, ('p','id','task-responsible-help'):1, ('p','id','task-draft-notice'):1, ('h2','id','ai-title-heading'):1, ('p','id','ai-review-help'):1})
-    assert Counter(old_modals.contracts)+kanban_label_ids+task_label_ids==Counter(new_modals.contracts),'Task/modal DOM contract changed'
+    # TC-450 adds attachment help and shared confirmation labels only.
+    collaboration_label_ids = Counter({('p','id','attachment-selection-help'):1, ('h2','id','confirm-dialog-title'):1, ('p','id','confirm-dialog-description'):1})
+    assert Counter(old_modals.contracts)+kanban_label_ids+task_label_ids+collaboration_label_ids==Counter(new_modals.contracts),'Task/modal DOM contract changed'
     checks.append(f'All {len(before.ids)} original IDs and every task/modal field/data contract preserved')
     assert 'hidden' in after.elements['user-management-btn']['class']
     assert 'href="/logout"' in new

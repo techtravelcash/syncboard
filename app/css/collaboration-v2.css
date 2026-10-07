@@ -1,0 +1,118 @@
+/* TC-450 / Fluxo v2: collaboration presentation only.
+   Loaded after custom, shell and detail compatibility styles (and task-space when integrated).
+   No persisted HTML is rewritten. IDs and handler data remain the source of truth. */
+.sb-app .sb-collab-help { margin: 10px 0 14px; color: var(--sb-muted); font: 400 12px/1.6 var(--sb-font); overflow-wrap: anywhere; }
+
+/* Real input remains keyboard reachable; the associated label is still the same upload trigger. */
+.sb-app #task-attachment-input.sb-collab-file-input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+.sb-app #taskForm label[for='task-attachment-input'] { min-height: 44px; padding: 8px 12px; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); color: var(--sb-action); background: var(--sb-inprogress-bg); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.sb-app #taskForm div:focus-within > label[for='task-attachment-input'] { outline: 3px solid var(--sb-focus); outline-offset: 3px; }
+.dark .sb-app #taskForm label[for='task-attachment-input'] { color: var(--sb-focus); background: var(--sb-canvas); }
+.sb-app #attachment-list, .sb-app #modal-info-attachments { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.sb-app #attachment-list:empty { display: none; }
+.sb-app #attachment-list .sb-collab-attachment, .sb-app #modal-info-attachments .sb-collab-attachment { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); background: var(--sb-surface); color: var(--sb-text); }
+.sb-app .sb-collab-file-info { min-width: 0; flex: 1 1 auto; overflow: visible; }
+.sb-app .sb-collab-file-copy { display: grid; gap: 4px; min-width: 0; }
+.sb-app .sb-collab-file-icon { flex-shrink: 0; color: var(--sb-muted); background: var(--sb-canvas); }
+.sb-app .sb-collab-file-name { display: block; color: var(--sb-text); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
+.sb-app .sb-collab-file-state { color: var(--sb-muted); font-size: 12px; line-height: 1.5; }
+.sb-app .sb-collab-file-actions { flex-shrink: 0; }
+.sb-app #attachment-list .remove-attachment-btn, .sb-app #attachment-list .sb-collab-attachment-link, .sb-app #modal-info-attachments .sb-collab-attachment-link { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-control); }
+.sb-app #attachment-list .sb-collab-attachment-link, .sb-app #modal-info-attachments .sb-collab-attachment-link { color: var(--sb-action); background: var(--sb-surface); }
+.sb-app #attachment-list .remove-attachment-btn { color: var(--sb-error-text); background: var(--sb-surface); }
+.sb-app #attachment-list .remove-attachment-btn:hover { background: var(--sb-error-bg); }
+.dark .sb-app #attachment-list .remove-attachment-btn { color: #FFB6AD; background: var(--sb-surface); }
+.dark .sb-app #attachment-list .remove-attachment-btn:hover { background: #382A31; }
+.dark .sb-app #attachment-list .sb-collab-attachment-link, .dark .sb-app #modal-info-attachments .sb-collab-attachment-link { color: var(--sb-focus); }
+
+/* Flat message cards, distinct from the separate event timeline. Legacy !important widths
+   and padding need narrowly scoped overrides, including the flex-col 90% rule. */
+.sb-app #comments-feed { padding: 8px 24px 20px !important; min-height: 120px; }
+.sb-app #comments-feed .sb-collab-comment { display: flex; align-items: flex-start; justify-content: flex-start; gap: 10px; padding: 0; margin-bottom: 16px; }
+.sb-app #comments-feed > .sb-collab-comment > .sb-collab-comment-main { flex: 1 1 auto; min-width: 0; max-width: 100% !important; align-items: stretch; }
+.sb-app #comments-feed .sb-collab-comment--own > .sb-collab-comment-avatar { order: -1; }
+.sb-app #comments-feed .sb-collab-comment-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 8px; }
+.sb-app #comments-feed .sb-collab-comment-author { order: -1; flex: 1 1 100%; min-width: 0; color: var(--sb-text); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
+.sb-app #comments-feed .sb-collab-meta, .sb-app #history-feed .sb-collab-meta { color: var(--sb-muted); font: 400 12px/1.5 var(--sb-font); text-transform: none; letter-spacing: 0; white-space: normal; overflow-wrap: anywhere; }
+.sb-app #comments-feed .sb-collab-edited { flex-basis: 100%; }
+.sb-app #comments-feed .sb-collab-comment-body { min-width: 0; width: 100%; padding: 12px !important; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); background: var(--sb-surface); color: var(--sb-text); font-size: 14px; line-height: 1.65; overflow-wrap: anywhere !important; white-space: pre-wrap !important; }
+.sb-app #comments-feed .sb-collab-comment--own .sb-collab-comment-body { background: var(--sb-canvas); border-left: 3px solid var(--sb-action); }
+.sb-app #comments-feed .sb-collab-comment-body > :is(pre, table) { display: block; max-width: 100%; overflow-x: auto; }
+.sb-app #comments-feed .sb-collab-comment-body img { max-width: 100%; height: auto; }
+.sb-app #comments-feed .sb-collab-comment-body ul { list-style: disc; padding-left: 20px; }
+.sb-app #comments-feed .sb-collab-comment-body ol { list-style: decimal; padding-left: 20px; }
+.sb-app #comments-feed .sb-collab-comment-avatar { width: 32px; height: 32px; background-color: var(--sb-ink); border-color: var(--sb-border-strong); color: var(--sb-accent); }
+.sb-app #comments-feed .edit-comment-btn, .sb-app #comments-feed .delete-comment-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 8px; position: static; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-control); background: var(--sb-surface); }
+.sb-app #comments-feed .edit-comment-btn { color: var(--sb-action); }
+.sb-app #comments-feed .delete-comment-btn { color: var(--sb-error-text); }
+.sb-app #comments-feed .edit-comment-btn:hover { background: var(--sb-inprogress-bg); }
+.sb-app #comments-feed .delete-comment-btn:hover { background: var(--sb-error-bg); }
+.dark .sb-app #comments-feed .edit-comment-btn { color: var(--sb-focus); }
+.dark .sb-app #comments-feed .delete-comment-btn { color: #FFB6AD; }
+.dark .sb-app #comments-feed .edit-comment-btn:hover { background: #253550; }
+.dark .sb-app #comments-feed .delete-comment-btn:hover { background: #382A31; }
+.sb-app #comments-feed .sb-collab-empty, .sb-app #history-feed .sb-collab-empty { padding: 20px 12px; margin: 0; border: 1px dashed var(--sb-border-strong); border-radius: var(--sb-radius-card); color: var(--sb-muted); font-size: 13px; line-height: 1.6; font-style: normal; text-align: left; }
+.sb-app #history-feed { border: 0; padding-left: 12px; }
+.sb-app #history-feed .sb-collab-history-item { border-color: var(--sb-border-strong); padding-left: 24px; padding-bottom: 20px; }
+.sb-app #history-feed .sb-collab-history-icon { background: var(--sb-canvas); border-color: var(--sb-border-strong); color: var(--sb-muted); box-shadow: none; }
+.sb-app #history-feed .sb-collab-history-description { color: var(--sb-text); font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+
+/* Editor chrome only: preserve the contenteditable value and original command handlers. */
+.sb-app #taskHistoryModal .rich-editor-wrapper { border-radius: var(--sb-radius-card); border: 1px solid var(--sb-border-strong); background: var(--sb-surface); overflow: visible; }
+.sb-app #taskHistoryModal .rich-editor-wrapper:focus-within { outline: 2px solid var(--sb-focus); outline-offset: 2px; border-color: var(--sb-focus); box-shadow: none; }
+.sb-app #taskHistoryModal .editor-toolbar { gap: 4px; flex-wrap: wrap; padding: 4px 8px; border-bottom: 1px solid var(--sb-border); border-radius: var(--sb-radius-card) var(--sb-radius-card) 0 0; background: var(--sb-canvas); }
+.sb-app #taskHistoryModal .editor-tool-btn { display: inline-flex; align-items: center; justify-content: center; width: 44px; min-height: 44px; padding: 8px; border-radius: var(--sb-radius-control); color: var(--sb-muted); }
+.sb-app #taskHistoryModal .editor-tool-btn:hover, .sb-app #taskHistoryModal .editor-tool-btn.active { color: var(--sb-action); background: var(--sb-inprogress-bg); }
+.dark .sb-app #taskHistoryModal .editor-tool-btn:hover, .dark .sb-app #taskHistoryModal .editor-tool-btn.active { color: var(--sb-focus); background: #253550; }
+.sb-app #comment-input-rich { min-width: 0; min-height: 96px; max-height: 200px; padding: 12px; color: var(--sb-text); caret-color: var(--sb-text); overflow-wrap: anywhere; font: 400 14px/1.65 var(--sb-font); white-space: pre-wrap; }
+.sb-app #comment-input-rich :is(b, strong) { color: inherit; }
+.sb-app #comment-input-rich:empty::before { color: var(--sb-muted); }
+.sb-app #taskHistoryModal #add-comment-btn { position: static; display: inline-flex; align-items: center; justify-content: center; align-self: flex-end; width: 44px; min-height: 44px; margin: 0 8px 8px; border: 1px solid var(--sb-action); border-radius: var(--sb-radius-control); background: var(--sb-action); color: #FFFFFF; box-shadow: none; transform: none; }
+.sb-app #taskHistoryModal #add-comment-btn:hover { background: var(--sb-action-hover); }
+.sb-app #taskHistoryModal #add-comment-btn:disabled { background: var(--sb-border); color: var(--sb-muted); border-color: var(--sb-border); cursor: not-allowed; }
+.sb-app #comment-input { color: var(--sb-text); background: var(--sb-surface); border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); }
+
+/* Suggestions have inline legacy fallback paint: scoped !important defeats those values,
+   but display/top/left and selection callbacks remain fully owned by existing JS. */
+.sb-app #rich-mention-suggestions, .sb-app #mention-suggestions { max-width: calc(100vw - 24px); min-width: min(220px, calc(100vw - 24px)) !important; border: 1px solid var(--sb-border-strong) !important; border-radius: var(--sb-radius-card) !important; background: var(--sb-surface) !important; color: var(--sb-text); box-shadow: 0 10px 24px rgb(17 24 39 / 18%) !important; backdrop-filter: none !important; font-family: var(--sb-font); }
+.sb-app #rich-mention-suggestions .mention-item { width: 100%; min-height: 44px; text-align: left; border: 0; background: transparent; color: var(--sb-text) !important; }
+.sb-app #rich-mention-suggestions .mention-item:hover, .sb-app #rich-mention-suggestions .mention-item:focus-visible { background: var(--sb-canvas) !important; }
+.sb-app #rich-mention-suggestions .mention-item span { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
+.sb-app #rich-mention-suggestions .mention-item img { flex-shrink: 0; }
+.sb-app #mention-suggestions > div { min-height: 44px; color: var(--sb-text); }
+.sb-app #comments-feed .mention-tag, .sb-app #comment-input-rich .mention-tag { max-width: 100%; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+html.dark body.sb-app #comments-feed .mention-tag, html.dark body.sb-app #comment-input-rich .mention-tag { color: var(--sb-focus) !important; background: #253550 !important; border-color: var(--sb-focus) !important; }
+html.dark body.sb-app #comments-feed a { color: var(--sb-focus); }
+
+/* Shared confirmation is neutral until the existing data-intent marks a destructive action.
+   No aria-modal claim, focus trap or callback change is introduced by this visual slice. */
+.sb-app #deleteConfirmModal > .orb-glass-unified { max-width: 440px; max-height: calc(100dvh - 32px); overflow-y: auto; padding: 24px; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-panel); background: var(--sb-surface); color: var(--sb-text); backdrop-filter: none; }
+.sb-app #deleteConfirmModal h2 { color: var(--sb-text); font-size: 22px; line-height: 1.35; overflow-wrap: anywhere; }
+.sb-app #deleteConfirmModal p { color: var(--sb-muted); font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; }
+.sb-app #deleteConfirmModal .sb-confirm-icon { width: 56px; height: 56px; border-radius: var(--sb-radius-panel); margin-bottom: 20px; box-shadow: none; }
+.sb-app #cancelDeleteBtn, .sb-app #confirmDeleteBtn { min-height: 44px; padding: 10px 16px; border-radius: var(--sb-radius-control); box-shadow: none; transform: none; }
+.sb-app #cancelDeleteBtn { background: var(--sb-surface); color: var(--sb-text); border: 1px solid var(--sb-border-strong); }
+.sb-app #cancelDeleteBtn:hover { background: var(--sb-canvas); }
+.sb-app #confirmDeleteBtn[data-intent='confirm'] { background: var(--sb-action); color: #FFFFFF; }
+.sb-app #confirmDeleteBtn[data-intent='destructive'] { background: var(--sb-error-text); color: #FFFFFF; }
+.sb-app #deleteConfirmModal button:disabled { opacity: .65; cursor: not-allowed; }
+.sb-app #deleteConfirmModal .sb-confirm-icon[data-intent='confirm'] :is(i, svg) { color: var(--sb-action); }
+.sb-app #deleteConfirmModal .sb-confirm-icon[data-intent='destructive'] :is(i, svg) { color: var(--sb-error-text); }
+
+/* Existing toast content/types/timing are preserved. No fabricated request state is added. */
+.sb-app #toast-container { max-width: calc(100vw - 32px); }
+.sb-app #toast-container .sb-collab-toast { min-width: 0; max-width: min(480px, calc(100vw - 32px)); border-radius: var(--sb-radius-card); border: 1px solid var(--sb-border-strong); background: var(--sb-surface); color: var(--sb-text); font-family: var(--sb-font); overflow-wrap: anywhere; }
+.sb-app #toast-container .sb-collab-toast[data-kind='success'] { border-left: 4px solid var(--sb-publication-text); }
+.sb-app #toast-container .sb-collab-toast[data-kind='error'] { border-left: 4px solid var(--sb-error-text); background: var(--sb-error-bg); color: var(--sb-error-text); }
+.sb-app #toast-container .sb-collab-toast[data-kind='info'] { border-left: 4px solid var(--sb-action); }
+
+@media (max-width: 767px) {
+  .sb-app #comments-feed { padding: 8px 16px 16px !important; }
+  .sb-app #comments-feed .sb-collab-comment { gap: 8px; }
+  .sb-app #attachment-list .sb-collab-attachment, .sb-app #modal-info-attachments .sb-collab-attachment { flex-wrap: wrap; }
+  .sb-app .sb-collab-file-actions { margin-left: auto; }
+  .sb-app #deleteConfirmModal > .orb-glass-unified { padding: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-app #comments-feed .sb-collab-comment, .sb-app #toast-container .sb-collab-toast { animation: none; }
+}
