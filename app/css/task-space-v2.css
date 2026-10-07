@@ -196,3 +196,9 @@
 
 /* Supplied validation state is always readable metadata, including inherited small spans. */
 .sb-app #modal-info-homologador .sb-task-validation-status { font-size: 12px; line-height: 1.5; color: var(--sb-text); opacity: 1; }
+
+/* TC462: a distinct, labeled return-to-work action in both themes. */
+.sb-app .sb-task-detail-actions #modal-reject-btn { color: #B91C1C; background: transparent; border: 1px solid currentColor; }
+.dark .sb-app .sb-task-detail-actions #modal-reject-btn { color: #FCA5A5; background: transparent; border-color: currentColor; }
+.sb-app .sb-task-detail-actions #modal-reject-btn:hover { background: rgba(220, 38, 38, .1); }
+.sb-app .sb-task-detail-actions button:disabled, .sb-app .sb-kanban-action:disabled { opacity: .55; cursor: wait; }

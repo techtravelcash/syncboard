@@ -13,6 +13,34 @@ let filesToDelete = [];
 let alertQueue = [];
 let isAlertModalOpen = false;
 
+// One in-flight decision per task, shared by card and detail actions.
+const pendingHomologationDecisions = state.pendingHomologationDecisions = new Set();
+async function decideHomologation(taskId, decision) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (!task || task.status !== 'homologation' || pendingHomologationDecisions.has(taskId)) return;
+    const rejecting = decision === 'reject';
+    const payload = rejecting ? { status: 'inprogress', homologador: null } : { status: 'publication', progress: 100 };
+    pendingHomologationDecisions.add(taskId);
+    const buttons = [...document.querySelectorAll('.approve-btn, .reject-btn, #modal-approve-btn, #modal-reject-btn')]
+        .filter(button => button.dataset.taskId === taskId);
+    buttons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); });
+    try {
+        const updatedTask = await api.updateTask(taskId, payload);
+        const index = state.tasks.findIndex(t => t.id === taskId);
+        if (index !== -1) state.tasks[index] = { ...state.tasks[index], ...updatedTask };
+        ui.showToast(rejecting ? 'Tarefa reprovada e devolvida para Andamento!' : 'Tarefa aprovada para Publicação!', 'success');
+        const modal = document.getElementById('taskHistoryModal');
+        // A delayed response must not reopen a closed detail or replace another task.
+        if (state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show')) ui.renderTaskHistory(taskId, state.returnToNotifications);
+        ui.updateActiveView();
+    } catch (err) {
+        ui.showToast(rejecting ? 'Erro ao reprovar tarefa. Tente novamente.' : 'Erro ao aprovar tarefa. Tente novamente.', 'error');
+    } finally {
+        pendingHomologationDecisions.delete(taskId);
+        [...document.querySelectorAll('.approve-btn, .reject-btn, #modal-approve-btn, #modal-reject-btn')].filter(button => button.dataset.taskId === taskId).forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); });
+    }
+}
+
 // --- PONTO DE ENTRADA ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -386,14 +414,10 @@ function initializeEventListeners() {
             ui.renderTaskHistory(state.lastInteractedTaskId);
             return;
         }
-        const approveBtn = e.target.closest('.approve-btn');
-        if (approveBtn) {
+        const decisionBtn = e.target.closest('.approve-btn, .reject-btn');
+        if (decisionBtn) {
             e.stopPropagation();
-            try {
-                // Adicionamos o progress: 100 aqui
-                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication', progress: 100 });
-                ui.showToast('Enviado para Publicação!', 'success');
-            } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
+            await decideHomologation(decisionBtn.dataset.taskId, decisionBtn.classList.contains('reject-btn') ? 'reject' : 'approve');
             return;
         }
         const publishBtn = e.target.closest('.publish-btn');
@@ -701,37 +725,10 @@ function initializeEventListeners() {
 
     document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
 
-    const modalApproveBtn = document.getElementById('modal-approve-btn');
-    if (modalApproveBtn) {
-        modalApproveBtn.addEventListener('click', async (e) => {
+    for (const [id, decision] of [['modal-approve-btn', 'approve'], ['modal-reject-btn', 'reject']]) {
+        document.getElementById(id)?.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const taskId = modalApproveBtn.dataset.taskId;
-            if (!taskId) return;
-
-            try {
-                modalApproveBtn.innerHTML = '<i class="animate-spin w-4 h-4" data-lucide="loader-2"></i><span class="hidden sm:inline">Aprovando...</span>';
-                modalApproveBtn.disabled = true;
-                if (window.lucide) lucide.createIcons();
-
-                await api.updateTask(taskId, { status: 'publication', progress: 100 });
-                ui.showToast('Tarefa aprovada para Publicação!', 'success');
-                
-                const taskIndex = state.tasks.findIndex(t => t.id === taskId);
-                if(taskIndex !== -1) {
-                    state.tasks[taskIndex].status = 'publication';
-                    state.tasks[taskIndex].progress = 100; // Reflete na UI instantaneamente
-                }
-                
-                ui.renderTaskHistory(taskId); 
-                ui.updateActiveView();
-                
-            } catch (err) {
-                console.error(err);
-                ui.showToast('Erro ao aprovar tarefa', 'error');
-                modalApproveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>';
-                modalApproveBtn.disabled = false;
-                if (window.lucide) lucide.createIcons();
-            }
+            await decideHomologation(e.currentTarget.dataset.taskId, decision);
         });
     }
 
