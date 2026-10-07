@@ -40,6 +40,8 @@ assert shell.count("document.addEventListener('keydown'")==1
 assert shell.count("trigger.addEventListener('click'")==1
 css=(ROOT/'app/css/list-filters-v2.css').read_text()
 assert css.count('{')==css.count('}')
+assert '.sb-app #orb-filter #orb-sort { z-index: auto; }' in css
+assert '.sb-app #orb-filter .sb-shell-panel { z-index: 20; }' in css
 assert '--sb-filter-height' in css and 'max-height: min(44dvh, 360px)' in css
 assert 'overflow-wrap: anywhere' in css and 'prefers-reduced-motion: reduce' in css
 assert 'text-overflow: ellipsis' not in css and 'line-clamp' not in css

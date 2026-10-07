@@ -88,3 +88,7 @@ body.sb-app { --sb-filter-height: 0px; }
 body.sb-app #orb-sort:not(.expanded):hover { box-shadow: none !important; transform: none !important; }
 .sb-app #orb-sort-options .radial-content svg { width: 20px !important; height: 20px !important; transform: none; flex-shrink: 0; }
 .sb-app #orb-sort-options .sort-indicator svg { width: 16px !important; height: 16px !important; }
+
+/* Keep fixed popovers above every sibling control, not under legacy orbital z-index. */
+.sb-app #orb-filter #orb-sort { z-index: auto; }
+.sb-app #orb-filter .sb-shell-panel { z-index: 20; }

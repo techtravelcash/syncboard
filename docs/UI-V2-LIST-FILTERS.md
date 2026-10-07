@@ -65,3 +65,7 @@ The candidate is ready for parent integration and HTTPS validation, not a claim 
 Release marker: `tc448-list-1`. Missing person names show their supplied email or “Nome não informado”; no identity is inferred or rewritten. Copy uses the approved 14/12 px control/metadata scale. The Home controller fixture stubs only the new filter-label refresh while retaining all real Home focus logic.
 
 Before release, record and verify the exact current parent in `rollback/ui-v2-list-baseline-20261007`. Commit atomically under an expected-head lease, require exact-SHA Azure success, then verify the full legacy stylesheet cascade in the live app. Recover with a new revert commit for this release, preserving later unrelated changes; never reset or force-push main. Human handoff is Homologação for Elmo after the available QA, with remaining PF and device-test limits explicit.
+
+## Live stacking correction
+
+At200% zoom, the legacy `#orb-sort` z-index950 painted the sort control over the project/responsible popover. The correction resets that child index only inside the new filter band and gives its fixed panels z-index20. The band itself remains below the header, and drawer inertness/handlers/filter state are unchanged. Release marker: `tc448-list-2`; recheck popup layering at compact and desktop widths before handoff.
