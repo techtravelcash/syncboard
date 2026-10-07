@@ -28,18 +28,18 @@ def main():
     for path in ('css/fluxo-v2.css','css/login-v2.css'):
         assert p.styles[path].strip()==(ROOT/'app'/path).read_text().strip(),f'Style drift: {path}'
     manifest=json.loads((ROOT/'app/assets/brand-v2/manifest.json').read_text())['assets']
-    assert len(p.brands)==5
+    assert len(p.brands)==4
     for name,uri in p.brands:
         assert uri.startswith('data:image/svg+xml;base64,')
         raw=base64.b64decode(uri.split(',',1)[1],validate=True)
         assert raw==(ROOT/'app/assets/brand-v2'/name).read_bytes()
         assert hashlib.sha256(raw).hexdigest()==manifest[name]
     assert 'href="/.auth/login/google?post_login_redirect_uri=/"' in html
-    assert 'tc445-login-2' in html
+    assert 'tc461-login-1' in html
     config=json.loads((ROOT/'app/staticwebapp.config.json').read_text())
     assert next(r for r in config['routes'] if r['route']=='/*')['allowedRoles']==['travelcash_user']
     assert 'anonymous' in next(r for r in config['routes'] if r['route']=='/login')['allowedRoles']
     subprocess.run(['python','scripts/embed_login_assets.py','--check'],cwd=ROOT,check=True,capture_output=True)
-    print(json.dumps({'status':'passed','checks':['No protected local login subresources','Both embedded CSS sources match checked-in originals','Five embedded SVG instances match exact approved v2 hashes','Google login target unchanged','Public login and protected catch-all role rules unchanged','Asset generation is reproducible'],'limits':'Static public-route compatibility; no SSO sign-in, sign-out, anonymous browser session or provider availability claim'},indent=2))
+    print(json.dumps({'status':'passed','checks':['No protected local login subresources','Both embedded CSS sources match checked-in originals','Four embedded SVG instances match exact approved v2 hashes','Google login target unchanged','Public login and protected catch-all role rules unchanged','Asset generation is reproducible'],'limits':'Static public-route compatibility; no SSO sign-in, sign-out, anonymous browser session or provider availability claim'},indent=2))
 
 if __name__=='__main__':main()

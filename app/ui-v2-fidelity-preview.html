@@ -53,12 +53,14 @@
     <link rel="stylesheet" href="css/fidelity-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/fidelity-secondary-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/task-fidelity-v2.css?v=tc455-fidelity-preview-4">
+    <link rel="stylesheet" href="css/cube-feedback.css?v=tc461-1">
+    <link rel="stylesheet" href="css/approval-success.css?v=tc461-success-1">
 </head>
 <body class="sb-scope sb-app sb-fidelity-v2 antialiased font-sans" data-ui-release="tc455-fidelity-preview-4">
     <div id="loader-container" role="status" aria-live="polite">
-      <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
+      <picture class="sb-cube sb-cube--startup" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture>
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
-      <span class="sb-spinner" aria-hidden="true"></span>
+
     </div>
   <div id="app" inert>
     <a class="sb-button sb-shell-skip" href="#main-content">Pular para o conteúdo</a>
@@ -567,7 +569,7 @@
                 <div><h2 id="notifications-title">Notificações</h2><p>Selecione uma notificação para abrir a tarefa.</p></div>
                 <button type="button" id="closeNotificationsBtn" class="sb-people-close" aria-label="Fechar notificações"><i data-lucide="x" aria-hidden="true"></i></button>
             </header>
-            <div id="modal-notifications-list" class="sb-notifications-list custom-scrollbar"><p class="sb-notifications-loading" role="status">Carregando notificações…</p></div>
+            <div id="modal-notifications-list" class="sb-notifications-list custom-scrollbar"><p class="sb-notifications-loading" role="status"><picture class="sb-cube sb-cube--inline" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture>Carregando notificações…</p></div>
         </div>
     </div>
 

@@ -1,3 +1,4 @@
+import { showApprovalSuccess } from './approval-success.js';
 import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
 import { state } from './state.js';
 import { escapePeopleText, peopleAvatar } from './people-v2.js';
@@ -8,6 +9,7 @@ import { initializeShell, closeShellPanels, syncShellView, showStartupState } fr
 
 // --- Variáveis Globais ---
 let kanbanSortableInstances = [];
+const pendingApprovalFeedback = new Set();
 let localFiles = [];
 let filesToDelete = [];
 let alertQueue = [];
@@ -389,11 +391,24 @@ function initializeEventListeners() {
         const approveBtn = e.target.closest('.approve-btn');
         if (approveBtn) {
             e.stopPropagation();
+            const taskId = approveBtn.dataset.taskId;
+            if (!taskId || pendingApprovalFeedback.has(taskId)) return;
+            pendingApprovalFeedback.add(taskId);
+            approveBtn.disabled = true;
+            let approvalPersisted = false;
             try {
-                // Adicionamos o progress: 100 aqui
-                await api.updateTask(approveBtn.dataset.taskId, { status: 'publication', progress: 100 });
+                const approvedTask = await api.updateTask(taskId, { status: 'publication', progress: 100 });
+                if (approvedTask?.status !== 'publication') throw new Error('A aprovação não foi confirmada pelo servidor.');
+                approvalPersisted = true;
                 ui.showToast('Enviado para Publicação!', 'success');
-            } catch (err) { ui.showToast('Erro ao aprovar', 'error'); }
+                if (approvedTask?.status === 'publication') {
+                    const taskIndex = state.tasks.findIndex(t => t.id === taskId);
+                    if (taskIndex !== -1) state.tasks[taskIndex] = approvedTask;
+                    ui.updateActiveView();
+                    try { showApprovalSuccess(); } catch { /* Cosmetic feedback must not fail persisted approval. */ }
+                }
+            } catch (err) { ui.showToast(approvalPersisted ? 'Tarefa aprovada. Recarregue a página para atualizar a visualização.' : 'Erro ao aprovar', approvalPersisted ? 'success' : 'error'); }
+            finally { pendingApprovalFeedback.delete(taskId); approveBtn.disabled = approvalPersisted; }
             return;
         }
         const publishBtn = e.target.closest('.publish-btn');
@@ -706,14 +721,18 @@ function initializeEventListeners() {
         modalApproveBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const taskId = modalApproveBtn.dataset.taskId;
-            if (!taskId) return;
+            if (!taskId || pendingApprovalFeedback.has(taskId)) return;
+            pendingApprovalFeedback.add(taskId);
 
+            let approvalPersisted = false;
             try {
                 modalApproveBtn.innerHTML = '<i class="animate-spin w-4 h-4" data-lucide="loader-2"></i><span class="hidden sm:inline">Aprovando...</span>';
                 modalApproveBtn.disabled = true;
                 if (window.lucide) lucide.createIcons();
 
-                await api.updateTask(taskId, { status: 'publication', progress: 100 });
+                const approvedTask = await api.updateTask(taskId, { status: 'publication', progress: 100 });
+                if (approvedTask?.status !== 'publication') throw new Error('A aprovação não foi confirmada pelo servidor.');
+                approvalPersisted = true;
                 ui.showToast('Tarefa aprovada para Publicação!', 'success');
                 
                 const taskIndex = state.tasks.findIndex(t => t.id === taskId);
@@ -724,14 +743,17 @@ function initializeEventListeners() {
                 
                 ui.renderTaskHistory(taskId); 
                 ui.updateActiveView();
+                if (approvedTask?.status === 'publication') {
+                    try { showApprovalSuccess(); } catch { /* Cosmetic feedback must not fail persisted approval. */ }
+                }
                 
             } catch (err) {
                 console.error(err);
-                ui.showToast('Erro ao aprovar tarefa', 'error');
+                ui.showToast(approvalPersisted ? 'Tarefa aprovada. Recarregue a página para atualizar a visualização.' : 'Erro ao aprovar tarefa', approvalPersisted ? 'success' : 'error');
                 modalApproveBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>';
-                modalApproveBtn.disabled = false;
+                modalApproveBtn.disabled = approvalPersisted;
                 if (window.lucide) lucide.createIcons();
-            }
+            } finally { pendingApprovalFeedback.delete(taskId); }
         });
     }
 

@@ -23,7 +23,7 @@ for path in ('css/fluxo-v2.css','css/login-v2.css'):
         text=re.sub(link,lambda _:style,text)
 assets=ROOT/'app/assets/brand-v2'
 manifest=json.loads((assets/'manifest.json').read_text())['assets']
-for name in ('favicon.svg','logo-primary-dark.svg','logo-primary-light.svg','mark-primary.svg'):
+for name in ('favicon.svg','logo-primary-dark.svg','logo-primary-light.svg'):
     assert name in manifest
     encoded=base64.b64encode((assets/name).read_bytes()).decode()
     # Add markers on first generation; later runs update bytes through those markers.
@@ -32,6 +32,11 @@ for name in ('favicon.svg','logo-primary-dark.svg','logo-primary-light.svg','mar
     pattern=rf'(<(?:img|link)\b[^>]*data-brand-source="{re.escape(name)}"[^>]*?(?:src|href)=")[^"]*(")'
     text,count=re.subn(pattern,lambda m:m.group(1)+'data:image/svg+xml;base64,'+encoded+m.group(2),text)
     assert count>0,f'Missing login brand marker: {name}'
+for name, mime in [('cube-assembly-512.gif', 'image/gif'), ('cube-static-512.png', 'image/png')]:
+    encoded=base64.b64encode((ROOT/'app/assets'/name).read_bytes()).decode()
+    pattern=rf'(<(?:img|source)\b[^>]*data-cube-source="{re.escape(name)}"[^>]*?(?:src|srcset)=")[^"]*(")'
+    text,count=re.subn(pattern,lambda m:m.group(1)+'data:'+mime+';base64,'+encoded+m.group(2),text)
+    assert count>0,f'Missing login cube marker: {name}'
 if args.check:
     assert text==original,'Login asset drift: run python scripts/embed_login_assets.py'
     print('PASS: public login embeds current approved CSS and SVG assets; no protected asset URLs required.')

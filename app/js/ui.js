@@ -691,7 +691,7 @@ export async function renderArchivedTasks() {
     const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
     const archiveShell = fidelity ? renderFidelityArchiveShell : renderArchiveShell;
     if (fidelity) setFidelitySecondaryHeading('Arquivados', 'Tarefas concluídas ficam separadas do fluxo ativo. Restaurar envia a tarefa para Fila.');
-    container.innerHTML = archiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><span class="sb-spinner" aria-hidden="true"></span><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
+    container.innerHTML = archiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><picture class="sb-cube sb-cube--archive" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
     lucide.createIcons();
 
     try {
