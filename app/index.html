@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncBoard NT</title>
-    <meta name="syncboard-ui-release" content="tc444-v2-pilot-2">
+    <meta name="syncboard-ui-release" content="tc445-shell-1">
     <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,8 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
-    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc444-2">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc445-shell-1">
     
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc445-shell-1">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -42,173 +43,75 @@
         }
     </script>
 </head>
-<body class="antialiased bg-base-bg dark:bg-custom-dark text-custom-darkest dark:text-custom-light overflow-hidden h-screen font-sans transition-colors duration-300">
-    
-    <div id="app">
-        
-        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-nav">
-            <div class="orb-icon-wrapper">
-                <i data-lucide="home" class="w-8 h-8 cycling-icon active" data-idx="0"></i>
-                <i data-lucide="layout-grid" class="w-8 h-8 cycling-icon" data-idx="1"></i>
-                <i data-lucide="list" class="w-8 h-8 cycling-icon" data-idx="2"></i>
-                <i data-lucide="archive" class="w-8 h-8 cycling-icon" data-idx="3"></i>
-            </div>
-
-            <div class="menu-content text-white">
-                <button class="close-btn absolute top-3 right-3 w-12 h-12 flex items-center justify-center z-50 rounded-full hover:bg-black/10 dark:hover:bg-white/10 opacity-70 hover:opacity-100 transition-all">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-                <h4 class="text-2xl font-bold mb-8 tracking-tight text-custom-darkest dark:text-white">Navegação</h4>
-                <div id="view-switcher-orb" class="space-y-3">
-                    <button data-view="home" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all active ring-1 ring-white/10 text-custom-darkest dark:text-white bg-white/20 font-bold">
-                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="home" class="w-5 h-5"></i></div>
-                        <span class="font-semibold">Home</span>
-                    </button>
-                    <button data-view="kanban" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all text-custom-darkest dark:text-white">
-                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
-                        <span class="font-semibold">Quadro</span>
-                    </button>
-                    <button data-view="list" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 text-custom-darkest dark:text-white">
-                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="list" class="w-5 h-5"></i></div>
-                        <span class="font-semibold">Lista</span>
-                    </button>
-                    <button data-view="archived" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 text-custom-darkest dark:text-white">
-                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="archive" class="w-5 h-5"></i></div>
-                        <span class="font-semibold">Arquivados</span>
-                    </button>
-                    <button data-view="users" id="user-management-btn" class="nav-item w-full text-left p-3 rounded-2xl flex items-center gap-4 hover:bg-white/15 transition-all ring-1 ring-transparent hover:ring-white/10 hidden text-custom-darkest dark:text-white">
-                        <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="users" class="w-5 h-5"></i></div>
-                        <span class="font-semibold">Utilizadores</span>
-                    </button>
-                </div>
-                <div class="mt-auto pt-6 border-t border-black/10 dark:border-white/10 flex items-center gap-3 opacity-60 text-custom-darkest dark:text-white">
-                    <i data-lucide="command" class="w-4 h-4"></i>
-                    <span class="text-xs font-mono tracking-widest uppercase">SyncBoard</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="orb-nav-label" class="pointer-events-none fixed z-[900] opacity-0 transition-all duration-500 ease-out">
-            <svg viewBox="0 0 320 320" class="w-full h-full overflow-visible">
-                <path id="curvePath" d="M 160,35 A 125,125 0 0 1 285,160" fill="transparent" />
-                <text class="fill-custom-darkest dark:fill-white font-bold text-sm tracking-[0.3em] uppercase drop-shadow-md">
-                    <textPath href="#curvePath" startOffset="50%" text-anchor="middle">
-                        Navegação
-                    </textPath>
-                </text>
-            </svg>
-        </div>
-
-        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-filter">
-            <div class="orb-icon-wrapper">
-                <i data-lucide="filter" class="w-6 h-6"></i>
-            </div>
-            <div class="menu-content text-custom-darkest dark:text-white">
-                <button class="close-btn absolute top-3 right-3 w-12 h-12 flex items-center justify-center z-50 rounded-full hover:bg-black/10 dark:hover:bg-white/10 opacity-50 hover:opacity-100 transition-all">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-                <h5 class="text-lg font-bold mb-6 flex items-center gap-2">
-                    <i data-lucide="list-filter" class="w-5 h-5 text-custom-dark"></i> Filtrar
-                </h5>
-                <div class="mb-6">
-                    <div class="relative w-full group">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="w-4 h-4 text-custom-dark group-focus-within:text-custom-darkest dark:group-focus-within:text-white transition-colors"></i>
-                        </div>
-                        <input type="search" id="search-input" placeholder="Buscar tarefas..." class="w-full bg-custom-darkest/5 border border-custom-darkest/10 dark:bg-white/10 dark:border-white/10 rounded-xl text-sm py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-custom-dark/20 focus:border-custom-dark transition-all placeholder-custom-dark/50 dark:text-white">
-                    </div>
-                </div>
-                <div class="filter-group mb-6">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 dark:text-custom-medium mb-3">Projetos</div>
-                    <div id="orb-project-filters" class="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto scrollbar-hide"></div>
-                </div>
-                <div class="filter-group flex-grow">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-custom-dark/70 dark:text-custom-medium mb-3">Responsáveis</div>
-                    <div id="orb-responsible-filters" class="flex flex-wrap gap-2 max-h-[120px] overflow-y-auto scrollbar-hide"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="corner-orb text-custom-darkest dark:text-white" id="orb-tools">
-            <div class="orb-icon-wrapper relative">
-                <div id="orb-avatar-container" class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20 shadow-sm flex items-center justify-center bg-white/10">
-                    <i data-lucide="user" class="w-6 h-6"></i>
-                </div>
-                <span id="notification-orb-badge" class="absolute top-0 right-0 w-3.5 h-3.5 bg-red-500 border-2 border-white dark:border-custom-header rounded-full hidden animate-pulse"></span>
-            </div>
-            <div class="menu-content">
-                <button class="close-btn absolute top-3 right-3 w-12 h-12 flex items-center justify-center z-50 rounded-full hover:bg-black/10 dark:hover:bg-white/10 opacity-50 hover:opacity-100 transition-all">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-                <div class="flex items-center gap-4 mb-6 -mt-20">
-                    <div id="user-avatar-menu" class="w-14 h-14 rounded-full overflow-hidden border-2 border-custom-light dark:border-white/20 shadow-sm relative">
-                        <div class="absolute inset-0 bg-gray-200 animate-pulse"></div>
-                    </div>
-                    <div>
-                        <div id="user-name-display" class="font-bold text-lg leading-tight text-custom-darkest dark:text-white">...</div>
-                        <div id="user-role-display" class="text-xs font-medium text-custom-dark dark:text-custom-medium mt-0.5">...</div>
-                    </div>
-                </div>
-                <div class="space-y-2">
-                    <button id="orb-notif-btn" class="nav-item w-full text-left p-3 rounded-xl flex items-center justify-between hover:bg-custom-light/50 dark:hover:bg-white/5 transition-colors group">
-                        <div class="flex items-center gap-3 text-sm font-medium">
-                            <i data-lucide="bell" class="w-5 h-5 text-custom-dark group-hover:text-custom-darkest dark:text-gray-400 dark:group-hover:text-white"></i> Notificações
-                        </div>
-                        <span id="orb-notif-count" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm">0</span>
-                    </button>
-                    <button id="theme-toggle" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 hover:bg-custom-light/50 dark:hover:bg-white/5 transition-colors text-sm font-medium group">
-                        <i id="theme-icon" data-lucide="moon" class="w-5 h-5 text-custom-dark group-hover:text-custom-darkest dark:text-gray-400 dark:group-hover:text-white"></i> <span>Tema</span>
-                    </button>
-                    <div class="h-px bg-custom-light dark:bg-white/10 my-3"></div>
-                    <a href="/logout" class="nav-item w-full text-left p-3 rounded-xl flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm font-bold">
-                        <i data-lucide="log-out" class="w-5 h-5"></i> Sair
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="corner-orb text-custom-darkest dark:text-white hidden" id="orb-sort">
-            <div class="orb-icon-wrapper pl-6">
-                <i data-lucide="arrow-up-down" class="w-6 h-6"></i>
-            </div>
-            
-            <div class="menu-content relative w-full h-full p-0">
-                <div id="orb-sort-options" class="absolute inset-0"></div>
-            </div>
-        </div>
-
-        <button id="addTaskBtn" class="orb-fab bg-custom-darkest text-white dark:bg-custom-light dark:text-custom-darkest shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 group" title="Nova Tarefa">
-            <i data-lucide="plus" class="w-8 h-8 group-hover:rotate-90 transition-transform duration-300"></i>
-        </button>
-
-        <div class="project-title-area fixed top-2 left-[90px] z-10 hidden md:block pointer-events-none">
-            <div class="flex items-center gap-4">
-                <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark w-12 h-12" alt="SyncBoard NT" width="48" height="48">
-                
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight text-custom-darkest dark:text-white drop-shadow-sm">SyncBoard NT</h1>
-                    <div class="text-custom-dark/60 dark:text-custom-light/60 text-sm flex items-center gap-2 font-semibold mt-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                        <span id="current-view-label">Quadro Kanban</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="loader-container" class="fixed inset-0 z-[2000] flex justify-center items-center bg-custom-darkest">
-                <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark w-16 h-16" alt="" width="64" height="64">
-                <div class="sb-loader-copy text-xl font-bold" role="status">Carregando SyncBoard NT...</div>
-            </div>
-        </div>
-
-        <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out">
-            <div id="homeView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
-            <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto"></div>
-            <div id="listView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
-            <div id="archivedView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
-            <div id="userManagementView" class="hidden w-full h-full px-4 pt-20 pb-32 overflow-y-auto custom-scrollbar"></div>
-        </main>
+<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc445-shell-1">
+    <div id="loader-container" role="status" aria-live="polite">
+      <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
+      <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
+      <span class="sb-spinner" aria-hidden="true"></span>
     </div>
+  <div id="app" inert>
+    <a class="sb-button sb-shell-skip" href="#main-content">Pular para o conteúdo</a>
+    <aside id="orb-nav" class="sb-shell-sidebar" aria-label="Navegação principal">
+      <div class="sb-shell-panel-head">
+        <a class="sb-shell-brand" href="/" aria-label="SyncBoard NT, início"><img src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="176" height="38"></a>
+        <button type="button" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-close aria-label="Fechar navegação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button>
+      </div>
+      <p class="sb-shell-kicker">Seu espaço de trabalho</p>
+      <nav id="view-switcher-orb" class="sb-shell-nav" aria-label="Visualizações">
+        <button type="button" data-view="home" class="nav-item" aria-current="page"><i data-lucide="home" class="sb-shell-icon" aria-hidden="true"></i><span>Home</span></button>
+        <button type="button" data-view="kanban" class="nav-item"><i data-lucide="layout-grid" class="sb-shell-icon" aria-hidden="true"></i><span>Quadro</span></button>
+        <button type="button" data-view="list" class="nav-item"><i data-lucide="list" class="sb-shell-icon" aria-hidden="true"></i><span>Lista</span></button>
+        <button type="button" data-view="archived" class="nav-item"><i data-lucide="archive" class="sb-shell-icon" aria-hidden="true"></i><span>Arquivados</span></button>
+        <button type="button" data-view="users" id="user-management-btn" class="nav-item hidden"><i data-lucide="users" class="sb-shell-icon" aria-hidden="true"></i><span>Utilizadores</span></button>
+      </nav>
+      <div class="sb-shell-sidebar-footer">Clareza em cada etapa.<br>SyncBoard NT · Fluxo</div>
+    </aside>
+    <button type="button" id="shell-backdrop" class="sb-shell-backdrop" hidden tabindex="-1" aria-label="Fechar navegação"></button>
+    <header id="shell-topbar" class="sb-shell-topbar">
+      <div class="sb-shell-heading">
+        <button type="button" id="shell-nav-toggle" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-toggle="orb-nav" aria-controls="orb-nav" aria-expanded="false" aria-label="Abrir navegação"><i data-lucide="menu" class="sb-shell-icon" aria-hidden="true"></i></button>
+        <div><small>SyncBoard NT</small><h1 id="current-view-label" tabindex="-1">Início</h1></div>
+      </div>
+      <div class="sb-shell-actions">
+        <div id="orb-filter" class="sb-shell-anchor hidden">
+          <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Buscar e filtrar tarefas"><i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Filtros</span></button>
+          <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-filter-title">Buscar e filtrar</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar filtros"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <label class="sb-label" for="search-input">Busca</label><input type="search" id="search-input" class="sb-input" placeholder="Buscar tarefas...">
+            <div class="sb-shell-filter-group"><h3>Projetos</h3><div id="orb-project-filters"></div></div>
+            <div class="sb-shell-filter-group"><h3>Responsáveis</h3><div id="orb-responsible-filters"></div></div>
+          </section>
+        </div>
+        <div id="orb-sort" class="sb-shell-anchor hidden">
+          <button type="button" id="shell-sort-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-sort-panel" aria-controls="shell-sort-panel" aria-expanded="false" aria-label="Ordenar lista de tarefas"><i data-lucide="arrow-up-down" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Ordenar</span></button>
+          <section id="shell-sort-panel" class="sb-shell-panel" hidden aria-labelledby="shell-sort-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-sort-title">Ordenação</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar ordenação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <div id="orb-sort-options"></div>
+          </section>
+        </div>
+        <button type="button" id="addTaskBtn" title="Nova Tarefa" aria-label="Nova Tarefa"><i data-lucide="plus" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Nova Tarefa</span></button>
+        <div id="orb-tools" class="sb-shell-anchor">
+          <button type="button" id="shell-account-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="orb-avatar-container"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></span><span id="notification-orb-badge" class="hidden" aria-label="Há notificações não lidas"></span></button>
+          <section id="shell-account-panel" class="sb-shell-panel" hidden aria-labelledby="shell-account-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-account-title">Perfil e ferramentas</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar perfil e ferramentas"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <div class="sb-shell-profile"><div id="user-avatar-menu"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></div><div><div id="user-name-display">Carregando perfil…</div><div id="user-role-display">Aguarde a sessão</div></div></div>
+            <button type="button" id="orb-notif-btn" class="sb-shell-menu-action"><i data-lucide="bell" class="sb-shell-icon" aria-hidden="true"></i>Notificações<span id="orb-notif-count" class="sb-shell-count hidden">0</span></button>
+            <button type="button" id="theme-toggle" class="sb-shell-menu-action"><i id="theme-icon" data-lucide="moon" class="sb-shell-icon" aria-hidden="true"></i><span>Tema</span></button>
+            <div class="sb-shell-divider"></div>
+            <a href="/logout" class="sb-shell-menu-action sb-shell-logout"><i data-lucide="log-out" class="sb-shell-icon" aria-hidden="true"></i>Sair</a>
+          </section>
+        </div>
+      </div>
+    </header>
+    <div id="orb-nav-label" hidden aria-hidden="true"><svg><path id="curvePath" d=""/></svg></div>
+    <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out" tabindex="-1" aria-busy="true">
+      <div id="homeView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto"></div>
+      <div id="listView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="archivedView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="userManagementView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+    </main>
+  </div>
 
     <div id="taskModal" class="fixed inset-0 flex items-center justify-center z-[1500] hidden modal-backdrop transition-opacity duration-300">
         
@@ -688,6 +591,6 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/main.js?v=tc445-shell-1"></script>
 </body>
 </html>

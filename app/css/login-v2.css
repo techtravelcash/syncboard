@@ -1,0 +1,28 @@
+body.sb-login { margin: 0; min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; background: var(--sb-canvas); color: var(--sb-text); }
+.sb-login-story { background: var(--sb-ink); color: #F5F7FA; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; min-height: 100dvh; }
+.sb-login-logo { width: 222px; height: 48px; object-fit: contain; }
+.sb-login-story h2 { max-width: 480px; margin: 32px 0 24px; font-size: clamp(36px,4vw,56px); line-height: 1.12; letter-spacing: -.045em; }
+.sb-login-story h2 span { color: var(--sb-accent); }
+.sb-login-story p { max-width: 420px; color: #B5C1D0; font-size: 16px; line-height: 1.7; }
+.sb-login-story small { font-size: 12px; color: #B5C1D0; }
+.sb-login-mark { width: 96px; height: 96px; background: #FFFFFF; border-radius: 12px; padding: 12px; }
+.sb-login-access { position: relative; padding: 96px 40px 48px; display: flex; align-items: center; justify-content: center; }
+.sb-login-access .sb-panel { width: 100%; max-width: 440px; padding: 40px; }
+.sb-login-access h1 { font-size: 28px; letter-spacing: -.03em; line-height: 1.25; margin: 12px 0; }
+.sb-login-access p { color: var(--sb-muted); font-size: 14px; line-height: 1.7; margin: 0 0 32px; }
+.sb-login-access .sb-login-button { width: 100%; min-height: 48px; }
+.sb-login-access .sb-login-button svg { width: 22px; height: 22px; background: #FFFFFF; padding: 2px; border-radius: 3px; }
+.sb-login-theme { position: absolute; top: 24px; right: 24px; }
+.sb-login-mobile-brand { display: none; }
+.sb-login-access .sb-login-note { font-size: 12px; margin: 24px 0 0; padding-top: 24px; border-top: 1px solid var(--sb-border); }
+@media (max-width: 900px) {
+  body.sb-login { grid-template-columns: 1fr; }
+  .sb-login-story { display: none; }
+  .sb-login-access { min-height: 100dvh; padding: 100px 24px 40px; }
+  .sb-login-access .sb-panel { padding: 32px 24px; }
+  .sb-login-mobile-brand { display: block; width: 176px; height: 38px; margin-bottom: 24px; }
+  .sb-login-mobile-brand-dark { display: none; }
+  .dark .sb-login-mobile-brand-light { display: none; }
+  .dark .sb-login-mobile-brand-dark { display: block; }
+}
+@media (max-width: 374px) { .sb-login-access { padding-left: 16px; padding-right: 16px; } .sb-login-access .sb-panel { padding: 24px 16px; } }

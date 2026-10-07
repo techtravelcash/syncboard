@@ -2,6 +2,7 @@ import { state } from './state.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 import { connectToSignalR } from './signalr.js';
+import { initializeShell, closeShellPanels, syncShellView, showStartupState } from './shell-v2.js';
 
 // --- Variáveis Globais ---
 let kanbanSortableInstances = [];
@@ -13,13 +14,22 @@ let isAlertModalOpen = false;
 // --- PONTO DE ENTRADA ---
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        const initialTheme = localStorage.getItem('theme');
+        document.documentElement.classList.toggle('dark', initialTheme === 'dark' || !initialTheme);
+    } catch { /* A blocked preference store must not prevent the loading screen. */ }
+    try {
+        initializeShell();
         // 1. Carrega a Sessão do Utilizador (Google Auth)
         state.currentUser = await api.getUserInfo();
+        if (!state.currentUser) {
+            showStartupState('Sua sessão não está disponível', 'Acesse sua conta ou tente carregar novamente para continuar.', true);
+            return;
+        }
 
         // 2. Verifica permissões de acesso
         if (state.currentUser) {
             if (!state.currentUser.userRoles.includes('travelcash_user')) {
-                document.body.innerHTML = '<div class="flex items-center justify-center h-screen text-white bg-red-900">Acesso Negado</div>';
+                showStartupState('Acesso não autorizado', 'Esta conta não possui acesso ao SyncBoard NT. Entre com uma conta autorizada.', true);
                 return;
             }
             if (state.currentUser.userRoles.includes('admin')) {
@@ -47,7 +57,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.updateNotificationBadge();
         ui.updateActiveView();
 
-        // 6. Remove Loader
+        // 6. Conecta SignalR e Eventos
+        connectToSignalR(updateDragAndDropState);
+        updateDragAndDropState();
+        initializeEventListeners();
+
+        // Verifica alertas iniciais
+        checkAndQueueAlerts(state.tasks);
+
+        // 7. Reveal only after every synchronous initializer has succeeded
         const loader = document.getElementById('loader-container');
         const mainContent = document.getElementById('main-content');
         if (loader) {
@@ -57,54 +75,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (mainContent) {
             mainContent.style.opacity = '1';
+            mainContent.setAttribute('aria-busy', 'false');
         }
 
-        // 7. Conecta SignalR e Eventos
-        connectToSignalR(updateDragAndDropState);
-        updateDragAndDropState();
-        initializeEventListeners();
-        
-        // Verifica alertas iniciais
-        checkAndQueueAlerts(state.tasks);
+        document.getElementById('app').inert = false;
 
     } catch (error) {
         console.error("Erro fatal na inicialização:", error);
-        alert("Erro ao carregar aplicação.");
+        showStartupState('Não foi possível carregar o SyncBoard NT', 'Verifique sua conexão e tente novamente para recarregar suas informações.');
     }
 });
-
-const setupSortOrbEvents = () => {
-    const orb = document.getElementById('orb-sort');
-    if(!orb) return;
-
-    // Expandir ao clicar no orb
-    orb.addEventListener('click', (e) => {
-        // Se clicar no botão de fechar, não faz nada
-        if(e.target.closest('.close-btn')) return;
-        
-        if (!orb.classList.contains('expanded')) {
-            orb.classList.add('expanded');
-        }
-    });
-
-    // Fechar ao clicar no X
-    const closeBtn = orb.querySelector('.close-btn');
-    if(closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            orb.classList.remove('expanded');
-        });
-    }
-
-    // Fechar ao clicar fora
-    document.addEventListener('click', (e) => {
-        if (orb.classList.contains('expanded') && !orb.contains(e.target)) {
-            orb.classList.remove('expanded');
-        }
-    });
-};
-
-document.addEventListener('DOMContentLoaded', setupSortOrbEvents);
 
 // --- ATUALIZA PERFIL NO ORB (Botão e Menu) ---
 function updateUserProfileUI() {
@@ -305,75 +285,15 @@ function openHomologadorModal(task, oldStatus, newStatus) {
 
 // --- EVENT LISTENERS ---
 function initializeEventListeners() {
-    const orbs = ['orb-nav', 'orb-filter', 'orb-tools'];
-    
-    orbs.forEach(id => {
-        const el = document.getElementById(id);
-        if(!el) return;
-
-        el.addEventListener('click', (e) => {
-            if (e.target.closest('.close-btn')) return;
-            orbs.filter(o => o !== id).forEach(other => document.getElementById(other).classList.remove('expanded'));
-            el.classList.add('expanded');
-        });
-
-        const closeBtn = el.querySelector('.close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                el.classList.remove('expanded');
-            });
-        }
-    });
-
-    const canvas = document.querySelector('.immersive-canvas');
-    if (canvas) {
-        canvas.addEventListener('click', (e) => {
-            if (!e.target.closest('.corner-orb') && !e.target.closest('.orb-fab')) {
-                orbs.forEach(id => document.getElementById(id).classList.remove('expanded'));
-            }
-        });
-    }
-
-    // --- 2. ANIMAÇÃO CÍCLICA DOS ÍCONES ---
-    const cyclingState = {};
-    
-    setInterval(() => {
-        const containers = [
-            document.getElementById('orb-nav'), 
-            document.getElementById('orb-tools')
-        ].filter(Boolean);
-        
-        containers.forEach(container => {
-            if (!container.classList.contains('expanded')) {
-                const icons = Array.from(container.querySelectorAll('.cycling-icon')).filter(el => !el.classList.contains('hidden'));
-                
-                if (icons.length === 0) return;
-                
-                if (icons.length === 1) {
-                    icons[0].classList.add('active');
-                    return;
-                }
-
-                const cid = container.id;
-                if (typeof cyclingState[cid] === 'undefined') cyclingState[cid] = 0;
-                
-                icons.forEach(icon => icon.classList.remove('active'));
-                
-                cyclingState[cid] = (cyclingState[cid] + 1) % icons.length;
-                
-                icons[cyclingState[cid]].classList.add('active');
-            }
-        });
-    }, 1500); 
-
+    // Shell presentation owns panel state and accessible focus.
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if (!btn) return;
         state.currentView = btn.dataset.view;
         ui.updateActiveView();
         updateDragAndDropState();
-        document.getElementById('orb-nav').classList.remove('expanded');
+        syncShellView(state.currentView);
+        closeShellPanels();
     });
 
     const setupFilterClick = (containerId, type) => {
@@ -485,7 +405,7 @@ function initializeEventListeners() {
         const deleteBtn = e.target.closest('.delete-btn');
         if (deleteBtn && !deleteBtn.classList.contains('delete-user-btn') && !deleteBtn.classList.contains('delete-comment-btn')) {
             e.stopPropagation();
-            ui.showConfirmModal(
+            ui.showDestructiveConfirmModal(
                 'Excluir Tarefa',
                 'Tem a certeza? Esta ação é irreversível.',
                 async () => {
@@ -582,7 +502,7 @@ function initializeEventListeners() {
             e.stopPropagation();
             const userId = deleteUserBtn.dataset.userId;
             
-            ui.showConfirmModal(
+            ui.showDestructiveConfirmModal(
                 'Remover Acesso',
                 'Tem a certeza? Este utilizador perderá o acesso ao SyncBoard imediatamente.',
                 async () => {
@@ -979,7 +899,7 @@ function initializeEventListeners() {
             const taskId = deleteBtn.dataset.taskId;
             const commentIndex = parseInt(deleteBtn.dataset.commentIndex);
 
-            ui.showConfirmModal(
+            ui.showDestructiveConfirmModal(
                 'Excluir Comentário?',
                 'Deseja realmente apagar este comentário permanentemente?',
                 async () => {
@@ -1058,7 +978,7 @@ function initializeEventListeners() {
         notifBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            document.getElementById('orb-tools').classList.remove('expanded');
+            closeShellPanels(false);
             
             notifModal.classList.remove('hidden');
             requestAnimationFrame(() => {

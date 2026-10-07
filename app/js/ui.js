@@ -351,7 +351,7 @@ export const createTaskElement = (task) => {
     if(deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            showConfirmModal(
+            showDestructiveConfirmModal(
                 'Excluir Tarefa?', 
                 `Deseja realmente excluir a tarefa "${task.title}" (${task.id})?`, 
                 async () => {
@@ -980,7 +980,7 @@ export function renderListView() {
             const taskId = btn.dataset.taskId;
             const taskTitle = state.tasks.find(t => t.id === taskId)?.title || taskId;
             
-            showConfirmModal(
+            showDestructiveConfirmModal(
                 'Excluir Tarefa?',
                 `Deseja realmente excluir a tarefa "${taskTitle}" (${taskId})?`,
                 async () => {
@@ -2209,7 +2209,11 @@ export function highlightTask(taskId, temporary = true) {
 }
 
 // [CORREÇÃO] Adicionada animação de entrada e saída
-export function showConfirmModal(title, message, onConfirm, onCancel) {
+export function showDestructiveConfirmModal(title, message, onConfirm, onCancel) {
+    return showConfirmModal(title, message, onConfirm, onCancel, true);
+}
+
+export function showConfirmModal(title, message, onConfirm, onCancel, destructive = false) {
     const modal = document.getElementById('deleteConfirmModal');
     modal.querySelector('h2').textContent = title;
     modal.querySelector('p').textContent = message;
@@ -2217,6 +2221,15 @@ export function showConfirmModal(title, message, onConfirm, onCancel) {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    newConfirmBtn.dataset.intent = destructive ? 'destructive' : 'confirm';
+    newConfirmBtn.textContent = destructive ? 'Sim, remover' : 'Confirmar';
+    const icon = document.getElementById('modal-icon');
+    if (icon) {
+        icon.setAttribute('data-lucide', destructive ? 'trash-2' : 'check-circle');
+        icon.parentElement.classList.add('sb-confirm-icon');
+        icon.parentElement.dataset.intent = destructive ? 'destructive' : 'confirm';
+        if (window.lucide) lucide.createIcons();
+    }
     
     // Função helper para fechar com animação
     const closeModal = (callback) => {

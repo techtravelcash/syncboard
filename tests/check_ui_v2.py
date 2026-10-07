@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 from collections import Counter
@@ -40,17 +41,20 @@ def contrast(a,b):
 
 def main():
     results = []
-    protected = ['app/js/api.js', 'app/js/main.js', 'app/js/signalr.js', 'app/js/state.js', 'app/js/ui.js', 'app/css/custom.css', 'app/login.html', 'app/staticwebapp.config.json']
-    protected += subprocess.check_output(['git','ls-tree','-r','--name-only',BASELINE,'api','.github'],cwd=ROOT,text=True).splitlines()
-    for path in protected:
-        assert (ROOT/path).read_bytes() == original(path), f'Protected file changed: {path}'
-    results.append(f'{len(protected)} protected files byte-identical to baseline')
-    before = Elements(original('app/index.html').decode())
-    after = Elements((ROOT/'app/index.html').read_text())
-    assert Counter(before.ids) == Counter(after.ids), 'Existing element IDs changed'
-    assert Counter(before.contracts) == Counter(after.contracts), 'Original handler/field/data contracts changed'
-    assert '<script src="js/ui-v2-pilot.js' not in (ROOT/'app/index.html').read_text(), 'Pilot script loaded on board'
-    results.append(f'{len(before.ids)} original IDs and all existing field/data contracts preserved')
+    if '--foundation-only' not in sys.argv:
+        protected = ['app/js/api.js', 'app/js/main.js', 'app/js/signalr.js', 'app/js/state.js', 'app/js/ui.js', 'app/css/custom.css', 'app/login.html', 'app/staticwebapp.config.json']
+        protected += subprocess.check_output(['git','ls-tree','-r','--name-only',BASELINE,'api','.github'],cwd=ROOT,text=True).splitlines()
+        for path in protected:
+            assert (ROOT/path).read_bytes() == original(path), f'Protected file changed: {path}'
+        results.append(f'{len(protected)} protected files byte-identical to baseline')
+        before = Elements(original('app/index.html').decode())
+        after = Elements((ROOT/'app/index.html').read_text())
+        assert Counter(before.ids) == Counter(after.ids), 'Existing element IDs changed'
+        assert Counter(before.contracts) == Counter(after.contracts), 'Original handler/field/data contracts changed'
+        assert '<script src="js/ui-v2-pilot.js' not in (ROOT/'app/index.html').read_text(), 'Pilot script loaded on board'
+        results.append(f'{len(before.ids)} original IDs and all existing field/data contracts preserved')
+    else:
+        results.append('Foundation-only mode: original application contract checks are owned by the current shell integration gate')
     for page in ['index.html','ui-v2.html']:
         parsed=Elements((ROOT/'app'/page).read_text())
         assert len(parsed.ids)==len(set(parsed.ids)), f'Duplicate ID in {page}'

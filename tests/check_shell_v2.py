@@ -3,6 +3,7 @@
 import json
 import re
 import subprocess
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -21,10 +22,13 @@ class Page(HTMLParser):
 
 def main():
     results=[]
-    protected=['app/index.html','app/login.html','app/css/custom.css','app/js/main.js','app/js/ui.js','app/js/api.js','app/js/signalr.js','app/js/state.js','app/staticwebapp.config.json']
-    for p in protected:
-        assert (ROOT/p).read_bytes()==subprocess.check_output(['git','show',f'{BASELINE}:{p}'],cwd=ROOT),p
-    results.append('Existing app, login, runtime, routes and CSS unchanged in preview stage')
+    if '--isolation-only' not in sys.argv:
+        protected=['app/index.html','app/login.html','app/css/custom.css','app/js/main.js','app/js/ui.js','app/js/api.js','app/js/signalr.js','app/js/state.js','app/staticwebapp.config.json']
+        for p in protected:
+            assert (ROOT/p).read_bytes()==subprocess.check_output(['git','show',f'{BASELINE}:{p}'],cwd=ROOT),p
+        results.append('Existing app, login, runtime, routes and CSS unchanged in preview stage')
+    else:
+        results.append('Isolation-only mode: live application preservation is checked by check_shell_integration.py')
     p=Page((ROOT/'app/ui-v2-shell-preview.html').read_text())
     assert len(p.ids)==len(set(p.ids)), 'Duplicate preview ID'
     assert p.views==['home','kanban','list','archived','users']
@@ -50,6 +54,6 @@ def main():
     results.append('Ordinary and destructive pilot confirmations have explicit blue/red intent')
     for file in (ROOT/'app/js').glob('*.js'):subprocess.run(['node','--check',str(file)],check=True,capture_output=True)
     results.append('All frontend JavaScript syntax passed; browser interaction verification still required')
-    print(json.dumps({'status':'passed','stage':'tc445-shell-preview-1','checks':results},indent=2,ensure_ascii=False))
+    print(json.dumps({'status':'passed','stage':'tc445-shell-preview-2','checks':results},indent=2,ensure_ascii=False))
 
 if __name__=='__main__':main()

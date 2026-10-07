@@ -114,6 +114,8 @@ export function initializeShell() {
 export function showStartupState(title, message, allowLogin = false) {
   const loader = document.getElementById('loader-container');
   if (!loader) return;
+  const app = document.getElementById('app');
+  if (app) app.inert = true;
   loader.classList.remove('hidden');
   loader.style.opacity = '1';
   const card = document.createElement('section');
