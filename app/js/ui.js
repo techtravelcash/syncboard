@@ -1087,6 +1087,10 @@ export function updateActiveView() {
     const sortOrb = document.getElementById('orb-sort'); 
     const filterOrb = document.getElementById('orb-filter'); // Pegamos o botão de filtro
     
+    // Preserve only the focused Home metric before hiding the view detaches focus.
+    const focusedHomeMetric = state.currentView === 'home' && home?.contains(document.activeElement)
+        ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;
+
     // Esconde views de conteúdo imediatamente
     [home, kanban, list, archived, users].forEach(el => el && el.classList.add('hidden'));
 
@@ -1169,6 +1173,7 @@ export function updateActiveView() {
         if (state.currentView === 'home') {
             renderHomeView();
             home.classList.remove('hidden');
+            if (focusedHomeMetric) [...home.querySelectorAll('.metric-card')].find(button => button.dataset.filter === focusedHomeMetric)?.focus({preventScroll: true});
             label.textContent = "Início";
         } else if (state.currentView === 'list') {
             renderListView();

@@ -23,3 +23,7 @@ Rollback uses a new revert commit returning this slice to the identified baselin
 ## Home detail return-focus repair
 
 Live QA identified the pre-existing close handler's missing focus return after opening a Home row by keyboard. The repair adds a Home-only close hook: restore the current task's Home button, or the selected category if that task left the current recorte. Other views and notification-return flows are excluded. Both animated and immediate close paths are covered by isolated real-function tests. No general modal trapping, draft recovery, API or data behavior is added. Release marker: `tc446-home-2`.
+
+## Home live-render metric focus
+
+During the legitimate TC-446 handoff, live QA confirmed the counts and selected category updated without reload, but hiding Home before rendering discarded the focused metric. A scoped controller hook now captures only a focused Home category before the hide and restores its matching replacement after Home is visible again. Focus elsewhere and navigation to another view are excluded. Isolated tests model the hide-induced blur, repeat renders, and another-view/nonmetric exclusions. Browser recheck remains a separate gate. Release marker: `tc446-home-3`.

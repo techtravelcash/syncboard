@@ -15,6 +15,8 @@ def outside_home(s):
 new_without_import=re.sub(r"^import \{[^\n]+\} from './home-v2.js';\n",'',new,flags=re.M)
 new_without_import=new_without_import.replace("    const restoreHomeFocus = () => {\n        if (state.currentView === 'home' && !state.returnToNotifications) {\n            restoreHomeTaskFocus(document.getElementById('homeView'), taskId);\n        }\n    };\n",'')
 new_without_import=re.sub(r'^ +restoreHomeFocus\(\);\n','',new_without_import,flags=re.M)
+new_without_import=new_without_import.replace("    // Preserve only the focused Home metric before hiding the view detaches focus.\n    const focusedHomeMetric = state.currentView === 'home' && home?.contains(document.activeElement)\n        ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;\n\n",'')
+new_without_import=new_without_import.replace("            if (focusedHomeMetric) [...home.querySelectorAll('.metric-card')].find(button => button.dataset.filter === focusedHomeMetric)?.focus({preventScroll: true});\n",'')
 assert outside_home(old)==outside_home(new_without_import),'Non-Home renderer/handler changed'
 model=(ROOT/'app/js/home-v2.js').read_text()
 assert not re.search(r'\b(fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage)\b',model)
@@ -34,4 +36,4 @@ class Page(HTMLParser):
 a=Page(original('app/index.html').decode());b=Page((ROOT/'app/index.html').read_text());assert a.ids==b.ids
 for ref in b.refs:assert (ROOT/'app'/ref).is_file(),ref
 for js in (ROOT/'app/js').glob('*.js'):subprocess.run(['node','--check',str(js)],check=True,capture_output=True)
-print(json.dumps({'status':'passed','protected_files':len(protected),'checks':['Home renderer/import plus scoped Home return-focus hook changed in existing ui.js','All static index IDs preserved','No API/state/storage changes','Six native metric selectors with pressed state','Existing task-opening callbacks preserved','Honest loaded-subset and empty-selection presentation','All local resources and frontend syntax valid']},indent=2))
+print(json.dumps({'status':'passed','protected_files':len(protected),'checks':['Home renderer/import plus scoped Home focus hooks changed in existing ui.js','All static index IDs preserved','No API/state/storage changes','Six native metric selectors with pressed state','Existing task-opening callbacks preserved','Honest loaded-subset and empty-selection presentation','All local resources and frontend syntax valid']},indent=2))
