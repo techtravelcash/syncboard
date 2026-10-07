@@ -129,15 +129,15 @@ function updateDragAndDropState() {
     kanbanSortableInstances.forEach(i => i.destroy());
     kanbanSortableInstances = [];
 
-    // Filtering must never submit a partial board order. Default-page behavior is unchanged.
-    if (typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state)) return;
+    // Filtered boards allow status moves, never reordering a partial task set.
+    const filtered = typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state);
     if (state.currentView === 'kanban') {
         const columns = document.querySelectorAll('.kanban-task-list');
         
         columns.forEach(list => {
             const sortable = new Sortable(list, {
                 group: 'kanban',
-                ...((typeof isFidelityV2 === 'function' && isFidelityV2()) ? { filter: 'button, summary, details, input, select, a', preventOnFilter: false } : {}),
+                ...((typeof isFidelityV2 === 'function' && isFidelityV2()) ? { filter: 'button:not(.fidelity-task-open), summary, details, input, select, a', preventOnFilter: false, sort: !filtered } : {}),
                 animation: 150,
                 delay: 100,
                 delayOnTouchOnly: true,
@@ -145,7 +145,7 @@ function updateDragAndDropState() {
                 dragClass: 'rotate-2',
                 
                 onEnd: async (evt) => {
-                    if (typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state)) {
+                    if (!kanbanSortableInstances.includes(sortable) || filtered !== (typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state))) {
                         ui.renderKanbanView(); updateDragAndDropState(); return;
                     }
                     const itemEl = evt.item;
@@ -153,6 +153,10 @@ function updateDragAndDropState() {
                     const newStatus = evt.to.dataset.columnId;
                     const oldStatus = evt.from.dataset.columnId;
                     
+                    if (filtered && oldStatus === newStatus) {
+                        ui.renderKanbanView(); updateDragAndDropState(); return;
+                    }
+
                     const task = state.tasks.find(t => t.id === taskId);
                     if (!task) return;
 
@@ -196,7 +200,7 @@ function updateDragAndDropState() {
                     }
 
                     const orderedTasksPayload = [];
-                    document.querySelectorAll('.kanban-task-list').forEach(column => {
+                    if (!filtered) document.querySelectorAll('.kanban-task-list').forEach(column => {
                         Array.from(column.children).forEach((card, index) => {
                             const cId = card.dataset.taskId;
                             if (cId) {
@@ -213,9 +217,11 @@ function updateDragAndDropState() {
                         if (oldStatus !== newStatus) {
                             await api.updateTask(taskId, updatePayload);
                         }
-                        await api.updateOrder(orderedTasksPayload);
+                        if (!filtered) await api.updateOrder(orderedTasksPayload);
                         
-                        if (removedHomologador) {
+                        if (filtered) {
+                            ui.updateActiveView();
+                        } else if (removedHomologador) {
                             ui.renderKanbanView();
                             updateDragAndDropState();
                         }

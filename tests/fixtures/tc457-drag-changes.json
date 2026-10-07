@@ -1,0 +1,17 @@
+{
+  "baseline": "a191109659d5448cf734b1ea372be9e2d6b680e1",
+  "changes": {
+    "app/js/main.js": {
+      "beforeSha256": "5249f8cf780e9341996a5c9e39abf2c8ae59dff74d2e9c507ff30aa6d97fef04",
+      "afterSha256": "030fd2ab0f2e09a7828164b920b794d3266d7e478a05c1a54d7440093e1f25d9"
+    },
+    "app/index.html": {
+      "beforeSha256": "f153afdb8ccfd5c3d383d8fc5d56de927deb3283b5441a10004e550e10d8c6a7",
+      "afterSha256": "adedd8a29e8b97ea9757abc0a55d5f1b931c8a046757174b43688d1c311aee5f"
+    },
+    "app/ui-v2-fidelity-preview.html": {
+      "beforeSha256": "6c34dcfe777f2a76abbe8e99ae71d4ea18a8f30db2258280039ede0c4db58093",
+      "afterSha256": "cd28f483989aa835d9205f90dc849274953fb2edadef87f0aa68c2efd8a3c45b"
+    }
+  }
+}
