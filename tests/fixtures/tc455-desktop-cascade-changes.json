@@ -1,0 +1,306 @@
+{
+  "baselineCommit": "a965230833cde7882e42a30443f4c37f21aeeb1b",
+  "approvedPrototypeCommit": "e329c93a8d4dfd043c4f1fe7e06b3949426ea359",
+  "activeEntry": "app/index.html",
+  "purpose": "Exact CSS/literal correction and audited original active-entry guard adaptations; no behavioral assertion rewrite and no pixel-fidelity claim.",
+  "runtimeChanges": {
+    "app/css/fidelity-v2.css": {
+      "beforeSha256": "97701823318a3196d94930e44a572280665e8052c7f7854657be4afdaebe66de",
+      "afterSha256": "047f200bdf4a02113f2eb9ec4d65035ee1a0857016111ef46553e4d97cb4c3aa",
+      "replacements": [
+        {
+          "reason": "Executable V2 body uses normal line height; cancel inherited Fluxo 1.6.",
+          "before": "--fidelity-top: 31px; font-family: Arial, Helvetica, sans-serif; }",
+          "after": "--fidelity-top: 31px; font-family: Arial, Helvetica, sans-serif; line-height: normal; }",
+          "count": 1,
+          "beforeSha256": "3217681e03081246fa2209bbe4c325e8a7b5e671a3ed116444678317e781d4ba",
+          "afterSha256": "59836f118695c5ec9cea3d398e326e58c886b13c1b87a3d6c133891d29d2e235"
+        },
+        {
+          "reason": "Match executable .page-title p specificity over .eyebrow, not nominal token intent.",
+          "before": "#fidelity-page-eyebrow { margin: 0 0 10px; font-size: 12px; line-height: 1.3;",
+          "after": "#fidelity-page-eyebrow { margin: 10px 0 0; font-size: 14px; line-height: 1.5;",
+          "count": 1,
+          "beforeSha256": "2006f18e2f5d15bcd9b3ffaed5295476064a8de86cfae791e17d54041cffab8c",
+          "afterSha256": "9477352df18944e17d3d1bd06db5718de643f32dca4ca24e15c4db37da3df8b5"
+        },
+        {
+          "reason": "Reference .search-field flex:1 computes to 1 1 0%.",
+          "before": "position: relative; flex: 1 1 190px; min-width: 160px; max-width: 290px;",
+          "after": "position: relative; flex: 1 1 0%; min-width: 160px; max-width: 290px;",
+          "count": 1,
+          "beforeSha256": "2746381cc339d648f631f5dc50ff3ecd08ab4f1a26be640376f20cbbb306d0bb",
+          "afterSha256": "7d73d9982fb9ad1ef8de10d6bf407d376fdc2b7d140b6f28f784908ae84e705d"
+        },
+        {
+          "reason": "Reference search icon offset.",
+          "before": ".fidelity-controls .sb-list-search > svg { position: absolute; left: 12px; top: 12px;",
+          "after": ".fidelity-controls .sb-list-search > svg { position: absolute; left: 12px; top: 11px;",
+          "count": 1,
+          "beforeSha256": "8fbff59df2f9a652fc133f52cebd3d252cfc858fb2494b1b11e920050e5862a9",
+          "afterSha256": "4a664008d5a7a5e99dfce27ecbb62a4b710815605969b210f216df4ea3a48152"
+        },
+        {
+          "reason": "Reference input padding and normal line height; retain 40px border-box height.",
+          "before": "padding: 9px 12px 9px 37px; background: var(--sb-surface); font-size: 13px; color: var(--sb-text);",
+          "after": "padding: 11px 12px 11px 37px; background: var(--sb-surface); font-size: 13px; line-height: normal; color: var(--sb-text);",
+          "count": 1,
+          "beforeSha256": "c3f8b573945e9dbf1e3fbed470335de804d5b4f25b9f66c1e77d96ec2c8deae7",
+          "afterSha256": "4395bc88cbbeb6d8edb570cd5f71335e734dd46ef139a4a368f19cb613ae1617"
+        },
+        {
+          "reason": "Reference filter maximum width and padding.",
+          "before": ".fidelity-controls select { width: auto; max-width: 170px; height: 40px; min-height: 40px; padding: 0 10px;",
+          "after": ".fidelity-controls select { width: auto; max-width: 160px; height: 40px; min-height: 40px; padding: 0 11px;",
+          "count": 1,
+          "beforeSha256": "b220d14d01cc4530705564deb08f7582f1486698ec7537a77fd4b8473ac034b9",
+          "afterSha256": "56608cf6f87e5222d04bed7f474e758698e17f2277abf2de52f4533c5fb55e61"
+        },
+        {
+          "reason": "Reference view-toggle geometry, with retained native button semantics.",
+          "before": "gap: 6px; min-height: 28px; padding: 5px 10px; border: 0; border-radius: 4px;",
+          "after": "gap: 6px; min-height: 0; padding: 6px 10px; line-height: normal; border: 0; border-radius: 4px;",
+          "count": 1,
+          "beforeSha256": "66654419d72a14cdabd216613191e9beff38d3c8c0449f9b8aa4db1cba624fcf",
+          "afterSha256": "386f64e886022882451ae01e13c3dd648a0b36b7ac9effb6563318b5dc55ba4a"
+        },
+        {
+          "reason": "Exact lane color from approved prototype.js labels.",
+          "before": "--fidelity-lane: #8292AB",
+          "after": "--fidelity-lane: #68788F",
+          "count": 1,
+          "beforeSha256": "ee108d9982aef97f6ca340caf058bed9fcebc8836b1b17ef634cc3cd6079843f",
+          "afterSha256": "d77082eb47eee163e487817d9a594378695269512d2545bc106291ac3ff865c6"
+        },
+        {
+          "reason": "Exact lane color from approved prototype.js labels.",
+          "before": "--fidelity-lane: #D99233",
+          "after": "--fidelity-lane: #AA6919",
+          "count": 1,
+          "beforeSha256": "5dd6046089ed5bc22c2ff82d458c5ab743eb6137194742e15f1972de37c7b7f2",
+          "afterSha256": "1117ef2d27bc43cc9512660f84d4eed86fc57ce323e786641818884ab03de2f6"
+        },
+        {
+          "reason": "Exact lane color from approved prototype.js labels.",
+          "before": "--fidelity-lane: #5276EE",
+          "after": "--fidelity-lane: #365DCB",
+          "count": 1,
+          "beforeSha256": "aa7c695bd195edb5a2dd0c2ae73c5323d15359f4f8b1acd5557328cdf33fa5b7",
+          "afterSha256": "cd445da870684e36252f0a16d9b2504fd43b514b7f2e9ebec21a659bd019df63"
+        },
+        {
+          "reason": "Exact lane color from approved prototype.js labels.",
+          "before": "--fidelity-lane: #9A60D2",
+          "after": "--fidelity-lane: #8951AF",
+          "count": 1,
+          "beforeSha256": "d0759c2d6bc8400fdb509d7882c4e3df73c1379fbb2c305f3bf18486bd9d909d",
+          "afterSha256": "c36db8b6ff5ff8ed8241f3c3d5762cfb21db0b501761fe0bdd906c55e6f00249"
+        },
+        {
+          "reason": "Exact lane color from approved prototype.js labels.",
+          "before": "--fidelity-lane: #3D9B7B",
+          "after": "--fidelity-lane: #327B64",
+          "count": 1,
+          "beforeSha256": "1d79436299943452357d3aa52f59f8dd955cd419f7c752d782b1f6536c47c6bf",
+          "afterSha256": "e2bcadc7658719b527fb49662e249fba6e2336d7d82be209c2c0d47153ac684d"
+        },
+        {
+          "reason": "Cancel inherited legacy column heading 1.5 line height.",
+          "before": "border-radius: 0; font-size: 13px; font-weight: 700; gap: 6px;",
+          "after": "border-radius: 0; font-size: 13px; line-height: normal; font-weight: 700; gap: 6px;",
+          "count": 1,
+          "beforeSha256": "b68effbd57170a943dad0d0e11adc9d4111cf42461da645e8cd9d37d2346e2b7",
+          "afterSha256": "8585214eec68e3f4156879429900b3f3438265022fc4e2ef5dd708021e9d846f"
+        },
+        {
+          "reason": "Reference count padding/line height.",
+          "before": ".column-count { min-width: 0; padding: 2px 6px;",
+          "after": ".column-count { min-width: 0; padding: 3px 6px; line-height: normal;",
+          "count": 1,
+          "beforeSha256": "92ebceaa018d7bc3a904523324fe2eb351af10569c44157104017f86eda8d63a",
+          "afterSha256": "a42e3e62c14497161f0acd6c6d9e893e897cec95bcb874e44e39a0c28d6ac913"
+        },
+        {
+          "reason": "Cancel legacy card-header 1.5 line height; keep action menu.",
+          "before": ".sb-kanban-card-head { padding: 0; margin: 0 0 13px;",
+          "after": ".sb-kanban-card-head { padding: 0; margin: 0 0 13px; line-height: normal;",
+          "count": 1,
+          "beforeSha256": "c9da8d0503cde49e1cd7096c053e45b9111c00f2790601ddd388d662a1f1b821",
+          "afterSha256": "eba48c603226e6bc9b700664928adf0dc6474d6cff165068670656d4f96f7519"
+        },
+        {
+          "reason": "Reference priority line height.",
+          "before": "gap: 4px; font-size: 12px; line-height: 1.2;",
+          "after": "gap: 4px; font-size: 12px; line-height: normal;",
+          "count": 1,
+          "beforeSha256": "31a94575a81a42cda21897499ba14567d7a1abfa14faa72a28afb84575f794a2",
+          "afterSha256": "66fd779d5d38de659b87b6e158f75b33a16b9a341dff859f0b3e13bc5293c17d"
+        },
+        {
+          "reason": "Reference progress metadata line height.",
+          "before": "margin-bottom: 6px; font-size: 12px; line-height: 1.3; gap: 4px;",
+          "after": "margin-bottom: 6px; font-size: 12px; line-height: normal; gap: 4px;",
+          "count": 1,
+          "beforeSha256": "c6e53a7096969ce24acac7d22ce5f2ddf15ff4adc79e92ebada58772dcab944f",
+          "afterSha256": "170756374360c718fa2124da473313b49bbeb3abe993c731f549b13427573cec"
+        },
+        {
+          "reason": "Reference card footer line height.",
+          "before": "padding-top: 11px; flex-wrap: nowrap; font-size: 12px; gap: 6px;",
+          "after": "padding-top: 11px; flex-wrap: nowrap; font-size: 12px; line-height: normal; gap: 6px;",
+          "count": 1,
+          "beforeSha256": "add20d89870e628502f200dabc65a7a0e83ecc4e1a0c0456fdf762a02bfede55",
+          "afterSha256": "c90e7dac8a4c38225f9a4ba99a5351092ef257303e070df8f9060d5400adf540"
+        },
+        {
+          "reason": "Approved light-only ink values; preserve existing dark theme variables.",
+          "before": "html.dark body.sb-fidelity-v2 .fidelity-controls #search-input, html.dark body.sb-fidelity-v2 .fidelity-controls select { border-color: var(--sb-border-strong); }",
+          "after": "html:not(.dark) body.sb-fidelity-v2 .fidelity-controls .sb-list-search > svg { color: #6C798C; }\nhtml:not(.dark) body.sb-fidelity-v2 .fidelity-controls #search-input { color: #27364A; }\nhtml:not(.dark) body.sb-fidelity-v2 .fidelity-controls select { color: #43536B; }\nhtml:not(.dark) body.sb-fidelity-v2 #kanbanView .column-count { color: #67768A; }\nhtml.dark body.sb-fidelity-v2 .fidelity-controls #search-input, html.dark body.sb-fidelity-v2 .fidelity-controls select { border-color: var(--sb-border-strong); }",
+          "count": 1,
+          "beforeSha256": "c6fa55728ee806845e077020ceef7e2416dc371ce8a90fdd67cb25d0a735effe",
+          "afterSha256": "cbb5cc669314450aee060da3cfe8b72701b38bdf079fafcf414b035f2779bf20"
+        },
+        {
+          "reason": "Exact approved <=1200px spacing; preserve grid tracks and >=1650px geometry.",
+          "before": "  body.sb-fidelity-v2 #kanbanView { gap: 14px; }\n}\n@media (max-width: 1000px)",
+          "after": "  body.sb-fidelity-v2 #kanbanView { gap: 9px; }\n  body.sb-fidelity-v2 #kanbanView .sb-kanban-card { padding: 12px 10px; }\n  body.sb-fidelity-v2 #kanbanView .column-header h2 { font-size: 12px; }\n}\n@media (max-width: 1000px)",
+          "count": 1,
+          "beforeSha256": "ea1de8fb27c18ba02207a4f045af97ca8aca87413d3eff44d0504f794fb75db6",
+          "afterSha256": "75bc9e1c7e9232b7a9bf90909951b446fedd3a439aa45dbdd5e52a1582e66c6b"
+        },
+        {
+          "reason": "Mobile .page-title p wins eyebrow cascade at 13px in approved reference.",
+          "before": "  body.sb-fidelity-v2 #fidelity-page-title { font-size: 28px; }",
+          "after": "  body.sb-fidelity-v2 #fidelity-page-eyebrow { font-size: 13px; }\n  body.sb-fidelity-v2 #fidelity-page-title { font-size: 28px; }",
+          "count": 1,
+          "beforeSha256": "6f5cecdce60e33ece255158da4dc43d8e7a3a698559af06586334c58ea39b61c",
+          "afterSha256": "fa4f77dcb010c3506eb0172a4a5db5cefce8a7c0dd4dc0495cbd9146a9d4506b"
+        },
+        {
+          "reason": "Restore canonical mobile heading size after <=1200 rule.",
+          "before": "  body.sb-fidelity-v2 #kanbanView { gap: 16px; }",
+          "after": "  body.sb-fidelity-v2 #kanbanView { gap: 16px; }\n  body.sb-fidelity-v2 #kanbanView .column-header h2 { font-size: 13px; }",
+          "count": 1,
+          "beforeSha256": "01e84a0a29f5a56cd90f70963309527188201794c73dc98ff6a0efb9a9770806",
+          "afterSha256": "532362cf6b936e80d83a6bec1c6d7658fb8ab56287dfeee2357dd8c3d83f0e1a"
+        }
+      ]
+    },
+    "app/css/fidelity-secondary-v2.css": {
+      "beforeSha256": "31a32c5d9a2772c8e602845f5712e4aa0598133f1c7041b1776d0d0c5b9f18d0",
+      "afterSha256": "31cee93613b2aa7217dbf1318225454268b1c6785d38712b13dcaac1cd26af40",
+      "replacements": [
+        {
+          "reason": "Reference table inherits normal line-height.",
+          "before": "text-align:left; font-size:12px; line-height:1.5; color:var(--sb-text);",
+          "after": "text-align:left; font-size:12px; line-height:normal; color:var(--sb-text);",
+          "count": 1,
+          "beforeSha256": "fd9de3d14d0d75f4d37014590ffbbb68105048df9651cd9586586637e5cb4cc9",
+          "afterSha256": "35b1d4407953db1c1f5d805c410a22f8e5d0d5085f6aa7e5f913834c8e8470f5"
+        },
+        {
+          "reason": "Reference task ID metadata line height; keep creation/reviewer text.",
+          "before": "gap:5px; font-size:12px; line-height:1.5; color:var(--sb-muted);",
+          "after": "gap:5px; font-size:12px; line-height:normal; color:var(--sb-muted);",
+          "count": 1,
+          "beforeSha256": "7ea8b8cc9cb723273dec97b1ce575c46227eb8db101c5f1feb86f497ef0e1ad2",
+          "afterSha256": "007a2d1b1f516f85ce1d5df16698595bb3074cc44fae58a8fcc5bd2ea588707d"
+        },
+        {
+          "reason": "Reference list progress fills its cell; remove unsupported wide-view cap.",
+          "before": "width:100%; max-width:140px; height:4px;",
+          "after": "width:100%; max-width:none; height:4px;",
+          "count": 1,
+          "beforeSha256": "bb372d0705f52e7bae4c139ceb763a07bd7623d36b5838ce7919cc3f226092b3",
+          "afterSha256": "fa0a11401c71eda17ec7c0c8b3b7dda5a6dfa7e1e29c3e38aabfd766498ed2a5"
+        },
+        {
+          "reason": "Reference status badge normal line height; preserve state/name contents.",
+          "before": ".fidelity-task-table .sb-badge { padding:4px 6px; border-radius:5px; font-size:12px; font-weight:600;",
+          "after": ".fidelity-task-table .sb-badge { padding:4px 6px; border-radius:5px; font-size:12px; line-height:normal; font-weight:600;",
+          "count": 1,
+          "beforeSha256": "5b5502bfe7cc4c19b127220d05a09622b1cc60225b825946af2fe24ce8cf640d",
+          "afterSha256": "6226d440f29a25ae02b3de72b2230a8cf129e1cbc58e9b2628e34a23eed75fbc"
+        }
+      ]
+    },
+    "app/index.html": {
+      "beforeSha256": "715617be6ff1c746eb053856e10273c5e5f60565e9404493b0bbfb290c8d6bdf",
+      "afterSha256": "f153afdb8ccfd5c3d383d8fc5d56de927deb3283b5441a10004e550e10d8c6a7",
+      "replacements": [
+        {
+          "reason": "Exact active release/cache literal only; every other HTML byte is preserved.",
+          "before": "tc455-fidelity-1",
+          "after": "tc455-fidelity-2",
+          "count": 16,
+          "beforeSha256": "d494f2efb472c363ebcb09b2b16416a24b588cb9cc35d0e282e1c76a724c05e8",
+          "afterSha256": "bedf87a3d837fd68465d86d53db0b9138ba896a20dd62243f33a811bdf41c0dc"
+        }
+      ]
+    },
+    "app/ui-v2-fidelity-preview.html": {
+      "beforeSha256": "9231073c8d4bd8aa54504f7e4e950b6ca09a7708cfe120571fc0c35f3cb89897",
+      "afterSha256": "6c34dcfe777f2a76abbe8e99ae71d4ea18a8f30db2258280039ede0c4db58093",
+      "replacements": [
+        {
+          "reason": "Exact preview release/cache literal only; every other HTML byte is preserved.",
+          "before": "tc455-fidelity-preview-3",
+          "after": "tc455-fidelity-preview-4",
+          "count": 16,
+          "beforeSha256": "210e0635f92d99ad997230e5b3f65b34860d9363ebed00890c25346591af78d6",
+          "afterSha256": "488985dc29c57993a22abe3c9b1c04f5917cd713d8ab9ae452faa3dac95f9a07"
+        }
+      ]
+    }
+  },
+  "activeRunnerOriginalSha256": "54d480f1b2659cedb1b905cb2cc58bc68256ad82b6f7ca5e9333a3cb1de47c19",
+  "activeRunnerAdaptations": [
+    {
+      "reason": "Bind the in-memory original wrapper root to its actual checkout URL. Do not rewrite the nested fixture import.meta.url replacement string.",
+      "before": "new URL('../', import.meta.url)",
+      "after": "new URL('../', process.env.SYNCBOARD_DESKTOP_RUNNER_URL)",
+      "count": 1,
+      "beforeSha256": "ead8714fe14685780db2101395f860d7dd1b572881d76e08d131fbd23aa041e4",
+      "afterSha256": "d9bf823a83372b05d0ad347ffb1686899ea777347cdc6a01f16cf099882afe23",
+      "kind": "wrapper path binding"
+    },
+    {
+      "reason": "Bind the inherited nested fixture helper to the unchanged original tests directory under this checkout.",
+      "before": "new URL('./check_fidelity_secondary_v2.mjs', import.meta.url)",
+      "after": "new URL('./check_fidelity_secondary_v2.mjs', process.env.SYNCBOARD_DESKTOP_RUNNER_URL)",
+      "count": 1,
+      "beforeSha256": "83b512fb6a54c66ce3601066fcbaafedc000f4eb23dfa9a25fb42b15c03cf541",
+      "afterSha256": "16ac506e9fda8f93146e4a217af178b5c19b422f61055137c9d9554dfb140025",
+      "kind": "wrapper path binding"
+    },
+    {
+      "reason": "Normalize original immutable preview3 HTML directly to the current active release2; no other HTML adaptation.",
+      "before": "preview.replaceAll('tc455-fidelity-preview-3', 'tc455-fidelity-1')",
+      "after": "preview.replaceAll('tc455-fidelity-preview-3', 'tc455-fidelity-2')",
+      "count": 1,
+      "beforeSha256": "ab5ae907e84d3f798c856faa9615f4d8679b7c5d99db34d752ffaa0b03e499f8",
+      "afterSha256": "4df4175ef05b55c9f89656b6568e499bf6eb40cd2beb064b51e022a61b78de63",
+      "kind": "release-marker guard"
+    },
+    {
+      "reason": "These four files have already passed stronger exact complete-file reconstruction in the enclosing runner; every other app/API/asset freeze stays intact.",
+      "before": "if (path !== 'app/index.html') assert.deepEqual",
+      "after": "if (!['app/index.html', 'app/ui-v2-fidelity-preview.html', 'app/css/fidelity-v2.css', 'app/css/fidelity-secondary-v2.css'].includes(path)) assert.deepEqual",
+      "count": 1,
+      "beforeSha256": "798d3d261a0289ce645781d0e1073accf555075b84b00539fb5d801053c44a64",
+      "afterSha256": "b1801603402c16e43f0788bbff9360af306f4cd2dde8a176edfb71a5515cc02f",
+      "kind": "obsolete four-file source guard"
+    },
+    {
+      "reason": "After verifying the unchanged original audit and its adapted fixture hash, migrate only the pre-behavior BODY release assertion. Original body loading, entry path, production execution, and all behavioral assertions remain unchanged and hash-checked.",
+      "before": "const activeCase = adapt(originalCase, 'case');",
+      "after": "const previousActiveCase = adapt(originalCase, 'case');\nconst previousReleaseAssertion = \"assert.equal(body.getAttribute('data-ui-release'), 'tc455-fidelity-1');\";\nconst currentReleaseAssertion = \"assert.equal(body.getAttribute('data-ui-release'), 'tc455-fidelity-2');\";\nassert.equal(previousActiveCase.split(previousReleaseAssertion).length, 2, 'Exact pre-behavior BODY release guard migration');\nconst activeCase = previousActiveCase.replace(previousReleaseAssertion, currentReleaseAssertion);",
+      "count": 1,
+      "beforeSha256": "b47ed366161bd402fcc230754c00d8511af8cec24f6de50249ba1fd9634a8330",
+      "afterSha256": "b51452270eeab07c6cb09196aea0b90297346d8191f7ca5af15d3bd8bd4166d4",
+      "kind": "pre-behavior release-marker guard"
+    }
+  ],
+  "activeRunnerAdaptedSha256": "c0e0c9beda47458e0cef48ec9351d28882776321f40f87512482b0113d04fcae",
+  "unchangedComposedBehaviorSha256": "b89eb3294849ee42baa089ac1790b9803394a5092b3bcfaeec5521ca93104ef7"
+}

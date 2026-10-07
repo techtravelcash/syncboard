@@ -72,7 +72,7 @@ body.sb-fidelity-v2 .fidelity-personal-projects .fidelity-project-scope { border
 
 /* Native tables: one common panel, calm rows, local horizontal overflow. */
 body.sb-fidelity-v2 .fidelity-table-scroll { width:100%; max-width:100%; overflow:auto; overscroll-behavior-x:contain; border:1px solid var(--sb-border); border-radius:10px; background:var(--sb-surface); }
-body.sb-fidelity-v2 .fidelity-task-table { width:100%; border-collapse:collapse; border-spacing:0; text-align:left; font-size:12px; line-height:1.5; color:var(--sb-text); }
+body.sb-fidelity-v2 .fidelity-task-table { width:100%; border-collapse:collapse; border-spacing:0; text-align:left; font-size:12px; line-height:normal; color:var(--sb-text); }
 body.sb-fidelity-v2 .fidelity-task-table th { background:var(--sb-canvas); padding:14px; font-size:12px; font-weight:500; color:var(--sb-muted); border-bottom:1px solid var(--sb-border); white-space:nowrap; }
 body.sb-fidelity-v2 #listView .fidelity-table-row,
 body.sb-fidelity-v2 #archivedView .fidelity-table-row { display:table-row; position:static; margin:0; padding:0; border:0; border-radius:0; background:var(--sb-surface); color:var(--sb-text); transform:none; animation:none; box-shadow:none; opacity:1; backdrop-filter:none; -webkit-backdrop-filter:none; }
@@ -83,7 +83,7 @@ body.sb-fidelity-v2 .fidelity-task-table td { padding:15px 14px; border-bottom:1
 body.sb-fidelity-v2 .fidelity-task-table tbody tr:last-child td { border-bottom:0; }
 body.sb-fidelity-v2 .fidelity-task-table .fidelity-table-task { width:37%; min-width:235px; overflow-wrap:anywhere; }
 body.sb-fidelity-v2 .fidelity-task-link { text-align:left; display:block; width:100%; padding:0; color:var(--sb-text); background:transparent; border:0; cursor:pointer; }
-body.sb-fidelity-v2 .fidelity-table-task-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; font-size:12px; line-height:1.5; color:var(--sb-muted); }
+body.sb-fidelity-v2 .fidelity-table-task-meta { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px; font-size:12px; line-height:normal; color:var(--sb-muted); }
 body.sb-fidelity-v2 .fidelity-table-task strong { display:block; font-size:13px; font-weight:600; line-height:1.4; margin-top:6px; }
 body.sb-fidelity-v2 .fidelity-table-task .sb-list-task-id { font-weight:400; }
 body.sb-fidelity-v2 .fidelity-table-task-extra { display:block; margin-top:6px; font-size:12px; line-height:1.5; color:var(--sb-muted); }
@@ -94,7 +94,7 @@ body.sb-fidelity-v2 .fidelity-table-priority { display:inline-flex; align-items:
 body.sb-fidelity-v2 .fidelity-table-priority svg { width:12px; height:12px; flex-shrink:0; }
 body.sb-fidelity-v2 .fidelity-table-priority[data-priority='Alta'],body.sb-fidelity-v2 .fidelity-table-priority[data-priority='Urgente'] { color:var(--sb-error-border); }
 body.sb-fidelity-v2 .fidelity-table-progress { min-width:116px; color:var(--sb-muted); }
-body.sb-fidelity-v2 .fidelity-table-progress progress { appearance:none; display:block; width:100%; max-width:140px; height:4px; margin:7px 0 0; border:0; border-radius:3px; overflow:hidden; color:var(--sb-action); background:var(--sb-border); }
+body.sb-fidelity-v2 .fidelity-table-progress progress { appearance:none; display:block; width:100%; max-width:none; height:4px; margin:7px 0 0; border:0; border-radius:3px; overflow:hidden; color:var(--sb-action); background:var(--sb-border); }
 body.sb-fidelity-v2 .fidelity-table-progress progress::-webkit-progress-bar { background:var(--sb-border); }
 body.sb-fidelity-v2 .fidelity-table-progress progress::-webkit-progress-value { background:var(--sb-action); }
 body.sb-fidelity-v2 .fidelity-table-progress progress::-moz-progress-bar { background:var(--sb-action); }
@@ -105,7 +105,7 @@ body.sb-fidelity-v2 .fidelity-table-actions svg { width:16px; height:16px; }
 body.sb-fidelity-v2 .fidelity-table-actions .delete-list-btn:hover,
 body.sb-fidelity-v2 #archivedView .fidelity-archive-actions .sb-archive-delete:hover { color:var(--sb-error-text); background:var(--sb-error-bg); }
 body.sb-fidelity-v2 .fidelity-table-note { font-size:12px; line-height:1.6; color:var(--sb-muted); margin:14px 0 0; }
-body.sb-fidelity-v2 .fidelity-task-table .sb-badge { padding:4px 6px; border-radius:5px; font-size:12px; font-weight:600; white-space:nowrap; }
+body.sb-fidelity-v2 .fidelity-task-table .sb-badge { padding:4px 6px; border-radius:5px; font-size:12px; line-height:normal; font-weight:600; white-space:nowrap; }
 body.sb-fidelity-v2 #archivedView .fidelity-table-task .sb-archive-task-id { font-weight:400; }
 body.sb-fidelity-v2 #archivedView .fidelity-table-task .sb-archive-project { display:inline-flex; align-items:center; gap:5px; font-size:12px; line-height:1.5; margin:0; }
 body.sb-fidelity-v2 #archivedView .sb-archive-project-dot { width:7px; height:7px; border-radius:2px; }

@@ -1,6 +1,6 @@
 /* TC-455 opt-in correction. Geometry from approved V2 e329c93 prototype.css.
    The full real-app cascade precedes this file. No selector affects the default page. */
-body.sb-fidelity-v2 { --sb-font: Arial, Helvetica, sans-serif; --sb-sidebar-width: 212px; --sb-header-height: 67px; --fidelity-gutter: 34px; --fidelity-top: 31px; font-family: Arial, Helvetica, sans-serif; }
+body.sb-fidelity-v2 { --sb-font: Arial, Helvetica, sans-serif; --sb-sidebar-width: 212px; --sb-header-height: 67px; --fidelity-gutter: 34px; --fidelity-top: 31px; font-family: Arial, Helvetica, sans-serif; line-height: normal; }
 body.sb-fidelity-v2 #orb-nav.sb-shell-sidebar { width: var(--sb-sidebar-width); padding: 24px 10px 20px; border-right: 1px solid #303B4F; }
 body.sb-fidelity-v2 #orb-nav > .sb-shell-panel-head { margin: 0 0 28px; padding: 4px 10px 0; min-height: 48px; }
 body.sb-fidelity-v2 .sb-shell-brand { min-height: 43px; }
@@ -42,7 +42,7 @@ body.sb-fidelity-v2 .fidelity-mobile-brand { display: none; }
 body.sb-fidelity-v2 #main-content, body.sb-fidelity-v2 #main-content.immersive-canvas { top: var(--sb-header-height); height: calc(100dvh - var(--sb-header-height)); width: calc(100% - var(--sb-sidebar-width)); padding: var(--fidelity-top) var(--fidelity-gutter) 32px; overflow: auto; display: block; }
 body.sb-fidelity-v2 #fidelity-page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 25px; }
 body.sb-fidelity-v2 #fidelity-page-header > div:first-child { min-width: 0; }
-body.sb-fidelity-v2 #fidelity-page-eyebrow { margin: 0 0 10px; font-size: 12px; line-height: 1.3; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--sb-muted); }
+body.sb-fidelity-v2 #fidelity-page-eyebrow { margin: 10px 0 0; font-size: 14px; line-height: 1.5; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--sb-muted); }
 body.sb-fidelity-v2 #fidelity-page-title { margin: 0; font-size: 29px; line-height: 1.2; letter-spacing: -1px; color: var(--sb-text); font-weight: 700; }
 body.sb-fidelity-v2 #fidelity-page-subtitle { margin: 10px 0 0; color: var(--sb-muted); font-size: 14px; line-height: 1.5; }
 body.sb-fidelity-v2 #fidelity-page-actions { display: flex; align-items: center; gap: 9px; margin-top: 6px; flex-shrink: 0; }
@@ -53,10 +53,10 @@ body.sb-fidelity-v2 #addTaskBtn svg { width: 17px; height: 17px; }
 body.sb-fidelity-v2 #homeView, body.sb-fidelity-v2 #listView, body.sb-fidelity-v2 #archivedView, body.sb-fidelity-v2 #userManagementView { padding: 0; height: auto; overflow: visible; }
 body.sb-fidelity-v2 #orb-filter.sb-task-filter-band { position: static; display: block; width: 100%; padding: 0; max-height: none; border: 0; background: transparent; overflow: visible; z-index: auto; }
 body.sb-fidelity-v2 .fidelity-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin-bottom: 24px; }
-body.sb-fidelity-v2 .fidelity-controls .sb-list-search { position: relative; flex: 1 1 190px; min-width: 160px; max-width: 290px; display: block; }
-body.sb-fidelity-v2 .fidelity-controls .sb-list-search > svg { position: absolute; left: 12px; top: 12px; width: 16px; height: 16px; color: var(--sb-muted); pointer-events: none; }
-body.sb-fidelity-v2 .fidelity-controls #search-input { width: 100%; height: 40px; min-height: 40px; border: 1px solid #CBD4E0; border-radius: 7px; padding: 9px 12px 9px 37px; background: var(--sb-surface); font-size: 13px; color: var(--sb-text); }
-body.sb-fidelity-v2 .fidelity-controls select { width: auto; max-width: 170px; height: 40px; min-height: 40px; padding: 0 10px; border: 1px solid #CBD4E0; border-radius: 7px; background: var(--sb-surface); color: var(--sb-muted); font-size: 12px; }
+body.sb-fidelity-v2 .fidelity-controls .sb-list-search { position: relative; flex: 1 1 0%; min-width: 160px; max-width: 290px; display: block; }
+body.sb-fidelity-v2 .fidelity-controls .sb-list-search > svg { position: absolute; left: 12px; top: 11px; width: 16px; height: 16px; color: var(--sb-muted); pointer-events: none; }
+body.sb-fidelity-v2 .fidelity-controls #search-input { width: 100%; height: 40px; min-height: 40px; border: 1px solid #CBD4E0; border-radius: 7px; padding: 11px 12px 11px 37px; background: var(--sb-surface); font-size: 13px; line-height: normal; color: var(--sb-text); }
+body.sb-fidelity-v2 .fidelity-controls select { width: auto; max-width: 160px; height: 40px; min-height: 40px; padding: 0 11px; border: 1px solid #CBD4E0; border-radius: 7px; background: var(--sb-surface); color: var(--sb-muted); font-size: 12px; }
 body.sb-fidelity-v2 #clear-task-filters { padding: 0 6px; min-height: 40px; border: 0; border-radius: 4px; color: var(--sb-muted); background: transparent; text-decoration: underline; font-size: 12px; cursor: pointer; }
 body.sb-fidelity-v2 #clear-task-filters:disabled { cursor: default; text-decoration: none; opacity: .65; }
 body.sb-fidelity-v2 .fidelity-legacy-filter-source[hidden] { display: none !important; }
@@ -67,7 +67,7 @@ body.sb-fidelity-v2 #fidelity-filter-drag-note { margin: 0; font-size: 12px; col
 body.sb-fidelity-v2 #fidelity-filter-drag-note[hidden] { display: none; }
 body.sb-fidelity-v2 .fidelity-results-tools { display: flex; gap: 12px; align-items: center; }
 body.sb-fidelity-v2 .fidelity-view-switch { display: flex; gap: 3px; padding: 3px; border-radius: 6px; background: #E9EDF3; }
-body.sb-fidelity-v2 .fidelity-view-switch button { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 5px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--sb-muted); font-size: 12px; cursor: pointer; }
+body.sb-fidelity-v2 .fidelity-view-switch button { display: flex; align-items: center; gap: 6px; min-height: 0; padding: 6px 10px; line-height: normal; border: 0; border-radius: 4px; background: transparent; color: var(--sb-muted); font-size: 12px; cursor: pointer; }
 body.sb-fidelity-v2 .fidelity-view-switch button[aria-pressed='true'] { background: var(--sb-surface); color: var(--sb-text); box-shadow: 0 1px 3px #18243D14; }
 body.sb-fidelity-v2 .fidelity-view-switch svg { width: 14px; height: 14px; }
 body.sb-fidelity-v2 #orb-sort .sb-sort-selection { min-height: 32px; width: auto; padding: 5px 8px; border-color: var(--sb-border); font-size: 12px; }
@@ -76,23 +76,23 @@ body.sb-fidelity-v2 #orb-sort .sb-filter-selection-label { display: none; }
 body.sb-fidelity-v2 #orb-sort .sb-sort-selection svg { width: 15px; height: 15px; }
 body.sb-fidelity-v2 #orb-sort.orb-slide-out { display: none; }
 body.sb-fidelity-v2 #kanbanView { display: grid; grid-template-columns: repeat(5, minmax(214px, 1fr)); width: 100%; min-width: 0; height: auto; margin: 0; gap: 14px; padding: 0 0 14px; align-items: start; overflow-x: auto; }
-body.sb-fidelity-v2 #kanbanView .board-column { --fidelity-lane: #8292AB; display: grid; grid-template-columns: minmax(0, 1fr); flex: initial; min-width: 0; width: auto; max-width: none; height: auto; max-height: none; min-height: 0; border: 0; border-radius: 0; padding: 0; margin: 0; background: transparent; overflow: visible; }
-body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='stopped'] { --fidelity-lane: #D99233; }
-body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='inprogress'] { --fidelity-lane: #5276EE; }
-body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='homologation'] { --fidelity-lane: #9A60D2; }
-body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='publication'] { --fidelity-lane: #3D9B7B; }
+body.sb-fidelity-v2 #kanbanView .board-column { --fidelity-lane: #68788F; display: grid; grid-template-columns: minmax(0, 1fr); flex: initial; min-width: 0; width: auto; max-width: none; height: auto; max-height: none; min-height: 0; border: 0; border-radius: 0; padding: 0; margin: 0; background: transparent; overflow: visible; }
+body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='stopped'] { --fidelity-lane: #AA6919; }
+body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='inprogress'] { --fidelity-lane: #365DCB; }
+body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='homologation'] { --fidelity-lane: #8951AF; }
+body.sb-fidelity-v2 #kanbanView .board-column[data-column-id='publication'] { --fidelity-lane: #327B64; }
 body.sb-fidelity-v2 #kanbanView .column-header { grid-column: 1; grid-row: 1; padding: 0 2px 13px; margin: 0 0 13px; border-bottom: 2px solid var(--fidelity-lane); background: transparent; }
-body.sb-fidelity-v2 #kanbanView .column-header h2 { padding: 0; background: transparent; color: var(--sb-text); border-radius: 0; font-size: 13px; font-weight: 700; gap: 6px; }
+body.sb-fidelity-v2 #kanbanView .column-header h2 { padding: 0; background: transparent; color: var(--sb-text); border-radius: 0; font-size: 13px; line-height: normal; font-weight: 700; gap: 6px; }
 body.sb-fidelity-v2 #kanbanView .column-header h2 svg { width: 15px; height: 15px; color: var(--fidelity-lane); }
-body.sb-fidelity-v2 #kanbanView .column-count { min-width: 0; padding: 2px 6px; border-radius: 5px; color: var(--sb-muted); background: #E8EDF4; font-size: 12px; font-weight: 400; }
+body.sb-fidelity-v2 #kanbanView .column-count { min-width: 0; padding: 3px 6px; line-height: normal; border-radius: 5px; color: var(--sb-muted); background: #E8EDF4; font-size: 12px; font-weight: 400; }
 body.sb-fidelity-v2 #kanbanView .kanban-task-list { grid-column: 1; grid-row: 2; padding: 0; min-height: 104px; height: auto; overflow: visible; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-empty { grid-column: 1; grid-row: 2; position: static; top: auto; left: auto; right: auto; align-self: start; min-height: 104px; pointer-events: none; padding: 28px 14px; margin: 0; border: 1px dashed #BAC5D5; border-radius: 9px; font-size: 12px; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-card { position: relative; width: 100%; min-width: 0; height: auto; min-height: 0; padding: 14px 13px 12px; margin: 0 0 11px; border: 1px solid var(--sb-border); border-radius: 9px; box-shadow: 0 2px 3px #18243D03; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-card:hover { border-color: #9AAFEA; box-shadow: 0 4px 12px #2635580B; }
-body.sb-fidelity-v2 #kanbanView .sb-kanban-card-head { padding: 0; margin: 0 0 13px; display: flex; flex-wrap: nowrap; align-items: center; gap: 7px; }
+body.sb-fidelity-v2 #kanbanView .sb-kanban-card-head { padding: 0; margin: 0 0 13px; line-height: normal; display: flex; flex-wrap: nowrap; align-items: center; gap: 7px; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-id { font-size: 12px; letter-spacing: .3px; font-weight: 400; }
 body.sb-fidelity-v2 #kanbanView .fidelity-card-head-end { margin-left: auto; display: flex; align-items: center; gap: 4px; }
-body.sb-fidelity-v2 #kanbanView .sb-kanban-priority { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.2; }
+body.sb-fidelity-v2 #kanbanView .sb-kanban-priority { display: flex; align-items: center; gap: 4px; font-size: 12px; line-height: normal; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-priority svg { width: 11px; height: 11px; flex-basis: 11px; }
 body.sb-fidelity-v2 #kanbanView .fidelity-priority-high { color: #9B3B2F; }
 body.sb-fidelity-v2 #kanbanView .task-body { display: block; padding: 0; }
@@ -101,11 +101,11 @@ body.sb-fidelity-v2 #kanbanView .fidelity-task-open { display: block; width: 100
 body.sb-fidelity-v2 #kanbanView .project-strip { display: inline-flex; padding: 3px 6px; gap: 5px; margin: 0 0 12px; border: 0; border-radius: 4px; font-size: 12px; line-height: 1.3; font-weight: 400; color: var(--sb-muted); background: #F0F3F8; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-project-swatch { width: 6px; height: 6px; flex-basis: 6px; border: 0; border-radius: 2px; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-progress { display: block; padding: 0 0 13px; min-height: 0; margin: 0; border-radius: 0; }
-body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-heading { flex-wrap: nowrap; margin-bottom: 6px; font-size: 12px; line-height: 1.3; gap: 4px; }
+body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-heading { flex-wrap: nowrap; margin-bottom: 6px; font-size: 12px; line-height: normal; gap: 4px; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-heading strong { color: var(--sb-muted); font-weight: 400; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-track { height: 4px; background: #E7EBF2; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-fill { background: #3655AA; }
-body.sb-fidelity-v2 #kanbanView .sb-kanban-metadata { border-top: 1px solid var(--sb-border); padding-top: 11px; flex-wrap: nowrap; font-size: 12px; gap: 6px; }
+body.sb-fidelity-v2 #kanbanView .sb-kanban-metadata { border-top: 1px solid var(--sb-border); padding-top: 11px; flex-wrap: nowrap; font-size: 12px; line-height: normal; gap: 6px; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-counts { gap: 6px; flex-wrap: nowrap; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-count, body.sb-fidelity-v2 #kanbanView .sb-kanban-date { gap: 4px; flex-wrap: nowrap; white-space: nowrap; }
 body.sb-fidelity-v2 #kanbanView .sb-kanban-count svg, body.sb-fidelity-v2 #kanbanView .sb-kanban-date svg { width: 12px; height: 12px; flex-basis: 12px; }
@@ -124,6 +124,10 @@ body.sb-fidelity-v2 #kanbanView .fidelity-card-menu-panel .sb-kanban-action:hove
 body.sb-fidelity-v2 #kanbanView .fidelity-card-menu-panel .sb-kanban-action--danger { color: var(--sb-error-text); }
 body.sb-fidelity-v2 #fidelity-mobile-nav { display: none; }
 body.sb-fidelity-v2 .fidelity-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+html:not(.dark) body.sb-fidelity-v2 .fidelity-controls .sb-list-search > svg { color: #6C798C; }
+html:not(.dark) body.sb-fidelity-v2 .fidelity-controls #search-input { color: #27364A; }
+html:not(.dark) body.sb-fidelity-v2 .fidelity-controls select { color: #43536B; }
+html:not(.dark) body.sb-fidelity-v2 #kanbanView .column-count { color: #67768A; }
 html.dark body.sb-fidelity-v2 .fidelity-controls #search-input, html.dark body.sb-fidelity-v2 .fidelity-controls select { border-color: var(--sb-border-strong); }
 html.dark body.sb-fidelity-v2 .fidelity-view-switch, html.dark body.sb-fidelity-v2 #kanbanView .column-count, html.dark body.sb-fidelity-v2 #kanbanView .project-strip { background: #29374B; }
 html.dark body.sb-fidelity-v2 #kanbanView .sb-kanban-progress-track { background: #3B4A60; }
@@ -139,7 +143,9 @@ html.dark body.sb-fidelity-v2 #kanbanView .fidelity-priority-high, html.dark bod
   body.sb-fidelity-v2 { --sb-sidebar-width: 185px; --fidelity-gutter: 24px; --fidelity-top: 25px; }
   body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-lockup { display: block; width: 147px; height: auto; }
   body.sb-fidelity-v2 .sb-shell-brand .fidelity-brand-symbol { display: none; }
-  body.sb-fidelity-v2 #kanbanView { gap: 14px; }
+  body.sb-fidelity-v2 #kanbanView { gap: 9px; }
+  body.sb-fidelity-v2 #kanbanView .sb-kanban-card { padding: 12px 10px; }
+  body.sb-fidelity-v2 #kanbanView .column-header h2 { font-size: 12px; }
 }
 @media (max-width: 1000px) {
   body.sb-fidelity-v2 #kanbanView { display: flex; scroll-snap-type: x proximity; }
@@ -158,6 +164,7 @@ html.dark body.sb-fidelity-v2 #kanbanView .fidelity-priority-high, html.dark bod
   body.sb-fidelity-v2 #main-content { padding-bottom: 94px; }
   body.sb-fidelity-v2 #main-content.immersive-canvas { padding-bottom: 94px; }
   body.sb-fidelity-v2 #fidelity-page-header { display: block; margin-bottom: 24px; }
+  body.sb-fidelity-v2 #fidelity-page-eyebrow { font-size: 13px; }
   body.sb-fidelity-v2 #fidelity-page-title { font-size: 28px; }
   body.sb-fidelity-v2 #fidelity-page-subtitle { font-size: 13px; }
   body.sb-fidelity-v2 #fidelity-page-actions { margin-top: 17px; }
@@ -168,6 +175,7 @@ html.dark body.sb-fidelity-v2 #kanbanView .fidelity-priority-high, html.dark bod
   body.sb-fidelity-v2 .fidelity-results-tools { flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
   body.sb-fidelity-v2 .fidelity-view-switch button { padding: 5px 7px; }
   body.sb-fidelity-v2 #kanbanView { gap: 16px; }
+  body.sb-fidelity-v2 #kanbanView .column-header h2 { font-size: 13px; }
   body.sb-fidelity-v2 #kanbanView .board-column { flex-basis: 258px; width: 258px; }
   body.sb-fidelity-v2 #kanbanView .sb-kanban-card { padding: 16px; }
   body.sb-fidelity-v2 #kanbanView .sb-kanban-title { font-size: 15px; }
