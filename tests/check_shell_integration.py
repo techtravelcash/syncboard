@@ -45,7 +45,10 @@ def main():
     task_label_ids = Counter({('p','id','task-link-help'):1, ('p','id','task-responsible-help'):1, ('p','id','task-draft-notice'):1, ('h2','id','ai-title-heading'):1, ('p','id','ai-review-help'):1})
     # TC-450 adds attachment help and shared confirmation labels only.
     collaboration_label_ids = Counter({('p','id','attachment-selection-help'):1, ('h2','id','confirm-dialog-title'):1, ('p','id','confirm-dialog-description'):1})
-    assert Counter(old_modals.contracts)+kanban_label_ids+task_label_ids+collaboration_label_ids==Counter(new_modals.contracts),'Task/modal DOM contract changed'
+    # TC-452 adds five dialog labels and explicit non-submit types; removes one decorative header icon.
+    people_labels = Counter({('h2','id','signal-confirm-title'):1, ('p','id','signal-confirm-help'):1, ('h2','id','alert-modal-title'):1, ('p','id','alert-modal-help'):1, ('h2','id','notifications-title'):1, ('button','type','button'):2})
+    for id in ('dismissAlertBtn','closeNotificationsBtn'): assert after.elements[id].get('type') == 'button'
+    assert Counter(old_modals.contracts)+kanban_label_ids+task_label_ids+collaboration_label_ids+people_labels-Counter({('i','data-lucide','bell-ring'):1})==Counter(new_modals.contracts),'Task/modal DOM contract changed'
     checks.append(f'All {len(before.ids)} original IDs and every task/modal field/data contract preserved')
     assert 'hidden' in after.elements['user-management-btn']['class']
     assert 'href="/logout"' in new
@@ -60,6 +63,14 @@ def main():
     start='const setupFilterClick = '
     old_tail=old_main[old_main.index(start):]
     new_tail=main_code[main_code.index(start):].replace('ui.showDestructiveConfirmModal(', 'ui.showConfirmModal(').replace('closeShellPanels(false);',"document.getElementById('orb-tools').classList.remove('expanded');")
+    # TC-452 recipient HTML and full sender text are presentation-only; handlers/payloads stay exact.
+    start_html='            // Renderiza os checkboxes dinamicamente'; end_html='            if(window.lucide) lucide.createIcons();'
+    old_html=old_tail[old_tail.index(start_html):old_tail.index(end_html,old_tail.index(start_html))]
+    new_html=new_tail[new_tail.index(start_html):new_tail.index(end_html,new_tail.index(start_html))]
+    assert "const name = typeof r === 'object' ? r.name : r;" in new_html
+    assert "index === 0 ? 'checked' : ''" in new_html
+    assert 'value="${escapePeopleText(String(name))}"' in new_html
+    new_tail=new_tail.replace(new_html,old_html).replace('? alertData.signaledBy\n',"? alertData.signaledBy.split(' ')[0] \n")
     assert old_tail==new_tail,'Unexpected mutation/navigation/theme handler change'
     checks.append('Role checks, all API calls/payloads, task handlers, filters, theme preference and notifications preserved')
     ui=(ROOT/'app/js/ui.js').read_text()

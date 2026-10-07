@@ -1,0 +1,100 @@
+/* TC-452: people and attention surfaces. Fluxo v2 tokens, no account or task state changes.
+   Dark colors are compatibility only; visual validation is still required. */
+.sb-app .sb-people-page { max-width: 1120px; margin: 0 auto; padding-bottom: 24px; }
+.sb-app .sb-people-header { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 24px; }
+.sb-app .sb-people-header h1 { margin: 4px 0 8px; color: var(--sb-text); font-size: clamp(24px, 3vw, 32px); line-height: 1.3; font-weight: 800; }
+.sb-app .sb-people-header p { margin: 0; color: var(--sb-muted); font-size: 14px; }
+.sb-app .sb-people-header .sb-people-kicker { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.sb-app .sb-people-header > .sb-button { flex-shrink: 0; }
+.sb-app .sb-people-search { display: grid; gap: 8px; max-width: 560px; margin-bottom: 24px; }
+.sb-app .sb-people-list { display: grid; gap: 12px; }
+.sb-app .sb-person-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); background: var(--sb-surface); }
+.sb-app .sb-person-identity { display: flex; align-items: start; flex: 1 1 280px; gap: 16px; min-width: 0; }
+.sb-app .sb-person-avatar { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 48px; height: 48px; overflow: hidden; border: 1px solid var(--sb-border-strong); border-radius: 50%; background: var(--sb-ink); color: var(--sb-accent); font-size: 18px; font-weight: 700; }
+.sb-app .sb-person-photo { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sb-app .sb-person-initial { line-height: 1; }
+.sb-app .sb-person-details { min-width: 0; }
+.sb-app .sb-person-name { margin: 0 0 4px; color: var(--sb-text); font-size: 16px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.sb-app .sb-person-email { margin: 0; color: var(--sb-muted); font-size: 14px; overflow-wrap: anywhere; }
+.sb-app .sb-person-roles { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 8px; }
+.sb-app .sb-person-role, .sb-app .sb-person-admin { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; color: var(--sb-muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.sb-app .sb-person-admin { font-weight: 700; }
+.sb-app .sb-person-admin svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sb-app .sb-person-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sb-app .sb-person-count { display: grid; gap: 2px; min-width: 86px; margin-right: 8px; }
+.sb-app .sb-person-count span { color: var(--sb-muted); font-size: 12px; }
+.sb-app .sb-person-count strong { color: var(--sb-text); font-size: 20px; line-height: 1.3; }
+.sb-app .sb-person-actions svg, .sb-app .sb-people-page .sb-button svg, .sb-app .sb-people-dialog .sb-button svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sb-app .sb-people-list .sb-empty { background: var(--sb-surface); color: var(--sb-muted); font-size: 14px; }
+.sb-app .sb-people-list .sb-empty h2 { margin: 0; color: var(--sb-text); font-size: 16px; }
+.sb-app .sb-shell-profile > div:last-child { min-width: 0; }
+.sb-app #user-avatar-menu .sb-person-avatar, .sb-app #orb-avatar-container .sb-person-avatar { width: 100%; height: 100%; border: 0; }
+.sb-app #orb-avatar-container .sb-person-avatar { font-size: 14px; }
+.sb-app #orb-notif-count { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+/* Preserve hidden/show and dynamic form scale/opacity classes used by existing callbacks. */
+.sb-app .sb-people-dialog { padding: 16px; background: rgb(17 24 39 / 60%); font-family: var(--sb-font); }
+.sb-app .sb-people-dialog .sb-people-panel { width: 100%; max-width: 520px; max-height: calc(100dvh - 32px); margin: 0; padding: 24px; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-panel); background: var(--sb-surface); color: var(--sb-text); box-shadow: 0 16px 48px rgb(17 24 39 / 24%); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.sb-app .sb-people-panel h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.3; font-weight: 800; overflow-wrap: anywhere; }
+.sb-app .sb-people-panel > p, .sb-app .sb-people-dialog-header p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--sb-muted); overflow-wrap: anywhere; }
+.sb-app .sb-people-dialog-header { display: flex; justify-content: space-between; align-items: start; gap: 16px; margin-bottom: 24px; }
+.sb-app .sb-people-dialog-header > div { min-width: 0; }
+.sb-app .sb-people-close { display: inline-flex; justify-content: center; align-items: center; width: 44px; height: 44px; flex-shrink: 0; background: var(--sb-surface); color: var(--sb-text); border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); cursor: pointer; }
+.sb-app .sb-people-close:hover { background: var(--sb-canvas); }
+.sb-app .sb-people-close svg { width: 20px; height: 20px; pointer-events: none; }
+.sb-app .sb-people-form { display: grid; gap: 20px; }
+.sb-app .sb-person-permissions { padding: 16px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); background: var(--sb-canvas); }
+.sb-app .sb-person-permissions label { display: flex; align-items: center; min-height: 44px; gap: 12px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.sb-app .sb-person-permissions input, .sb-app .sb-signal-target input { appearance: auto; width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--sb-action); cursor: pointer; }
+.sb-app .sb-people-form-actions { display: flex; justify-content: end; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.sb-app .sb-people-dialog :focus-visible, .sb-app .sb-people-page :focus-visible { outline: 3px solid var(--sb-focus); outline-offset: 3px; }
+.sb-app .sb-attention-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-card); margin-bottom: 16px; background: var(--sb-accent); color: var(--sb-ink); }
+.sb-app .sb-attention-icon svg { width: 24px; height: 24px; }
+.sb-app .sb-signal-targets { display: grid; gap: 8px; max-height: min(300px, 40dvh); margin: 24px 0; padding: 4px; overflow: auto; overscroll-behavior: contain; }
+.sb-app .sb-signal-target { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 48px; padding: 12px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-control); color: var(--sb-text); background: var(--sb-canvas); cursor: pointer; }
+.sb-app .sb-signal-target:hover { border-color: var(--sb-border-strong); }
+.sb-app .sb-signal-name { flex: 1 1 140px; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.sb-app .sb-signal-principal { margin-left: 32px; color: var(--sb-muted); font-size: 12px; font-weight: 700; }
+.sb-app .sb-people-dialog .sb-attention-panel { border-top: 6px solid var(--sb-accent); }
+.sb-app .sb-alert-task { margin: 24px 0; padding: 16px; border-left: 4px solid var(--sb-action); border-radius: var(--sb-radius-control); background: var(--sb-canvas); }
+.sb-app .sb-alert-task p { margin: 0 0 8px; color: var(--sb-muted); font-size: 12px; overflow-wrap: anywhere; }
+.sb-app .sb-alert-task h3 { margin: 0; color: var(--sb-text); font-size: 18px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; }
+.sb-app #dismissAlertBtn { width: 100%; background: var(--sb-action); color: #FFFFFF; }
+.sb-app #dismissAlertBtn:hover { background: var(--sb-action-hover); }
+.sb-app #dismissAlertBtn:disabled, .sb-app #confirmSignalBtn:disabled { background: var(--sb-border); color: var(--sb-muted); border-color: var(--sb-border); cursor: not-allowed; }
+.sb-app .sb-people-panel > .sb-alert-help { margin-top: 12px; font-size: 12px; }
+.sb-app .sb-people-panel > .sb-alert-queue { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sb-border); font-size: 14px; }
+.sb-app #alert-queue-count, .sb-app #alert-signaled-by { font-weight: 700; }
+.sb-app .sb-people-dialog .sb-notifications-panel { max-width: 720px; display: flex; flex-direction: column; overflow: hidden; }
+.sb-app .sb-notifications-panel > .sb-people-dialog-header { flex-shrink: 0; margin-bottom: 20px; }
+.sb-app .sb-notifications-list { display: grid; gap: 12px; min-height: 0; overflow-y: auto; padding: 4px; }
+.sb-app .sb-notifications-loading { color: var(--sb-muted); font-size: 14px; }
+.sb-app .sb-notification-card { display: flex; align-items: start; gap: 12px; padding: 16px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); background: var(--sb-canvas); color: var(--sb-text); cursor: pointer; }
+.sb-app .sb-notification-card.is-unread { border-left: 4px solid var(--sb-action); background: var(--sb-surface); }
+.sb-app .sb-notification-card.is-read { opacity: 1; }
+.sb-app .sb-notification-card:hover { border-color: var(--sb-border-strong); }
+.sb-app .sb-notification-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--sb-radius-control); background: var(--sb-ink); color: var(--sb-accent); flex-shrink: 0; }
+.sb-app .sb-notification-icon svg, .sb-app .sb-notification-arrow { width: 18px; height: 18px; flex-shrink: 0; }
+.sb-app .sb-notification-arrow { color: var(--sb-muted); margin-top: 6px; }
+.sb-app .sb-notification-copy { min-width: 0; flex: 1; }
+.sb-app .sb-notification-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: 12px; color: var(--sb-muted); margin-bottom: 8px; }
+.sb-app .sb-notification-state { font-weight: 700; }
+.sb-app .sb-notification-copy h3 { margin: 0; color: var(--sb-text); font-size: 14px; line-height: 1.5; font-weight: 700; overflow-wrap: anywhere; }
+.sb-app .sb-notification-preview { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--sb-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sb-app .sb-notification-target { display: block; margin-top: 12px; color: var(--sb-text); font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .sb-app .sb-people-header { align-items: start; flex-direction: column; gap: 16px; }
+  .sb-app .sb-people-header > .sb-button { width: 100%; }
+  .sb-app .sb-person-card { padding: 16px; }
+  .sb-app .sb-person-identity { flex-basis: 100%; gap: 12px; }
+  .sb-app .sb-person-actions { width: 100%; padding-top: 16px; border-top: 1px solid var(--sb-border); }
+  .sb-app .sb-person-count { width: 100%; }
+  .sb-app .sb-people-dialog { padding: 12px; }
+  .sb-app .sb-people-dialog .sb-people-panel { max-height: calc(100dvh - 24px); padding: 20px; }
+  .sb-app .sb-people-form-actions > .sb-button { flex: 1 1 120px; }
+  .sb-app .sb-notification-card { padding: 12px; }
+  .sb-app .sb-notification-arrow { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-app .sb-people-dialog, .sb-app .sb-people-dialog *, .sb-app .sb-people-page * { animation: none !important; transition: none !important; }
+  .sb-app .sb-notification-card { transform: none !important; }
+}

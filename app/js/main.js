@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { escapePeopleText, peopleAvatar } from './people-v2.js';
 import * as api from './api.js';
 import * as ui from './ui.js';
 import { connectToSignalR } from './signalr.js';
@@ -109,14 +110,13 @@ function updateUserProfileUI() {
     const photoUrl = picClaim ? picClaim.val : null;
 
     if (photoUrl) {
-        const imgTag = `<img src="${photoUrl}" class="w-full h-full object-cover">`;
+        const imgTag = peopleAvatar(displayName, photoUrl);
         if (avatarMenu) avatarMenu.innerHTML = imgTag;
         if (avatarOrb) avatarOrb.innerHTML = imgTag;
         // Atualiza a foto na BD silenciosamente
         api.updateUserPhoto(photoUrl).catch(console.error);
     } else {
-        const initial = displayName.charAt(0).toUpperCase();
-        const placeholder = `<div class="w-full h-full bg-custom-dark text-white flex items-center justify-center font-bold text-xl">${initial}</div>`;
+        const placeholder = peopleAvatar(displayName, null);
         if (avatarMenu) avatarMenu.innerHTML = placeholder;
         if (avatarOrb) avatarOrb.innerHTML = placeholder;
     }
@@ -784,13 +784,10 @@ function initializeEventListeners() {
                 // Deixa apenas o primeiro responsável (Principal) marcado por padrão
                 const checked = index === 0 ? 'checked' : '';
                 return `
-                    <label class="flex items-center gap-3 p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors border border-transparent hover:border-black/5 dark:hover:border-white/5">
-                        <div class="relative flex items-center shrink-0">
-                            <input type="checkbox" value="${name}" class="target-checkbox peer appearance-none w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-md checked:bg-orange-500 checked:border-orange-500 transition-colors cursor-pointer" ${checked}>
-                            <i data-lucide="check" class="absolute inset-0 m-auto w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"></i>
-                        </div>
-                        <span class="text-sm font-bold text-custom-darkest dark:text-white truncate">${name}</span>
-                        ${index === 0 ? '<span class="ml-auto shrink-0 text-[9px] font-bold uppercase tracking-widest text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-md">Principal</span>' : ''}
+                    <label class="sb-signal-target">
+                        <input type="checkbox" value="${escapePeopleText(String(name))}" class="target-checkbox" ${checked}>
+                        <span class="sb-signal-name">${escapePeopleText(name || 'Nome não informado')}</span>
+                        ${index === 0 ? '<span class="sb-signal-principal">Principal</span>' : ''}
                     </label>
                 `;
             }).join('');
@@ -1081,7 +1078,7 @@ function processAlertQueue() {
     document.getElementById('alert-queue-count').textContent = alertQueue.length - 1;
     
     const signaledBy = (typeof alertData === 'object' && alertData.signaledBy) 
-        ? alertData.signaledBy.split(' ')[0] 
+        ? alertData.signaledBy
         : 'Um colega';
     document.getElementById('alert-signaled-by').textContent = signaledBy;
 

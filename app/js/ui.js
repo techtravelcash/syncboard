@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { renderArchiveRows, renderArchiveShell, applyArchiveProjectColors } from './archive-v2.js';
+import { personCard, notificationCard } from './people-v2.js';
 import { buildHomeModel, selectHomeTasks, isPendingHomeValidation, escapeHomeText, restoreHomeTaskFocus } from './home-v2.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
@@ -707,160 +708,50 @@ export function renderUserManagementView() {
             return nameA.localeCompare(nameB);
         });
 
-    // O map agora recebe (user, index) para calcularmos o atraso da animação
-    const userCards = allUsers.map((user, index) => {
-        const activeTasksCount = state.tasks.filter(t => 
-            t.status !== 'done' && 
+    const userCards = allUsers.map(user => {
+        const activeTasksCount = state.tasks.filter(t =>
+            t.status !== 'done' &&
             t.responsible?.some(r => (typeof r === 'object' ? r.name : r) === user.name)
         ).length;
-
-        const roleBadge = user.role 
-            ? `<span class="px-2.5 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-blue-200 dark:border-blue-800/50 shadow-sm">${user.role}</span>` 
-            : '';
-
-        return `
-        <div class="user-card-item animate-slide-up-enter group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-700 rounded-[24px] hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:border-blue-200 dark:hover:border-blue-500/30 relative overflow-hidden" style="animation-delay: ${index * 0.05}s">
-            <div class="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-700"></div>
-
-            <div class="flex items-center gap-5 mb-4 sm:mb-0 relative z-10">
-                <div class="relative shrink-0">
-                    <img src="${user.picture || 'https://i.imgur.com/6b6psVE.png'}" class="w-14 h-14 rounded-full object-cover border-[3px] border-white dark:border-[#0F172A] shadow-md group-hover:scale-105 transition-transform duration-300">
-                    ${user.isAdmin 
-                        ? `<div class="absolute -bottom-1 -right-1 bg-purple-500 text-white rounded-full p-1.5 border-2 border-white dark:border-[#0F172A] shadow-sm" title="Administrador do Sistema">
-                            <i data-lucide="shield-check" class="w-3 h-3"></i>
-                           </div>` 
-                        : ''}
-                </div>
-                <div>
-                    <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <p class="font-extrabold text-custom-darkest dark:text-white text-base leading-tight">${user.displayName || user.name}</p>
-                        ${roleBadge}
-                    </div>
-                    <div class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                        <span class="flex items-center gap-1.5 bg-gray-50 dark:bg-white/5 px-2 py-1 rounded-md border border-gray-100 dark:border-white/5">
-                            <i data-lucide="mail" class="w-3.5 h-3.5 opacity-70"></i> ${user.email}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full sm:w-auto border-t border-gray-100 dark:border-gray-700 sm:border-0 pt-4 sm:pt-0 relative z-10">
-                
-                <div class="flex flex-col justify-center items-center px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-white/10 bg-transparent min-w-[120px]">
-                    <span class="text-[9px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 leading-none mb-1.5 text-center">Tarefas Ativas</span>
-                    <span class="text-xl font-black text-custom-darkest dark:text-white leading-none text-center">${activeTasksCount}</span>
-                </div>
-
-                <div class="flex items-center gap-2.5">
-                    <button type="button" class="edit-user-btn flex items-center justify-center w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-[1.05] active:scale-95 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-all border border-transparent dark:border-blue-500/10 shadow-sm" data-user-email="${user.email}" title="Editar Perfil">
-                        <i data-lucide="user-cog" class="w-5 h-5 pointer-events-none"></i>
-                    </button>
-                    
-                    <button type="button" class="delete-user-btn flex items-center justify-center w-11 h-11 rounded-2xl bg-red-50 text-red-600 hover:bg-red-100 hover:scale-[1.05] active:scale-95 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-all border border-transparent dark:border-red-500/10 shadow-sm" data-user-id="${user.id || user.email}" title="Remover Acesso">
-                        <i data-lucide="user-x" class="w-5 h-5 pointer-events-none"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        `;
+        return personCard(user, activeTasksCount);
     }).join('');
 
     container.innerHTML = `
-        <div class="max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in pb-12">
-            
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pt-4 pb-2">
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-custom-darkest dark:text-white tracking-tight">
-                        Gestão de Utilizadores
-                    </h1>
-                    <p class="text-custom-dark dark:text-gray-400 mt-2 font-medium">Acessos e cargos</p>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                    
-                    <div class="relative w-full sm:w-64">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none h-full">
-                            <i data-lucide="search" class="w-4 h-4 text-gray-400"></i>
-                        </div>
-                        <input type="text" id="userSearchInput" placeholder="Procurar utilizador..." class="w-full h-[50px] bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-gray-700 rounded-2xl pl-11 pr-4 text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white placeholder-gray-400 shadow-sm">
-                    </div>
-
-                    <button id="openNewUserModalBtn" class="w-full sm:w-auto flex-shrink-0 h-[50px] bg-custom-darkest text-white dark:bg-white dark:text-custom-darkest px-6 rounded-2xl text-sm font-bold shadow-xl shadow-custom-darkest/10 dark:shadow-white/5 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 border border-transparent dark:border-white/10">
-                        <i data-lucide="plus" class="w-4 h-4 pointer-events-none"></i>
-                        <span class="hidden sm:inline pointer-events-none tracking-wide">Novo Membro</span>
-                    </button>
-                </div>
+        <div class="sb-people-page">
+            <header class="sb-people-header">
+                <div><p class="sb-people-kicker">Pessoas</p><h1>Gestão de Utilizadores</h1><p>Acessos e cargos</p></div>
+                <button type="button" id="openNewUserModalBtn" class="sb-button"><i data-lucide="plus" aria-hidden="true"></i><span>Novo Membro</span></button>
+            </header>
+            <div class="sb-people-search">
+                <label for="userSearchInput" class="sb-label">Procurar utilizador</label>
+                <input type="search" id="userSearchInput" class="sb-input" placeholder="Nome, email ou cargo…">
             </div>
-
-            <div class="space-y-4" id="user-list-container">
+            <div id="user-list-container" class="sb-people-list">
                 ${userCards}
-                
-                <div id="no-users-found" class="hidden flex-col items-center justify-center py-12 text-gray-400 opacity-60">
-                    <i data-lucide="users-2" class="w-16 h-16 mb-4"></i>
-                    <p class="font-medium">Nenhum membro encontrado.</p>
-                </div>
+                ${allUsers.length === 0 ? '<div class="sb-empty"><h2>Nenhum membro disponível</h2><p>A lista de utilizadores está vazia.</p></div>' : ''}
+                <div id="no-users-found" class="hidden sb-empty" role="status"><i data-lucide="users-2" aria-hidden="true"></i><p>Nenhum membro encontrado.</p></div>
             </div>
         </div>
 
-        <div id="userFormModal" class="fixed inset-0 z-[1500] hidden items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
-            
-            <div class="absolute inset-0 close-user-modal"></div>
-            
-            <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-md p-8 relative z-10 flex flex-col shadow-2xl border border-white/20 dark:border-white/10 transform scale-95 opacity-0 transition-all duration-300" id="userFormModalContent">
-                
-                <button type="button" class="absolute top-6 right-6 p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-all opacity-60 hover:opacity-100 close-user-modal">
-                    <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
-                </button>
-
-                <div class="mb-8">
-                    <h2 id="user-form-title" class="text-2xl font-extrabold text-custom-darkest dark:text-white leading-tight tracking-tight">Novo Membro</h2>
-                    <p id="user-form-subtitle" class="text-xs text-custom-dark dark:text-gray-400 font-medium mt-0.5 opacity-80">Adicionar ao SyncBoard</p>
-                </div>
-                
-                <form id="addUserForm" class="space-y-6">
+        <div id="userFormModal" role="dialog" aria-labelledby="user-form-title" aria-describedby="user-form-subtitle" class="sb-people-dialog fixed inset-0 z-[1500] hidden items-center justify-center p-4 modal-backdrop">
+            <div class="absolute inset-0 close-user-modal" aria-hidden="true"></div>
+            <div class="sb-people-panel orb-glass-unified relative z-10 transform scale-95 opacity-0" id="userFormModalContent">
+                <header class="sb-people-dialog-header">
+                    <div><h2 id="user-form-title">Novo Membro</h2><p id="user-form-subtitle">Adicionar ao SyncBoard</p></div>
+                    <button type="button" class="sb-people-close close-user-modal" aria-label="Fechar formulário"><i data-lucide="x" aria-hidden="true"></i></button>
+                </header>
+                <form id="addUserForm" class="sb-people-form">
                     <input type="hidden" id="editUserId" value="">
-                    
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
-                            <i data-lucide="user" class="w-3 h-3"></i> Nome de Exibição
-                        </label>
-                        <input type="text" id="newUserName" required placeholder="Ex: Maria Silva" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
+                    <div class="sb-field"><label for="newUserName" class="sb-label">Nome de Exibição (obrigatório)</label><input type="text" id="newUserName" required placeholder="Ex: Maria Silva" class="sb-input"></div>
+                    <div class="sb-field"><label for="newUserEmail" class="sb-label">Email (Google, obrigatório)</label><input type="email" id="newUserEmail" required placeholder="maria@empresa.com" class="sb-input"></div>
+                    <div class="sb-field"><label for="newUserRole" class="sb-label">Cargo</label><input type="text" id="newUserRole" placeholder="Ex: Frontend Developer…" class="sb-input"></div>
+                    <div class="sb-person-permissions">
+                        <label for="newUserIsAdmin"><input type="checkbox" id="newUserIsAdmin" aria-describedby="user-admin-help"><span>Privilégios Admin</span></label>
+                        <p id="user-admin-help" class="sb-help">Permite editar projetos, gerir painéis e remover utilizadores.</p>
                     </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
-                            <i data-lucide="mail" class="w-3 h-3"></i> Email (Google)
-                        </label>
-                        <input type="email" id="newUserEmail" required placeholder="maria@empresa.com" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-widest opacity-50 mb-2 flex items-center gap-2 text-custom-darkest dark:text-white">
-                            <i data-lucide="briefcase" class="w-3 h-3"></i> Cargo
-                        </label>
-                        <input type="text" id="newUserRole" placeholder="Ex: Frontend Developer..." class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-black/20 dark:focus:border-white/20 p-3 outline-none transition-all placeholder-black/30 dark:placeholder-white/20">
-                    </div>
-
-                    <div class="p-4 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 mt-2">
-                        <div class="flex items-center justify-between">
-                            <div class="pr-4">
-                                <p class="text-xs font-bold text-custom-darkest dark:text-white flex items-center gap-1.5 opacity-80">
-                                    <i data-lucide="shield" class="w-4 h-4"></i> Privilégios Admin
-                                </p>
-                                <p class="text-[10px] text-custom-dark dark:text-gray-400 mt-1 leading-snug font-medium opacity-80">Permite editar projetos, gerir painéis e remover utilizadores.</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0 opacity-80 hover:opacity-100 transition-opacity">
-                                <input type="checkbox" id="newUserIsAdmin" class="sr-only peer">
-                                <div class="w-11 h-6 bg-black/20 dark:bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="pt-4 flex flex-col gap-3">
-                        <button type="submit" id="submitUserBtn" class="w-full py-4 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 dark:shadow-white/5 transition-transform active:scale-95 flex items-center justify-center gap-2 group border border-transparent dark:border-white/10">
-                            <i data-lucide="save" class="w-4 h-4 group-hover:scale-110 transition-transform pointer-events-none"></i>
-                            <span class="tracking-wide pointer-events-none">Salvar Utilizador</span>
-                        </button>
+                    <div class="sb-people-form-actions">
+                        <button type="button" class="sb-button sb-button--secondary close-user-modal">Cancelar</button>
+                        <button type="submit" id="submitUserBtn" class="sb-button"><i data-lucide="save" aria-hidden="true"></i><span>Salvar Utilizador</span></button>
                     </div>
                 </form>
             </div>
@@ -1951,36 +1842,21 @@ export async function updateNotificationBadge() {
 
     if (notifs.length === 0) {
         listContainer.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-16 text-custom-dark/50 dark:text-white/30">
-                <i data-lucide="bell-off" class="w-12 h-12 mb-3 opacity-50"></i>
-                <p class="text-sm font-bold tracking-wide uppercase">Tudo limpo por aqui</p>
-            </div>
+            <div class="sb-empty"><h3>Nenhuma notificação disponível</h3><p>Sua lista de notificações está vazia.</p></div>
         `;
     } else {
-        listContainer.innerHTML = notifs.map(n => `
-            <div class="p-4 rounded-2xl border ${n.isRead ? 'bg-white/40 dark:bg-white/5 border-transparent opacity-60' : 'bg-white/80 dark:bg-[#1E293B]/80 border-blue-200 dark:border-blue-500/30 shadow-sm'} hover:scale-[1.01] transition-all duration-300 cursor-pointer flex gap-4 group" data-notif-id="${n.id}" data-task-id="${n.taskId}">
-                
-                <div class="mt-1 flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center ${n.isRead ? 'bg-black/5 dark:bg-white/10 text-custom-dark dark:text-gray-400' : 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'}">
-                        <i data-lucide="${n.isRead ? 'check' : 'bell'}" class="w-5 h-5"></i>
-                    </div>
-                </div>
-                
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start mb-1 gap-2">
-                        <h4 class="text-sm font-bold text-custom-darkest dark:text-white leading-snug">${n.message}</h4>
-                        <span class="text-[10px] font-bold text-custom-dark/60 dark:text-gray-400 whitespace-nowrap pt-0.5">${formatDateTime(n.createdAt)}</span>
-                    </div>
-                    <p class="text-xs font-medium text-custom-dark dark:text-gray-300 italic line-clamp-2">"${n.commentPreview}"</p>
-                </div>
-                
-            </div>
-        `).join('');
-        
+        listContainer.innerHTML = notifs.map(n => notificationCard(n, formatDateTime(n.createdAt))).join('');
+
         if (window.lucide) lucide.createIcons();
         
         // 3. Lógica do Clique Coreografado
         listContainer.querySelectorAll('div[data-notif-id]').forEach(el => {
+            el.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    el.click();
+                }
+            });
             el.addEventListener('click', (e) => {
                 const notifId = el.dataset.notifId;
                 const taskId = el.dataset.taskId;
