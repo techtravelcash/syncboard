@@ -1,3 +1,5 @@
+import { canDecideHomologation, openForwardDialog } from './homologation-v2.js';
+import { showApprovalSuccess } from './approval-success.js';
 import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
 import { state } from './state.js';
 import { escapePeopleText, peopleAvatar } from './people-v2.js';
@@ -15,29 +17,67 @@ let isAlertModalOpen = false;
 
 // One in-flight decision per task, shared by card and detail actions.
 const pendingHomologationDecisions = state.pendingHomologationDecisions = new Set();
-async function decideHomologation(taskId, decision) {
+async function decideHomologation(taskId, decision, newResponsibleEmail) {
     const task = state.tasks.find(t => t.id === taskId);
-    if (!task || task.status !== 'homologation' || pendingHomologationDecisions.has(taskId)) return;
+    if (!canDecideHomologation(task, state.currentUser) || pendingHomologationDecisions.has(taskId)) {
+        ui.showToast('A decisão está indisponível. Confira o homologador e a etapa da tarefa.', 'error');
+        return false;
+    }
     const rejecting = decision === 'reject';
-    const payload = rejecting ? { status: 'inprogress', homologador: null } : { status: 'publication', progress: 100 };
+    const forwarding = decision === 'forward';
+    const payload = { homologationAction: decision, expectedStatus: 'homologation', expectedEtag: task._etag };
+    if (forwarding) payload.newResponsibleEmail = newResponsibleEmail;
     pendingHomologationDecisions.add(taskId);
-    const buttons = [...document.querySelectorAll('.approve-btn, .reject-btn, #modal-approve-btn, #modal-reject-btn')]
+    const buttons = [...document.querySelectorAll('.approve-btn, .reject-btn, .forward-btn, #modal-approve-btn, #modal-reject-btn, #modal-forward-btn')]
         .filter(button => button.dataset.taskId === taskId);
     buttons.forEach(button => { button.disabled = true; button.setAttribute('aria-busy', 'true'); });
+    let persisted = false;
     try {
         const updatedTask = await api.updateTask(taskId, payload);
+        const expectedStatus = { approve: 'publication', reject: 'inprogress', forward: 'todo' }[decision];
+        if (updatedTask?.status !== expectedStatus) throw new Error('A decisão não foi confirmada pelo servidor.');
+        persisted = true;
         const index = state.tasks.findIndex(t => t.id === taskId);
         if (index !== -1) state.tasks[index] = { ...state.tasks[index], ...updatedTask };
-        ui.showToast(rejecting ? 'Tarefa reprovada e devolvida para Andamento!' : 'Tarefa aprovada para Publicação!', 'success');
+        ui.showToast(forwarding ? 'Tarefa encaminhada para Fila com o novo responsável!' : rejecting ? 'Tarefa reprovada e devolvida para Andamento!' : 'Tarefa aprovada para Publicação!', 'success');
         const modal = document.getElementById('taskHistoryModal');
         // A delayed response must not reopen a closed detail or replace another task.
         if (state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show')) ui.renderTaskHistory(taskId, state.returnToNotifications);
         ui.updateActiveView();
+        if (decision === 'approve' && updatedTask.status === 'publication') {
+            try { showApprovalSuccess(() => ui.closeApprovedTaskHistory(taskId)); } catch { /* Cosmetic feedback must not report a persisted approval as failed. */ }
+        }
+        return true;
     } catch (err) {
-        ui.showToast(rejecting ? 'Erro ao reprovar tarefa. Tente novamente.' : 'Erro ao aprovar tarefa. Tente novamente.', 'error');
+        if (persisted) {
+            ui.showToast('Decisão salva. Recarregue a página para atualizar a visualização.', 'success');
+            return true;
+        }
+        let refreshed = false;
+        if (err.status === 409) {
+            try {
+                state.tasks = await api.fetchTasks();
+                ui.updateActiveView();
+                const modal = document.getElementById('taskHistoryModal');
+                if (state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show')) ui.renderTaskHistory(taskId, state.returnToNotifications);
+                refreshed = true;
+            } catch { /* Keep the decision explicit; never retry a write automatically. */ }
+        }
+        const message = err.status === 403 ? 'Somente o homologador atribuído pode decidir esta tarefa.' : err.status === 409 ? (refreshed ? 'A tarefa mudou e foi atualizada. Confira os dados antes de tentar novamente.' : 'A tarefa mudou. Recarregue a página antes de decidir.') : 'Não foi possível salvar a decisão. Tente novamente.';
+        ui.showToast(message, 'error');
+        return false;
     } finally {
         pendingHomologationDecisions.delete(taskId);
-        [...document.querySelectorAll('.approve-btn, .reject-btn, #modal-approve-btn, #modal-reject-btn')].filter(button => button.dataset.taskId === taskId).forEach(button => { button.disabled = false; button.removeAttribute('aria-busy'); });
+        [...document.querySelectorAll('.approve-btn, .reject-btn, .forward-btn, #modal-approve-btn, #modal-reject-btn, #modal-forward-btn')].filter(button => button.dataset.taskId === taskId).forEach(button => { button.disabled = persisted; button.removeAttribute('aria-busy'); });
+    }
+}
+
+function startHomologationDecision(taskId, decision) {
+    const task = state.tasks.find(t => t.id === taskId);
+    if (decision !== 'forward') return decideHomologation(taskId, decision);
+    if (!canDecideHomologation(task, state.currentUser) || pendingHomologationDecisions.has(taskId)) return;
+    if (openForwardDialog(task, state.users, email => decideHomologation(taskId, 'forward', email)) === false) {
+        ui.showToast('Não foi possível abrir a seleção de responsável neste navegador.', 'error');
     }
 }
 
@@ -188,6 +228,12 @@ function updateDragAndDropState() {
                     const task = state.tasks.find(t => t.id === taskId);
                     if (!task) return;
 
+                    if (oldStatus === 'homologation' && newStatus !== oldStatus) {
+                        ui.renderKanbanView(); updateDragAndDropState();
+                        ui.showToast('Use Aprovar, Reprovar ou Encaminhar para decidir a homologação.', 'info');
+                        return;
+                    }
+
                     // INTERCEPTAR IDA PARA HOMOLOGAÇÃO
                     if (oldStatus !== newStatus && newStatus === 'homologation') {
                         if (evt.oldIndex < evt.from.children.length) {
@@ -333,7 +379,7 @@ function initializeEventListeners() {
     }
     // Shell presentation owns panel state and accessible focus.
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
+        const btn = e.target.closest('button[data-view]');
         if (!btn) return;
         state.currentView = btn.dataset.view;
         ui.updateActiveView();
@@ -395,9 +441,11 @@ function initializeEventListeners() {
         ui.renderModalAttachments(localFiles);
         document.getElementById('no-due-date-checkbox').checked = false;
         document.getElementById('taskDueDate').disabled = false;
+        document.getElementById('responsible-input-container').inert = false;
         ui.setupResponsibleInput([]);
         ui.setupProjectSuggestions();
         ui.setupCustomColorPicker();
+        document.getElementById('taskStatus').disabled = false;
         document.getElementById('status-container').classList.add('hidden');
         
         taskModal.classList.remove('hidden');
@@ -414,10 +462,11 @@ function initializeEventListeners() {
             ui.renderTaskHistory(state.lastInteractedTaskId);
             return;
         }
-        const decisionBtn = e.target.closest('.approve-btn, .reject-btn');
+        const decisionBtn = e.target.closest('.approve-btn, .reject-btn, .forward-btn');
         if (decisionBtn) {
             e.stopPropagation();
-            await decideHomologation(decisionBtn.dataset.taskId, decisionBtn.classList.contains('reject-btn') ? 'reject' : 'approve');
+            const decision = decisionBtn.classList.contains('forward-btn') ? 'forward' : decisionBtn.classList.contains('reject-btn') ? 'reject' : 'approve';
+            await startHomologationDecision(decisionBtn.dataset.taskId, decision);
             return;
         }
         const publishBtn = e.target.closest('.publish-btn');
@@ -689,6 +738,11 @@ function initializeEventListeners() {
             };
 
             if (state.editingTaskId) {
+                const editingTask = state.tasks.find(task => task.id === state.editingTaskId);
+                if (editingTask?.status === 'homologation') {
+                    payload.status = 'homologation';
+                    payload.responsible = editingTask.responsible;
+                }
                 await api.updateTask(state.editingTaskId, payload);
                 ui.showToast('Tarefa atualizada!', 'success');
             } else {
@@ -725,10 +779,10 @@ function initializeEventListeners() {
 
     document.getElementById('closeHistoryBtn').addEventListener('click', () => ui.closeTaskHistory(state.lastInteractedTaskId));
 
-    for (const [id, decision] of [['modal-approve-btn', 'approve'], ['modal-reject-btn', 'reject']]) {
-        document.getElementById(id)?.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await decideHomologation(e.currentTarget.dataset.taskId, decision);
+    for (const [id, decision] of [['modal-approve-btn', 'approve'], ['modal-reject-btn', 'reject'], ['modal-forward-btn', 'forward']]) {
+        document.getElementById(id)?.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            await startHomologationDecision(event.currentTarget.dataset.taskId, decision);
         });
     }
 
@@ -760,10 +814,13 @@ function initializeEventListeners() {
 
         document.getElementById('status-container').classList.remove('hidden');
         document.getElementById('taskStatus').value = task.status;
+        document.getElementById('taskStatus').disabled = task.status === 'homologation';
 
         localFiles = task.attachments ? [...task.attachments] : [];
         filesToDelete = [];
         ui.renderModalAttachments(localFiles);
+        document.getElementById('responsible-input-container').inert = task.status === 'homologation';
+        document.getElementById('responsible-input-container').title = task.status === 'homologation' ? 'Use Encaminhar para substituir o responsável durante a homologação.' : '';
         ui.setupResponsibleInput(task.responsible || []);
         ui.setupProjectSuggestions();
         ui.setupCustomColorPicker();
@@ -784,6 +841,7 @@ function initializeEventListeners() {
             const task = state.tasks.find(t => t.id === taskId);
             if (!task) return;
 
+            if (task.status === 'homologation') return;
             const responsibleList = task.responsible || [];
             if (responsibleList.length === 0) {
                 ui.showToast('Esta tarefa não possui responsáveis para sinalizar.', 'info');

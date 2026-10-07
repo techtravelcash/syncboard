@@ -5,7 +5,9 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["put"],
+      "methods": [
+        "put"
+      ],
       "route": "tasks/{taskId}/comments/{commentId}"
     },
     {
@@ -17,15 +19,6 @@
       "connectionStringSetting": "CosmosDB",
       "id": "{taskId}",
       "partitionKey": "{taskId}"
-    },
-    {
-      "type": "cosmosDB",
-      "direction": "out",
-      "name": "outputDocument",
-      "databaseName": "TasksDB",
-      "collectionName": "Tasks",
-      "connectionStringSetting": "CosmosDB",
-      "createIfNotExists": false
     },
     {
       "type": "http",

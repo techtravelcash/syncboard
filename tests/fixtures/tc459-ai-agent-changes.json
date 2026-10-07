@@ -189,11 +189,12 @@
   "changes": {
     "api/addUser/index.js": "3e1173f3e3e5dfb62bb6dc9b331a18c4b6c04a5194a5533a49bc0e3feab650f7",
     "api/updateUser/index.js": "04dd2198e2fe73821a7447e14d6bb86439fb2a7dd1c77dab3103c782ef5f76fd",
-    "app/index.html": "1a6a62a3406d6592cac17933ee0ced3c4de81c68d7f115a55495522e10287d90",
+    "app/index.html": "bcf027d3fbede7d0a46a8a2a247a77463384cfb5d7d663c6316663fd6d362628",
     "app/js/main.js": "5ecab5505b55c9e96f949871351697216dea6e8aebc4a60bd815c0ec5861776d",
     "app/js/people-v2.js": "17ca7efdaef6507425051eff78efa9244db6450a57bb01c62c46aedcb98b104b",
     "app/js/ui.js": "e85ea30a8871c617d21754c3d8c8e4e14e4dc80f423d85e18e054d4de96a7124",
-    "app/ui-v2-fidelity-preview.html": "e6a002a99278ff5bc671f752d300904464abaebbdedb2e40446ce3ac93220aa9",
-    "tests/check_people_v2.mjs": "bb9aefe8cd25ce13c291387d77cc28c99d525535ed9521a313eb8fbc4184b295"
+    "app/ui-v2-fidelity-preview.html": "e0ea47dd8ddb5ca5d38ef131875e225eaab1b44a96de9cba24f4a42e110f0977",
+    "tests/check_people_v2.mjs": "bb9aefe8cd25ce13c291387d77cc28c99d525535ed9521a313eb8fbc4184b295",
+    "app/css/people-v2.css": "18b00df92a6927b7711f4de05c38ce212d847836fd9c751c62713492b4411e9e"
   }
 }

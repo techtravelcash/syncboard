@@ -1,0 +1,17 @@
+/* TC461 approval feedback: native dialog owns focus, Escape and top-layer stacking. */
+.sb-approval-success {
+    box-sizing: border-box; width: min(420px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px); overflow: auto; padding: 28px;
+    border: 1px solid #CBD5E1; border-radius: 24px; background: #FFF;
+    color: #172033; text-align: center; box-shadow: 0 24px 80px #0F172A33;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+.sb-approval-success::backdrop { background: #0F172A88; }
+.sb-approval-success-cube { display: block; width: min(224px, 100%); height: auto; margin: 0 auto 12px; }
+.sb-approval-success h2 { margin: 0; font-size: 22px; font-weight: 800; line-height: 1.3; }
+.sb-approval-success p { margin: 12px 0 24px; font-size: 14px; line-height: 1.5; }
+.sb-approval-success button { min-height: 44px; padding: 10px 24px; border: 0; border-radius: 12px; background: #2549E7; color: #FFF; font-weight: 700; cursor: pointer; }
+.sb-approval-success button:hover { background: #1D3BBC; }
+.sb-approval-success button:focus-visible { outline: 3px solid #5B75EF; outline-offset: 4px; }
+.dark .sb-approval-success { background: #172033; color: #F8FAFC; border-color: #475569; }
+.sb-approval-success-cube[hidden] { display: none; }

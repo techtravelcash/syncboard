@@ -97,7 +97,10 @@ module.exports = async function (context, req) {
 
         existingTask.pendingAlerts = mergedAlerts;
 
-        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask);
+        if (!existingTask._etag) throw new Error('ETag ausente na tarefa lida.');
+        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask, {
+            accessCondition: {type: 'IfMatch', condition: existingTask._etag}
+        });
 
         // --- Notificação para o Discord ---
         await sendDiscordNotification({
@@ -124,6 +127,10 @@ module.exports = async function (context, req) {
 
         context.res = { body: replaced };
     } catch (error) {
+        if (Number(error.code || error.statusCode) === 412) {
+            context.res = {status: 409, body: 'A tarefa foi alterada. Atualize e tente novamente.'};
+            return;
+        }
         context.log.error(`Erro ao sinalizar tarefa: ${error.message}`);
         context.res = { status: 500, body: "Erro interno." };
     }

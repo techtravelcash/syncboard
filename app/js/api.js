@@ -39,7 +39,11 @@ export async function updateTask(taskId, taskPayload) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(taskPayload)
     });
-    if (!response.ok) throw new Error('Falha ao atualizar a tarefa.');
+    if (!response.ok) {
+        const error = new Error('Falha ao atualizar a tarefa.');
+        error.status = response.status;
+        throw error;
+    }
     return await response.json();
 }
 

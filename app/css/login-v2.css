@@ -26,3 +26,9 @@ body.sb-login { margin: 0; min-height: 100dvh; display: grid; grid-template-colu
   .dark .sb-login-mobile-brand-dark { display: block; }
 }
 @media (max-width: 374px) { .sb-login-access { padding-left: 16px; padding-right: 16px; } .sb-login-access .sb-panel { padding: 24px 16px; } }
+
+/* TC-461: approved six-second cube, static when motion is reduced. */
+.sb-cube--login { display: block; width: 160px; height: 160px; }
+.sb-cube--login img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sb-cube-motion-toggle { margin-top: 8px; padding: 6px 10px; border: 1px solid #526174; border-radius: 7px; background: transparent; color: #F5F7FA; font: inherit; font-size: 12px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .sb-cube-motion-toggle { display: none; } }

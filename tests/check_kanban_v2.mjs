@@ -21,13 +21,14 @@ class Element {
     const child=new Element(match[1]);child.markup=match[0];this.matches[selector]=child;return child;
   }
 }
-const context={document:{createElement(tag){const el=new Element(tag);nodes.push(el);return el;}},state:{users:[{name:'Ana Exemplo',picture:'https://example.invalid/ana.png'}]},renderTaskHistory:id=>calls.push(['details',id]),openProgressUpdateModal:task=>calls.push(['progress',task.id]),showDestructiveConfirmModal:(title,text,fn)=>calls.push(['delete-confirm',title,text,typeof fn]),Date,console};
+const {canDecideHomologation}=await import('data:text/javascript;base64,'+Buffer.from(readFileSync(ROOT+'app/js/homologation-v2.js','utf8')).toString('base64'));
+const context={canDecideHomologation,document:{createElement(tag){const el=new Element(tag);nodes.push(el);return el;}},state:{currentUser:{userDetails:'ana@example.invalid',userRoles:['travelcash_user']},users:[{name:'Ana Exemplo',picture:'https://example.invalid/ana.png'}]},renderTaskHistory:id=>calls.push(['details',id]),openProgressUpdateModal:task=>calls.push(['progress',task.id]),showDestructiveConfirmModal:(title,text,fn)=>calls.push(['delete-confirm',title,text,typeof fn]),Date,console};
 vm.createContext(context);vm.runInContext(dates+'\n'+renderer+'\nglobalThis.makeCard=createTaskElement;',context);
 const tasks=[
  {id:'FIX-1',status:'todo',title:'Ausente',responsible:[]},
  {id:'FIX-2',status:'stopped',title:'Muito longo <escopo> & "aspas" '.repeat(10),project:'Projeto extenso',projectColor:'#E11D48',priority:'Urgente',responsible:['Ana Exemplo','Bruno Exemplo','Carla Exemplo','Diego Exemplo'],progress:0,missingToComplete:'Revisar <evidências> & definir conclusão',dueDate:'2025-01-10',attachments:[{},{}],comments:[{}]},
  {id:'FIX-3',status:'inprogress',title:'Andamento',progress:48,responsible:[{name:'Ana Exemplo',picture:'https://example.invalid/fallback.png'}]},
- {id:'FIX-4',status:'homologation',title:'Homologação',progress:100,homologador:{name:'Homologador Nome Completo',picture:'https://example.invalid/homologator.png'}},
+ {id:'FIX-4',status:'homologation',title:'Homologação',progress:100,homologador:{email:'ana@example.invalid',name:'Homologador Nome Completo',picture:'https://example.invalid/homologator.png'}},
  {id:'FIX-5',status:'publication',title:'Publicação',progress:100,homologador:'Homologador Nome Completo'},
 ];
 const before=JSON.stringify(tasks);const cards=tasks.map(t=>context.makeCard(t));
@@ -54,6 +55,12 @@ assert.equal(calls.filter(x=>x[0]==='delete-confirm').length,5);
 assert.equal(calls.filter(x=>x[0]==='stop').length,20);
 const missingNames=context.makeCard({id:'FIX-MISSING',status:'homologation',title:'Nomes ausentes',responsible:[{email:'provided@example.invalid'},null],homologador:{email:'validator@example.invalid'}});
 assert.match(missingNames.innerHTML,/provided@example.invalid/);assert.match(missingNames.innerHTML,/Nome não informado/);assert.match(missingNames.innerHTML,/validator@example.invalid/);
+for(const cls of ['.approve-btn','.reject-btn','.forward-btn'])assert.ok(cards[3].querySelector(cls));
+context.state.currentUser={userDetails:'other@example.invalid',userRoles:['travelcash_user','admin']};
+const wrongReviewer=context.makeCard(tasks[3]);
+for(const cls of ['.approve-btn','.reject-btn','.forward-btn'])assert.equal(wrongReviewer.querySelector(cls),null,'Even admin cannot see another homologator decisions');
+const unassigned=context.makeCard({...tasks[3],homologador:null});
+for(const cls of ['.approve-btn','.reject-btn','.forward-btn'])assert.equal(unassigned.querySelector(cls),null);
 const result={status:'passed',checks:['No rendering mutation','Absent, zero, partial and 100 percent progress','Long titles and text escaping','Priority, due date, project color, all owner names and supplied-email/unknown-name fallbacks','Current user photo override and homologator full name','Status-specific action classes/IDs','Native keyboard controls','Repeated details clicks preserve same callback','Progress callback and delete confirmation preserved'],scope:'Real card renderer with lightweight DOM mocks; does not prove browser layout or backend behavior'};
 if(process.env.KANBAN_RENDER_OUTPUT)writeFileSync(process.env.KANBAN_RENDER_OUTPUT,JSON.stringify(cards.map((card,i)=>({task:tasks[i],dataset:card.dataset,attrs:card.attrs,html:card.innerHTML})),null,2));
 console.log(JSON.stringify(result,null,2));

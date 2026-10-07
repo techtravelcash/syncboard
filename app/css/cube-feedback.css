@@ -1,0 +1,6 @@
+/* TC-461: decorative motion follows the real loading lifecycle, never a timer. */
+.sb-cube { display: inline-block; flex: 0 0 auto; vertical-align: middle; }
+.sb-cube img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sb-cube--startup { width: 112px; height: 112px; }
+.sb-cube--archive { width: 80px; height: 80px; }
+.sb-cube--inline { width: 32px; height: 32px; margin-right: 8px; }

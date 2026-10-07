@@ -1,3 +1,5 @@
+import { canDecideHomologation } from './homologation-v2.js';
+import { taskMatchesUser, taskUserFilterOptions } from './task-user-filter.js';
 import { isFidelityV2, applyFidelityFilters, fidelityFilterCount, resetFidelityFilters, syncFidelityShell, finishFidelityView, renderFidelityCardMarkup } from './fidelity-v2.js';
 import { state } from './state.js';
 import { setFidelitySecondaryHeading, renderFidelityHomeShell, renderFidelityHomeRow, renderFidelityListRow, renderFidelityListShell, renderFidelityArchiveShell, renderFidelityArchiveRows, renderFidelityPeopleDirectory } from './fidelity-secondary-v2.js';
@@ -239,8 +241,10 @@ export const createTaskElement = (task) => {
 
     const decisionPending = state.pendingHomologationDecisions?.has(task.id) ? 'disabled aria-busy="true"' : '';
     let actionButtons = '';
-    if (task.status === 'homologation') {
-        actionButtons = `<button type="button" ${decisionPending} class="approve-btn sb-kanban-action sb-kanban-action--primary" title="Aprovar para Publicação" aria-label="Aprovar ${escapeCardText(task.id)} para Publicação" data-task-id="${escapeCardText(task.id)}"><i data-lucide="arrow-right" aria-hidden="true"></i><span>Aprovar</span></button><button type="button" ${decisionPending} class="reject-btn sb-kanban-action sb-kanban-action--danger" title="Reprovar e devolver para Andamento" aria-label="Reprovar ${escapeCardText(task.id)} e devolver para Andamento" data-task-id="${escapeCardText(task.id)}"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Reprovar</span></button>`;
+    if (canDecideHomologation(task, state.currentUser)) {
+        actionButtons = `<button type="button" ${decisionPending} class="approve-btn sb-kanban-action sb-kanban-action--primary" title="Aprovar para Publicação" aria-label="Aprovar ${escapeCardText(task.id)} para Publicação" data-task-id="${escapeCardText(task.id)}"><i data-lucide="arrow-right" aria-hidden="true"></i><span>Aprovar</span></button>
+        <button type="button" ${decisionPending} class="reject-btn sb-kanban-action sb-kanban-action--danger" title="Reprovar e devolver para Andamento" aria-label="Reprovar ${escapeCardText(task.id)} e devolver para Andamento" data-task-id="${escapeCardText(task.id)}"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Reprovar</span></button>
+        <button type="button" ${decisionPending} class="forward-btn sb-kanban-action" title="Encaminhar para novo responsável na Fila" aria-label="Encaminhar ${escapeCardText(task.id)} para novo responsável na Fila" data-task-id="${escapeCardText(task.id)}"><i data-lucide="forward" aria-hidden="true"></i><span>Encaminhar</span></button>`;
     } else if (task.status === 'publication') {
         actionButtons = `<button type="button" class="publish-btn sb-kanban-action sb-kanban-action--primary" title="Publicar Tarefa" aria-label="Publicar ${escapeCardText(task.id)} e enviar para Arquivados" data-task-id="${escapeCardText(task.id)}"><i data-lucide="check-circle" aria-hidden="true"></i><span>Publicar</span></button>`;
     }
@@ -333,14 +337,7 @@ function filterTasks(tasks) {
     }
 
     if (state.selectedResponsible && state.selectedResponsible !== 'all') {
-        const targetResp = String(state.selectedResponsible).trim().toLowerCase();
-        filtered = filtered.filter(t => 
-            Array.isArray(t.responsible) && 
-            t.responsible.some(r => {
-                const name = typeof r === 'object' ? r.name : r;
-                return String(name).trim().toLowerCase() === targetResp;
-            })
-        );
+        filtered = filtered.filter(t => taskMatchesUser(t, state.selectedResponsible, state.users));
     }
 
     if (state.searchQuery) {
@@ -692,7 +689,7 @@ export async function renderArchivedTasks() {
     const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
     const archiveShell = fidelity ? renderFidelityArchiveShell : renderArchiveShell;
     if (fidelity) setFidelitySecondaryHeading('Arquivados', 'Tarefas concluídas ficam separadas do fluxo ativo. Restaurar envia a tarefa para Fila.');
-    container.innerHTML = archiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><span class="sb-spinner" aria-hidden="true"></span><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
+    container.innerHTML = archiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><picture class="sb-cube sb-cube--archive" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
     lucide.createIcons();
 
     try {
@@ -818,6 +815,8 @@ export function updateActiveView() {
     const list = document.getElementById('listView');
     const archived = document.getElementById('archivedView');
     const users = document.getElementById('userManagementView');
+    const workspace = document.getElementById('workspaceView');
+    const boards = document.getElementById('boardsView');
     const main = document.getElementById('main-content');
     const label = document.getElementById('current-view-label');
     const sortOrb = document.getElementById('orb-sort'); 
@@ -828,7 +827,7 @@ export function updateActiveView() {
         ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;
 
     // Esconde views de conteúdo imediatamente
-    [home, kanban, list, archived, users].forEach(el => el && el.classList.add('hidden'));
+    [home, kanban, list, archived, users, workspace, boards].forEach(el => el && el.classList.add('hidden'));
 
     // Atualiza botões do menu inferior
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
@@ -924,7 +923,11 @@ export function updateActiveView() {
         } else if (state.currentView === 'users') {
             renderUserManagementView();
             users.classList.remove('hidden');
-            label.textContent = "Utilizadores";
+            label.textContent = "Users";
+        } else if (state.currentView === 'workspace' || state.currentView === 'boards') {
+            const placeholder = state.currentView === 'workspace' ? workspace : boards;
+            placeholder?.classList.remove('hidden');
+            label.textContent = state.currentView === 'workspace' ? 'Workspace' : 'Boards';
         }
     }
     if (typeof isFidelityV2 === 'function' && isFidelityV2()) finishFidelityView(state);
@@ -1009,7 +1012,7 @@ export function populateResponsibleFilter() {
     const container = document.getElementById('orb-responsible-filters');
     if (!container) return;
 
-    const responsibles = [...new Set([...state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)), ...(state.selectedResponsible && state.selectedResponsible !== 'all' ? [state.selectedResponsible] : [])].filter(Boolean))].sort();
+    const responsibles = taskUserFilterOptions(state.tasks, state.selectedResponsible);
     
     container.innerHTML = '';
     
@@ -1198,16 +1201,22 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     }
 
     // Controle de Visibilidade do Botão de Aprovação
-    // Reprovar follows the same existing visibility/access pattern.
-    for (const [id, label, icon] of [['modal-approve-btn', 'Aprovar', 'check-circle'], ['modal-reject-btn', 'Reprovar', 'rotate-ccw']]) {
+    const canDecide = canDecideHomologation(task, state.currentUser);
+    for (const [id, label, icon] of [['modal-approve-btn', 'Aprovar', 'check-circle'], ['modal-reject-btn', 'Reprovar', 'rotate-ccw'], ['modal-forward-btn', 'Encaminhar', 'forward']]) {
         const button = document.getElementById(id);
         if (!button) continue;
-        button.classList.toggle('hidden', task.status !== 'homologation');
-        button.classList.toggle('flex', task.status === 'homologation');
-        button.dataset.taskId = task.status === 'homologation' ? task.id : '';
+        button.classList.toggle('hidden', !canDecide);
+        button.classList.toggle('flex', canDecide);
+        button.hidden = !canDecide;
+        button.dataset.taskId = canDecide ? task.id : '';
         button.disabled = !!state.pendingHomologationDecisions?.has(task.id);
         button.setAttribute('aria-busy', String(button.disabled));
         button.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4" aria-hidden="true"></i><span>${label}</span>`;
+    }
+    const signalBtn = document.getElementById('modal-signal-btn');
+    if (signalBtn) {
+        signalBtn.hidden = task.status === 'homologation';
+        signalBtn.classList.toggle('hidden', signalBtn.hidden);
     }
 
     // Prazo
@@ -1486,6 +1495,37 @@ export function renderTaskHistory(taskId, fromNotification = false) {
 }
 
 // --- FUNÇÃO AUXILIAR: FECHAR MODAL ---
+
+// Continue after approval closes only the originating detail, without a delayed
+// animation callback that could hide another task opened in the meantime.
+export function closeApprovedTaskHistory(taskId) {
+    const modal = document.getElementById('taskHistoryModal');
+    if (!modal || isAnimating || modal.classList.contains('hidden') || state.lastInteractedTaskId !== taskId) return;
+    const content = modal.querySelector('.orb-glass-unified');
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+    if (activeOriginEl) activeOriginEl.style.opacity = '1';
+    activeOriginEl = null;
+    activeOriginRect = null;
+    isAnimating = false;
+    state.returnToNotifications = false;
+    if (content) {
+        content.style.transform = '';
+        content.style.opacity = '';
+        content.style.borderRadius = '';
+        content.classList.remove('animating-morph');
+    }
+    const main = document.getElementById('main-content');
+    const task = [...(main?.querySelectorAll('[data-task-id]') || [])].find(el =>
+        el.dataset.taskId === taskId && !el.closest('.hidden, [hidden], [inert]') && el.getClientRects().length);
+    const detailControl = [...(task?.querySelectorAll('.fidelity-task-open:not([disabled]), .info-btn:not([disabled])') || [])]
+        .find(el => !el.closest('.hidden, [hidden], [inert], details:not([open])') && el.getClientRects().length);
+    const target = detailControl || task || main;
+    if (target) {
+        if (!target.hasAttribute('tabindex') && !target.matches('button, a[href], input, select, textarea')) target.tabIndex = -1;
+        target.focus({ preventScroll: true });
+    }
+}
 
 export function closeTaskHistory(taskId) {
     const modal = document.getElementById('taskHistoryModal');
@@ -2298,6 +2338,10 @@ export function setupSortOrbEvents() {
 
 // --- MODAL DE ATUALIZAÇÃO DE PROGRESSO ---
 export function openProgressUpdateModal(task) {
+    if (task.status === 'homologation') {
+        showToast('O progresso fica preservado durante a homologação. Use uma decisão de homologação.', 'info');
+        return;
+    }
     // Evita abrir vários
     if (document.getElementById('progressUpdateModal')) return;
 

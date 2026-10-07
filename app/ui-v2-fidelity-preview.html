@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="css/task-space-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/collaboration-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/archive-v2.css?v=tc455-fidelity-preview-4">
-    <link rel="stylesheet" href="css/people-v2.css?v=tc455-fidelity-preview-4">
+    <link rel="stylesheet" href="css/people-v2.css?v=tc459-ai-agent-2">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -53,12 +53,14 @@
     <link rel="stylesheet" href="css/fidelity-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/fidelity-secondary-v2.css?v=tc455-fidelity-preview-4">
     <link rel="stylesheet" href="css/task-fidelity-v2.css?v=tc455-fidelity-preview-4">
+    <link rel="stylesheet" href="css/cube-feedback.css?v=tc461-1">
+    <link rel="stylesheet" href="css/approval-success.css?v=tc461-success-1">
 </head>
 <body class="sb-scope sb-app sb-fidelity-v2 antialiased font-sans" data-ui-release="tc455-fidelity-preview-4">
     <div id="loader-container" role="status" aria-live="polite">
-      <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
+      <picture class="sb-cube sb-cube--startup" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture>
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
-      <span class="sb-spinner" aria-hidden="true"></span>
+
     </div>
   <div id="app" inert>
     <a class="sb-button sb-shell-skip" href="#main-content">Pular para o conteúdo</a>
@@ -107,7 +109,7 @@
         <div class="fidelity-controls">
           <div class="sb-list-search sb-field"><label class="fidelity-sr-only" for="search-input">Buscar tarefas</label><i data-lucide="search" aria-hidden="true"></i><input type="search" id="search-input" class="sb-input" placeholder="Buscar por título ou ID" autocomplete="off"></div>
           <label class="fidelity-sr-only" for="fidelity-project-filter">Projeto</label><select id="fidelity-project-filter" aria-label="Filtrar por projeto"><option value="all">Todos os projetos</option></select>
-          <label class="fidelity-sr-only" for="fidelity-responsible-filter">Responsável</label><select id="fidelity-responsible-filter" aria-label="Filtrar por responsável"><option value="all">Todos os responsáveis</option></select>
+          <label class="fidelity-sr-only" for="fidelity-responsible-filter">Usuário</label><select id="fidelity-responsible-filter" aria-label="Filtrar por usuário responsável ou homologador"><option value="all">Todos os usuários</option></select>
           <label class="fidelity-sr-only" for="fidelity-priority-filter">Prioridade</label><select id="fidelity-priority-filter" aria-label="Filtrar por prioridade"><option value="all">Todas as prioridades</option></select>
           <label class="fidelity-sr-only" for="fidelity-status-filter">Estado</label><select id="fidelity-status-filter" aria-label="Filtrar por estado"><option value="all">Todos os estados</option><option value="todo">Fila</option><option value="stopped">Parado</option><option value="inprogress">Andamento</option><option value="homologation">Homologação</option><option value="publication">Publicação</option></select>
           <button id="clear-task-filters" type="button" disabled>Limpar</button>
@@ -116,7 +118,7 @@
         <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button sb-filter-selection" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Escolher projeto e responsável" aria-describedby="selected-project-label selected-responsible-label task-filter-count">
           <i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i>
           <span><span class="sb-filter-selection-label">Projeto</span><span id="selected-project-label">Todos</span></span>
-          <span><span class="sb-filter-selection-label">Responsável</span><span id="selected-responsible-label">Todos</span></span>
+          <span><span class="sb-filter-selection-label">Usuário</span><span id="selected-responsible-label">Todos</span></span>
           <i data-lucide="chevron-down" class="sb-shell-icon" aria-hidden="true"></i>
         </button>
         <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
@@ -406,6 +408,7 @@
 <p>Sem prazo informado</p></section><section id="fidelity-no-validator" class="sb-fidelity-rail-field"><h3>Homologador</h3>
 <p>Não informado</p></section><section class="sb-fidelity-rail-field"><button type="button" id="fidelity-detail-progress" class="sb-fidelity-detail-progress" aria-label="Atualizar progresso"><span>Progresso informado</span><strong id="fidelity-detail-progress-value">Não informado</strong><span class="sb-fidelity-detail-progress-track" aria-hidden="true"><span id="fidelity-detail-progress-fill"></span></span></button><p class="sb-task-help">100% não substitui homologação e publicação.</p></section><div class="sb-task-detail-actions sb-fidelity-rail-actions">
 <button type="button" id="modal-reject-btn" aria-label="Reprovar e devolver para Andamento" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Reprovar e devolver para Andamento"><i data-lucide="rotate-ccw" class="w-4 h-4" aria-hidden="true"></i><span>Reprovar</span></button>
+<button type="button" id="modal-forward-btn" aria-label="Encaminhar para novo responsável na Fila" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Encaminhar para novo responsável na Fila"><i data-lucide="forward" class="w-4 h-4" aria-hidden="true"></i><span>Encaminhar</span></button>
 <button id="modal-approve-btn" aria-label="Aprovar e enviar para Publicação" class="hidden items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow-sm transition-transform active:scale-95 mr-2" title="Aprovar e Enviar para Publicação">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Aprovar</span>
@@ -568,7 +571,7 @@
                 <div><h2 id="notifications-title">Notificações</h2><p>Selecione uma notificação para abrir a tarefa.</p></div>
                 <button type="button" id="closeNotificationsBtn" class="sb-people-close" aria-label="Fechar notificações"><i data-lucide="x" aria-hidden="true"></i></button>
             </header>
-            <div id="modal-notifications-list" class="sb-notifications-list custom-scrollbar"><p class="sb-notifications-loading" role="status">Carregando notificações…</p></div>
+            <div id="modal-notifications-list" class="sb-notifications-list custom-scrollbar"><p class="sb-notifications-loading" role="status"><picture class="sb-cube sb-cube--inline" aria-hidden="true"><source media="(prefers-reduced-motion: no-preference)" srcset="assets/cube-assembly-128.gif"><img src="assets/cube-static-512.png" alt="" width="128" height="128"></picture>Carregando notificações…</p></div>
         </div>
     </div>
 

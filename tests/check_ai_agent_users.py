@@ -8,6 +8,11 @@ for p,sha in m['blobs'].items():
  raw=(ROOT/p).read_bytes()
  if p in m['changes']:assert hashlib.sha256(raw).hexdigest()==m['changes'][p],p
  else:assert hashlib.sha1(f'blob {len(raw)}\0'.encode()+raw).hexdigest()==sha,p
+css=(ROOT/'app/css/people-v2.css').read_text()
+assert '.sb-app #userFormModal { top: var(--sb-header-height, 66px); }' in css
+assert 'max-height: calc(100dvh - var(--sb-header-height, 66px) - 32px)' in css
+for entry in ['app/index.html','app/ui-v2-fidelity-preview.html']:
+ assert 'css/people-v2.css?v=tc459-ai-agent-2' in (ROOT/entry).read_text()
 for p in (ROOT/'app/js').glob('*.js'):run(['node','--input-type=module','--check'],input=p.read_bytes())
 for p in (ROOT/'api').rglob('*.js'):run(['node','--check',str(p)])
 for name in ['ai_agent_users','people_v2','comment_mentions','profile_claims_recovery','startup_v2','task_fidelity_flows']:
