@@ -1,0 +1,198 @@
+/* TC-449 / UI-V2-06. Presentation only; loaded after detail-compat-v2.css.
+   Do not target stored rich HTML, feed contents, project-color backgrounds or state logic. */
+.sb-app .sb-task-dialog { padding: 16px; background: rgb(17 24 39 / 60%); }
+.sb-app .sb-task-dialog .sb-task-panel {
+  width: 100%; max-width: 1240px; height: min(90vh, 940px); height: min(90dvh, 940px);
+  min-height: 0; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-panel);
+  color: var(--sb-text); background: var(--sb-surface); box-shadow: 0 24px 80px rgb(17 24 39 / 28%);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.sb-app .sb-task-label { display: flex; align-items: center; gap: 8px; color: var(--sb-text); font-size: 14px; font-weight: 700; line-height: 1.5; margin: 0 0 8px; }
+.sb-app .sb-task-label > i, .sb-app .sb-task-label > svg { width: 16px; height: 16px; color: var(--sb-muted); }
+.sb-app .sb-task-required { color: var(--sb-muted); font-size: 12px; font-weight: 400; }
+.sb-app .sb-task-help { margin: 8px 0 0; color: var(--sb-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.sb-app .sb-task-heading { min-width: 0; max-width: none; }
+.sb-app .sb-task-heading > .flex { flex-wrap: wrap; }
+.sb-app .sb-task-dialog .task-id-badge { background: var(--sb-canvas); color: var(--sb-muted); border: 1px solid var(--sb-border); opacity: 1; font-family: var(--sb-font); font-size: 12px; border-radius: var(--sb-radius-control); }
+.sb-app #modalTitle { color: var(--sb-action); background: var(--sb-inprogress-bg); opacity: 1; font-size: 12px; letter-spacing: .04em; border-radius: var(--sb-radius-control); }
+.sb-app .sb-task-form-header { padding: 24px; gap: 24px; border-bottom: 1px solid var(--sb-border); max-height: 40%; overflow-y: auto; }
+.sb-app .sb-task-title-field { margin-top: 16px; }
+.sb-app #taskTitle { display: block; color: var(--sb-text); font-size: clamp(22px, 2.4vw, 32px); line-height: 1.35; min-height: 44px; max-height: 144px; overflow-y: auto; padding: 8px 10px; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); background: var(--sb-surface); }
+.sb-app #openAiModalBtn { position: static; display: inline-flex; align-items: center; gap: 8px; opacity: 1; transform: none; min-height: 36px; margin-top: 8px; padding: 6px 8px; color: var(--sb-action); background: var(--sb-inprogress-bg); border-radius: var(--sb-radius-control); font-size: 12px; font-weight: 700; }
+.sb-app #openAiModalBtn > i, .sb-app #openAiModalBtn > svg { width: 16px; height: 16px; }
+.sb-app .sb-task-reference { align-self: stretch; width: 260px; flex: 0 0 260px; align-items: flex-end; }
+.sb-app .sb-task-reference > div { width: 100%; }
+.sb-app .sb-task-reference-icon { top: 30px; bottom: auto; height: 44px; }
+.sb-app .sb-task-form-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; flex: 1 1 auto; min-height: 0; }
+.sb-app .sb-task-form-main { min-width: 0; padding: 24px; }
+.sb-app .sb-task-description-field { min-height: 210px; margin-bottom: 24px; }
+.sb-app .sb-task-description-surface { display: flex; padding: 0; border: 0; background: none; }
+.sb-app #taskDescription { min-height: 176px; padding: 12px; resize: vertical; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); background: var(--sb-surface); color: var(--sb-text); font-size: 16px; }
+.sb-app .sb-task-attachments-section { border-color: var(--sb-border); padding-top: 20px; margin-bottom: 0; }
+.sb-app .sb-task-attachments-section h3 { opacity: 1; color: var(--sb-muted); font-size: 12px; }
+.sb-app .sb-task-form-sidebar { width: auto; min-width: 0; min-height: 0; background: var(--sb-canvas); border-left: 1px solid var(--sb-border); }
+.sb-app .sb-task-form-fields { padding: 24px; }
+.sb-app .sb-task-form-fields .relative { min-width: 0; }
+.sb-app .sb-task-form-fields > div + div { margin-top: 20px !important; }
+.sb-app #taskForm :is(#taskAzureLink, #taskProject, #taskPriority, #taskStatus, #taskDueDate),
+.sb-app #aiTitleModal :is(#ai-instruction, #ai-result-text),
+.sb-app #progressUpdateModal :is(#progressInput, #missingInput),
+.sb-app #homologadorSelect {
+  width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--sb-border-strong);
+  border-radius: var(--sb-radius-control); padding: 10px 12px; color: var(--sb-text);
+  background: var(--sb-surface); font-size: 14px; line-height: 1.5;
+}
+.sb-app #taskForm #taskAzureLink { padding-left: 36px; }
+.sb-app #taskForm :is(#taskTitle, #taskDescription, #taskAzureLink, #taskProject, #taskResponsible)::placeholder,
+.sb-app #aiTitleModal #ai-instruction::placeholder, .sb-app #progressUpdateModal #missingInput::placeholder { color: var(--sb-muted); opacity: 1; }
+.sb-app #taskForm :is(input, select, textarea):disabled,
+.sb-app #aiTitleModal textarea:disabled, .sb-app #progressUpdateModal :is(input, textarea):disabled { background: var(--sb-canvas); color: var(--sb-muted); cursor: not-allowed; border-style: dashed; }
+.sb-app #taskForm :is(input, textarea):user-invalid,
+.sb-app #taskForm [aria-invalid='true'],
+.sb-app #progressUpdateModal #missingInput.border-red-500 { border: 2px solid var(--sb-error-border); }
+.sb-app #responsible-input-container { min-height: 44px; background: var(--sb-surface); border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); gap: 6px; padding: 8px; }
+.sb-app #taskResponsible { min-width: 96px; max-width: 100%; min-height: 32px; color: var(--sb-text); font-size: 14px; }
+.sb-app #responsible-input-container > div { min-width: 0; max-width: 100%; background: var(--sb-canvas); border-color: var(--sb-border); color: var(--sb-text); border-radius: var(--sb-radius-control); box-shadow: none; }
+.sb-app #responsible-input-container > div > span { overflow-wrap: anywhere; }
+.sb-app #responsible-input-container > div > button { min-width: 28px; min-height: 28px; color: var(--sb-error-text); flex-shrink: 0; }
+.dark .sb-app #responsible-input-container > div > button { color: #FFB6AD; }
+.sb-app #responsible-suggestions, .sb-app #project-suggestions, .sb-app #color-palette { background: var(--sb-surface); color: var(--sb-text); border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); box-shadow: 0 8px 24px rgb(17 24 39 / 18%); backdrop-filter: none; }
+.sb-app #responsible-suggestions > div, .sb-app #project-suggestions > div { color: var(--sb-text); min-height: 44px; overflow-wrap: anywhere; }
+.sb-app #responsible-suggestions > div:hover, .sb-app #project-suggestions > div:hover { background: var(--sb-canvas); }
+.sb-app #project-suggestions > div > span:last-child { flex-shrink: 0; }
+.sb-app #color-picker-button { width: 44px; height: 44px; border: 1px solid var(--sb-border-strong); border-radius: var(--sb-radius-control); }
+.sb-app #color-picker-button > i, .sb-app #color-picker-button > svg { opacity: 1; }
+.sb-app #color-picker-button:disabled { cursor: not-allowed; border-style: dashed; }
+.sb-app #color-palette { right: 0; max-width: calc(100vw - 64px); }
+.sb-app #color-palette #hex-display { color: var(--sb-muted); }
+.sb-app #palette-grid { gap: 8px; }
+.sb-app #palette-grid > button { width: 32px; height: 32px; }
+.sb-app #no-due-date-checkbox { width: 18px; height: 18px; accent-color: var(--sb-action); }
+.sb-app #no-due-date-checkbox + label { color: var(--sb-text); font-size: 12px; }
+.sb-app .sb-task-form-footer { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--sb-border); border-bottom: 0; background: var(--sb-surface); margin-top: 0; }
+.sb-app .sb-task-form-footer .sb-task-help { flex: 1 1 280px; margin: 0; max-width: 640px; margin-right: auto; }
+.sb-app .sb-task-form-footer > button { width: auto; min-height: 44px; padding: 10px 20px; border-radius: var(--sb-radius-control); box-shadow: none; transform: none; }
+.sb-app .sb-task-form-footer > button[type='submit'],
+.sb-app #modal-approve-btn, .sb-app #generateAiBtn, .sb-app #applyAiBtn, .sb-app #saveProgressBtn { color: #FFFFFF; background: var(--sb-action); border: 1px solid var(--sb-action); box-shadow: none; }
+.sb-app .sb-task-form-footer > button[type='submit']:hover,
+.sb-app #modal-approve-btn:hover, .sb-app #generateAiBtn:hover, .sb-app #applyAiBtn:hover, .sb-app #saveProgressBtn:hover { background: var(--sb-action-hover); }
+.sb-app #cancelBtn, .sb-app #cancelAiBtn, .sb-app #cancelProgressBtn { color: var(--sb-text); background: var(--sb-surface); border: 1px solid var(--sb-border-strong); box-shadow: none; }
+.sb-app #cancelBtn:hover, .sb-app #cancelAiBtn:hover, .sb-app #cancelProgressBtn:hover { background: var(--sb-canvas); }
+.sb-app .sb-task-dialog button:disabled { cursor: not-allowed; opacity: .65; box-shadow: none; }
+.sb-app .sb-task-dialog button:disabled:hover { transform: none; }
+.sb-app .sb-task-dialog :focus-visible { outline: 3px solid var(--sb-focus); outline-offset: 2px; }
+
+/* Detail shell and context only. Comment/editor/history content belongs to TC-450. */
+.sb-app .sb-task-detail-header { padding: 24px; gap: 20px; border-bottom: 1px solid var(--sb-border); }
+.sb-app .sb-task-detail-header .sb-task-heading { flex: 1 1 auto; max-height: 26dvh; overflow-y: auto; }
+.sb-app #modal-info-title { font-size: clamp(22px, 2.4vw, 32px); line-height: 1.35; overflow-wrap: anywhere; margin-top: 12px; }
+.sb-app #modal-info-project { max-width: 100%; white-space: normal; overflow-wrap: anywhere; font-size: 12px; letter-spacing: 0; text-transform: none; border-radius: var(--sb-radius-control); }
+.sb-app .sb-task-detail-actions { flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; align-items: center; max-width: 400px; gap: 8px; }
+.sb-app .sb-task-detail-actions > button, .sb-app .sb-task-detail-actions > a, .sb-app #modal-info-azure-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px;
+  padding: 10px; margin: 0; opacity: 1; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-control);
+  background: var(--sb-surface); color: var(--sb-action); font-size: 12px; line-height: 1.4; text-decoration: none;
+}
+.sb-app .sb-task-detail-actions svg, .sb-app .sb-task-detail-actions i { width: 18px; height: 18px; flex-shrink: 0; }
+.sb-app #modal-info-azure-link-container { margin: 0; }
+.sb-app .sb-task-detail-actions > button:hover, .sb-app .sb-task-detail-actions > a:hover, .sb-app #modal-info-azure-link:hover { background: var(--sb-canvas); }
+.sb-app .sb-task-detail-actions #modal-approve-btn { background: var(--sb-action); color: #FFFFFF; border-color: var(--sb-action); }
+.sb-app .sb-task-detail-actions #modal-approve-btn:hover { background: var(--sb-action-hover); }
+.sb-app #modal-approve-btn > span.hidden { display: inline !important; }
+.sb-app .sb-task-detail-actions #closeHistoryBtn { color: var(--sb-muted); }
+.dark .sb-app .sb-task-detail-actions > button:not(#modal-approve-btn),
+.dark .sb-app .sb-task-detail-actions > a,
+.dark .sb-app #modal-info-azure-link { color: var(--sb-focus); }
+.sb-app .sb-task-detail-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 40%); min-height: 0; flex: 1 1 auto; }
+.sb-app .sb-task-detail-main { min-width: 0; padding: 24px; }
+.sb-app .sb-task-detail-main > .flex-grow > .mb-8 > h3, .sb-app .sb-task-detail-context h3 { font-size: 12px !important; color: var(--sb-muted); opacity: 1; letter-spacing: .04em; }
+.sb-app .sb-task-detail-description { padding: 16px; background: var(--sb-canvas); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); }
+.sb-app #modal-info-description { margin: 0 !important; color: var(--sb-text); font-size: 16px; line-height: 1.7; opacity: 1; overflow-wrap: anywhere; }
+.sb-app .sb-task-detail-sidebar { width: auto; min-width: 0; min-height: 0; border-left: 1px solid var(--sb-border); }
+.sb-app .sb-task-detail-context { padding: 20px 24px; gap: 20px; border-color: var(--sb-border); background: var(--sb-canvas); max-height: 35%; overflow-y: auto; }
+.sb-app #sidebar-responsibles-container { flex-wrap: wrap; }
+.sb-app #sidebar-responsibles-container > div { flex-shrink: 0; }
+.sb-app #sidebar-responsibles-container .sb-task-person { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; color: var(--sb-text); font-size: 12px; line-height: 1.5; }
+.sb-app #sidebar-responsibles-container .sb-task-person > div { flex-shrink: 0; }
+.sb-app #sidebar-responsibles-container .sb-task-person > span { overflow-wrap: anywhere; }
+.sb-app #modal-info-homologador, .sb-app #modal-info-homologador > div { min-width: 0; max-width: 100%; }
+.sb-app #modal-info-homologador > div { overflow-wrap: anywhere; }
+.sb-app #modal-info-dueDate { white-space: normal; overflow-wrap: anywhere; }
+
+/* The homologator selector keeps the existing decision and callback. */
+.sb-app #homologadorModal .sb-task-context-panel { padding: 24px; width: 100%; max-width: 460px; max-height: calc(100dvh - 32px); overflow-y: auto; margin: 0; background: var(--sb-surface); color: var(--sb-text); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-panel); backdrop-filter: none; }
+.sb-app #homologadorTitle { color: var(--sb-text); font-size: 22px; line-height: 1.4; }
+.sb-app #homologadorModal .sb-task-context-panel > p { color: var(--sb-muted); }
+.sb-app #homologadorModal .sb-task-context-panel > div:first-child { background: var(--sb-inprogress-bg); border-color: var(--sb-action); color: var(--sb-action); box-shadow: none; }
+.sb-app #homologadorModal .sb-task-context-panel > div:first-child svg, .sb-app #homologadorModal .sb-task-context-panel > div:first-child i { color: var(--sb-action); }
+.sb-app #homologadorModal .sb-task-label { text-align: left; }
+.sb-app #homologadorSelect { appearance: auto; padding-right: 28px; }
+.sb-app #homologadorSelect + div { display: none; }
+.sb-app #cancelHomologadorBtn { background: var(--sb-surface); color: var(--sb-text); border: 1px solid var(--sb-border-strong); }
+.sb-app #cancelHomologadorBtn, .sb-app #confirmHomologadorBtn { min-height: 44px; border-radius: var(--sb-radius-control); }
+
+/* Title suggestion and progress remain explicit review/save steps. */
+.sb-app .sb-task-assist-panel, .sb-app #progressModalContent { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; width: 100%; max-width: 520px; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-panel); color: var(--sb-text); background: var(--sb-surface); box-shadow: 0 24px 80px rgb(17 24 39 / 28%); backdrop-filter: none; }
+.sb-app .sb-task-assist-header { background: var(--sb-ink); color: #FFFFFF; padding: 20px 24px; }
+.sb-app .sb-task-assist-header h2 { font-size: 18px; }
+.sb-app #closeAiModalBtn { min-width: 44px; min-height: 44px; color: #FFFFFF; }
+.sb-app .sb-task-assist-body { padding: 24px; }
+.sb-app .sb-task-assist-body label { color: var(--sb-text); font-size: 14px; opacity: 1; }
+.sb-app #ai-original-title { color: var(--sb-muted); background: var(--sb-canvas); border-color: var(--sb-border-strong); overflow-wrap: anywhere; }
+.sb-app #ai-result-text { min-height: 110px; }
+.sb-app .ai-suggestion-chip { color: var(--sb-action); background: var(--sb-inprogress-bg); border: 1px solid var(--sb-action); min-height: 36px; border-radius: var(--sb-radius-control); }
+.sb-app .sb-task-assist-footer { padding: 16px 24px; border-top: 1px solid var(--sb-border); background: var(--sb-canvas); flex-wrap: wrap; }
+.sb-app .sb-task-assist-footer button, .sb-app #progressModalContent button { min-height: 44px; border-radius: var(--sb-radius-control); }
+.sb-app #progressModalContent { padding: 24px; }
+.sb-app #progress-modal-heading { margin-bottom: 8px; color: var(--sb-text); }
+.sb-app #progress-modal-help { margin: 0 0 24px; text-align: left; }
+.sb-app #missingTextContainer { opacity: 1 !important; }
+.sb-app #progressUpdateModal #missingInput { min-height: 96px; resize: vertical; }
+.sb-app #progressUpdateModal #progressInput { font-size: 22px; }
+
+@media (max-width: 1023px) {
+  .sb-app .sb-task-detail-header { flex-direction: column; gap: 16px; }
+  .sb-app .sb-task-detail-header .sb-task-heading { width: 100%; max-height: 20dvh; }
+  .sb-app .sb-task-detail-actions { width: 100%; max-width: none; justify-content: flex-start; }
+  .sb-app .sb-task-detail-actions #closeHistoryBtn { margin-left: auto; }
+  .sb-app .sb-task-detail-body { grid-template-columns: minmax(0, 1fr) minmax(300px, 42%); }
+}
+@media (max-width: 767px) {
+  .sb-app .sb-task-dialog { padding: 8px; }
+  .sb-app .sb-task-dialog .sb-task-panel { height: calc(100vh - 16px); height: calc(100dvh - 16px); }
+  .sb-app .sb-task-form-header { padding: 16px; gap: 16px; flex-direction: column; max-height: 40%; }
+  .sb-app .sb-task-reference { width: 100%; flex: 0 0 auto; }
+  .sb-app .sb-task-form-body { display: block; overflow-y: auto; }
+  .sb-app .sb-task-form-main { padding: 16px; overflow: visible; }
+  .sb-app .sb-task-description-field { min-height: 190px; }
+  .sb-app .sb-task-form-sidebar { border-left: 0; border-top: 1px solid var(--sb-border); }
+  .sb-app .sb-task-form-fields { padding: 20px 16px; overflow: visible; }
+  .sb-app .sb-task-form-footer { padding: 12px 16px; gap: 8px; }
+  .sb-app .sb-task-form-footer .sb-task-help { flex-basis: 100%; font-size: 12px; }
+  .sb-app .sb-task-form-footer > button { flex: 1 1 auto; padding: 10px 12px; }
+  .sb-app .sb-task-detail-header { padding: 16px; gap: 12px; }
+  .sb-app .sb-task-detail-actions { gap: 6px; }
+  .sb-app .sb-task-detail-actions > button, .sb-app .sb-task-detail-actions > a, .sb-app #modal-info-azure-link { padding: 8px; gap: 6px; }
+  .sb-app .sb-task-detail-body { display: block; overflow-y: auto; }
+  .sb-app .sb-task-detail-main { padding: 16px; overflow: visible; }
+  .sb-app .sb-task-detail-sidebar { border-left: 0; border-top: 1px solid var(--sb-border); }
+  .sb-app .sb-task-detail-context { padding: 20px 16px; max-height: none; overflow: visible; }
+  .sb-app .sb-task-detail-comments { min-height: 320px; }
+  .sb-app .sb-task-detail-comments > #comments-feed { flex: 0 0 auto; max-height: none; overflow: visible; }
+  .sb-app .sb-task-assist-header, .sb-app .sb-task-assist-body, .sb-app #progressModalContent { padding: 20px; }
+  .sb-app .sb-task-assist-footer { padding: 16px 20px; }
+}
+@media (max-height: 540px) {
+  .sb-app .sb-task-dialog { padding: 8px; }
+  .sb-app .sb-task-dialog .sb-task-panel { height: calc(100dvh - 16px); }
+  .sb-app .sb-task-form-header { max-height: 30%; }
+  .sb-app .sb-task-form-footer .sb-task-help { display: none; }
+  .sb-app .sb-task-detail-header { padding: 12px 16px; gap: 8px; }
+  .sb-app .sb-task-detail-header .sb-task-heading { max-height: 16dvh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-app .sb-task-dialog, .sb-app .sb-task-dialog .orb-glass-unified { transition: none !important; animation: none !important; }
+}
+
+/* Supplied validation state is always readable metadata, including inherited small spans. */
+.sb-app #modal-info-homologador .sb-task-validation-status { font-size: 12px; line-height: 1.5; color: var(--sb-text); opacity: 1; }

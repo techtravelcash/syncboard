@@ -1246,9 +1246,10 @@ export function renderTaskHistory(taskId, fromNotification = false) {
         sidebarRespContainer.innerHTML = ''; 
         if (task.responsible && task.responsible.length > 0) {
             task.responsible.forEach((resp, index) => {
-                const name = typeof resp === 'object' ? resp.name : resp;
+                const name = typeof resp === 'object' ? resp?.name : resp;
+                const displayName = String(name || (typeof resp === 'object' ? resp?.email : '') || 'Nome não informado');
                 const userObj = state.users.find(u => u.name === name);
-                const pic = userObj ? userObj.picture : (typeof resp === 'object' ? resp.picture : null);
+                const pic = userObj ? userObj.picture : (typeof resp === 'object' ? resp?.picture : null);
                 const isMain = index === 0;
                 const sizeClass = isMain ? 'w-10 h-10 ring-2 ring-white/20' : 'w-8 h-8 opacity-80 hover:opacity-100';
                 const zIndex = 10 - index;
@@ -1256,15 +1257,22 @@ export function renderTaskHistory(taskId, fromNotification = false) {
                 const avatarEl = document.createElement('div');
                 avatarEl.className = `${sizeClass} rounded-full bg-cover bg-center bg-gray-700 border border-white/10 shadow-lg transition-all hover:scale-105 hover:ring-white/50 relative group cursor-help`;
                 avatarEl.style.zIndex = zIndex;
-                avatarEl.title = isMain ? `Responsável Principal: ${name}` : name;
+                avatarEl.title = isMain ? `Responsável Principal: ${displayName}` : displayName;
 
                 if (pic) {
                     avatarEl.style.backgroundImage = `url('${pic}')`;
                 } else {
                     avatarEl.classList.add('flex', 'items-center', 'justify-center');
-                    avatarEl.innerHTML = `<span class="${isMain ? 'text-lg' : 'text-xs'} font-bold text-white">${name.charAt(0)}</span>`;
+                    avatarEl.innerHTML = `<span class="${isMain ? 'text-lg' : 'text-xs'} font-bold text-white">${escapeHomeText(displayName.charAt(0))}</span>`;
                 }
-                sidebarRespContainer.appendChild(avatarEl);
+                // Show the same supplied name on touch screens, without relying on hover.
+                const person = document.createElement('span');
+                person.className = 'sb-task-person';
+                const personName = document.createElement('span');
+                personName.textContent = isMain ? `${displayName} · Principal` : displayName;
+                avatarEl.setAttribute('aria-hidden', 'true');
+                person.append(avatarEl, personName);
+                sidebarRespContainer.appendChild(person);
             });
         } else {
             sidebarRespContainer.innerHTML = `
@@ -1282,7 +1290,7 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     
     if (homologadorContainer && homologadorContent) {
         if (task.homologador && (task.status === 'homologation' || task.status === 'publication')) {
-            const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+            const homolName = String((typeof task.homologador === 'object' ? (task.homologador.name || task.homologador.email) : task.homologador) || 'Nome não informado');
             const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
             const isApproved = task.status === 'publication';
             
@@ -1293,14 +1301,14 @@ export function renderTaskHistory(taskId, fromNotification = false) {
 
             const avatarImg = homolPic 
                 ? `<img src="${homolPic}" class="w-8 h-8 rounded-full object-cover border-2 ${borderColor}">` 
-                : `<div class="w-8 h-8 rounded-full ${bgColor} border-2 ${borderColor} flex items-center justify-center text-xs font-bold">${homolName.charAt(0)}</div>`;
+                : `<div class="w-8 h-8 rounded-full ${bgColor} border-2 ${borderColor} flex items-center justify-center text-xs font-bold">${escapeHomeText(homolName.charAt(0))}</div>`;
 
             homologadorContent.innerHTML = `
-                <div class="flex items-center gap-3 bg-black/10 dark:bg-white/5 pr-4 rounded-full border border-black/5 dark:border-white/10" title="Homologador: ${homolName}">
+                <div class="flex items-center gap-3 bg-black/10 dark:bg-white/5 pr-4 rounded-full border border-black/5 dark:border-white/10" title="Homologador: ${escapeHomeText(homolName)}">
                     ${avatarImg}
                     <div class="flex flex-col py-1">
-                        <span class="text-xs font-bold text-custom-darkest dark:text-white leading-none">${homolName.split(' ')[0]}</span>
-                        <span class="text-[9px] ${statusColor} uppercase font-bold tracking-wider mt-0.5">${statusText}</span>
+                        <span class="text-xs font-bold text-custom-darkest dark:text-white leading-none">${escapeHomeText(homolName)}</span>
+                        <span class="sb-task-validation-status text-[9px] ${statusColor} uppercase font-bold tracking-wider mt-0.5">${statusText}</span>
                     </div>
                 </div>
             `;
@@ -1315,7 +1323,7 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     // Google Calendar
     const calendarBtn = document.getElementById('modal-calendar-btn');
     if (calendarBtn) {
-        const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r.email : '')).filter(Boolean).join(',');
+        const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r?.email : '')).filter(Boolean).join(',');
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
         calendarBtn.href = googleUrl;
     }
@@ -2340,6 +2348,8 @@ export function setupCustomColorPicker() {
         swatch.type = 'button';
         swatch.className = 'w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform border-2 border-transparent focus:outline-none focus:border-gray-400 dark:focus:border-white relative';
         swatch.style.backgroundColor = color;
+        swatch.setAttribute('aria-label', `Cor ${color}`);
+        swatch.title = color;
         swatch.onclick = (e) => {
             e.stopPropagation();
             updateMainButton(color);
@@ -2351,6 +2361,7 @@ export function setupCustomColorPicker() {
     // Botão Arco-íris (Custom)
     const customBtn = document.createElement('button');
     customBtn.type = 'button';
+    customBtn.setAttribute('aria-label', 'Escolher cor personalizada');
     customBtn.className = 'w-8 h-8 rounded-full shadow-sm hover:scale-110 transition-transform overflow-hidden flex items-center justify-center';
     customBtn.style.background = 'conic-gradient(from 180deg at 50% 50%, #FF0000 0deg, #00FFE0 120deg, #0000FF 240deg, #FF0000 360deg)';
     customBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 text-white drop-shadow-md"></i>';
@@ -2435,7 +2446,10 @@ export function openProgressUpdateModal(task) {
 
     const modal = document.createElement('div');
     modal.id = 'progressUpdateModal';
-    modal.className = 'fixed inset-0 bg-custom-darkest/40 dark:bg-black/60 flex items-center justify-center z-[2000] animate-fade-in px-4';
+    modal.className = 'sb-task-dialog fixed inset-0 bg-custom-darkest/40 dark:bg-black/60 flex items-center justify-center z-[2000] animate-fade-in px-4';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-labelledby', 'progress-modal-heading');
+    modal.setAttribute('aria-describedby', 'progress-modal-help');
     
     modal.innerHTML = `
         <div class="orb-glass-unified backdrop-blur-[12px] w-full max-w-sm p-8 text-center relative shadow-2xl border border-white/20 dark:border-white/10 transform scale-95 opacity-0 transition-all duration-300" id="progressModalContent">
@@ -2444,19 +2458,21 @@ export function openProgressUpdateModal(task) {
                 <i data-lucide="bar-chart-horizontal" class="w-8 h-8 text-blue-600 dark:text-blue-400"></i>
             </div>
 
-            <h2 class="text-xl font-extrabold text-custom-darkest dark:text-white mb-6 tracking-tight">Atualizar Progresso</h2>
+            <h2 id="progress-modal-heading" class="text-xl font-extrabold text-custom-darkest dark:text-white mb-6 tracking-tight">Atualizar progresso</h2>
+            <p id="progress-modal-help" class="sb-task-help">100% representa o progresso informado. A aprovação e a publicação são etapas separadas.</p>
             
             <div class="mb-5 text-left relative">
-                <label class="block text-[10px] font-bold uppercase tracking-widest text-custom-dark dark:text-gray-400 mb-2">Porcentagem (%)</label>
+                <label for="progressInput" class="sb-task-label">Porcentagem (%)</label>
                 <input type="number" id="progressInput" min="0" max="100" value="${task.progress || 0}" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3 text-custom-darkest dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-xl font-bold text-center transition-all">
             </div>
             
             <div class="mb-8 text-left transition-opacity duration-300" id="missingTextContainer">
-                <label class="block text-[10px] font-bold uppercase tracking-widest text-custom-dark dark:text-gray-400 mb-2 flex items-center justify-between">
+                <label for="missingInput" class="sb-task-label">
                     <span>O que falta para 100%?</span>
                     <i data-lucide="help-circle" class="w-3 h-3 opacity-50"></i>
                 </label>
-                <textarea id="missingInput" rows="2" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3 text-custom-darkest dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-sm custom-scrollbar placeholder-custom-dark/40 dark:placeholder-white/30 resize-none transition-all" placeholder="Ex: Falta integrar a API de pagamentos...">${task.missingToComplete || ''}</textarea>
+                <textarea id="missingInput" rows="2" aria-describedby="missing-input-help" class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-3 text-custom-darkest dark:text-white focus:ring-2 focus:ring-blue-500/50 outline-none text-sm custom-scrollbar placeholder-custom-dark/40 dark:placeholder-white/30 resize-none transition-all" placeholder="Ex: Falta integrar a API de pagamentos...">${task.missingToComplete || ''}</textarea>
+                <p id="missing-input-help" class="sb-task-help">Informe a pendência quando o progresso for menor que 100%.</p>
             </div>
             
             <div class="grid grid-cols-2 gap-3">
@@ -2489,11 +2505,11 @@ export function openProgressUpdateModal(task) {
         if (parseInt(e.target.value) === 100) {
             missingContainer.style.opacity = '0.3';
             missingInput.disabled = true;
-            missingInput.value = 'Tarefa Concluída!';
+            missingInput.value = 'Progresso informado: 100%';
         } else {
             missingContainer.style.opacity = '1';
             missingInput.disabled = false;
-            if (missingInput.value === 'Tarefa Concluída!') missingInput.value = '';
+            if (missingInput.value === 'Progresso informado: 100%') missingInput.value = '';
         }
     });
 

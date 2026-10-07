@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncBoard NT</title>
-    <meta name="syncboard-ui-release" content="tc448-list-2">
+    <meta name="syncboard-ui-release" content="tc449-task-space-1">
     <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,12 +18,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
-    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc448-list-2">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc449-task-space-1">
     
-    <link rel="stylesheet" href="css/shell-v2.css?v=tc448-list-2">
-    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc448-list-2">
-    <link rel="stylesheet" href="css/home-v2.css?v=tc448-list-2">
-    <link rel="stylesheet" href="css/kanban-v2.css?v=tc448-list-2">
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/home-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/kanban-v2.css?v=tc449-task-space-1">
+    <link rel="stylesheet" href="css/task-space-v2.css?v=tc449-task-space-1">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -45,9 +46,9 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc448-list-2">
+    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc449-task-space-1">
 </head>
-<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc448-list-2">
+<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc449-task-space-1">
     <div id="loader-container" role="status" aria-live="polite">
       <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
@@ -126,60 +127,63 @@
     </main>
   </div>
 
-    <div id="taskModal" class="fixed inset-0 flex items-center justify-center z-[1500] hidden modal-backdrop transition-opacity duration-300">
+    <div id="taskModal" role="dialog" aria-labelledby="modalTitle" aria-describedby="task-draft-notice" class="sb-task-dialog fixed inset-0 flex items-center justify-center z-[1500] hidden modal-backdrop transition-opacity duration-300">
         
-        <div class="orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
-            
-            <form id="taskForm" class="flex flex-col h-full">
-                
-                <div class="flex-shrink-0 px-8 pt-8 pb-6 flex justify-between items-start">
-                    <div class="space-y-4 w-full max-w-4xl">
+        <div class="sb-task-panel orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
+
+            <form id="taskForm" class="sb-task-form flex flex-col h-full">
+
+                <div class="sb-task-form-header flex-shrink-0 px-8 pt-8 pb-6 flex justify-between items-start">
+                    <div class="sb-task-heading space-y-4 w-full max-w-4xl">
                         <div class="flex items-center gap-3">
                             <div class="task-id-badge bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg text-xs font-bold font-mono tracking-wider opacity-60">
-                                CARD
+                                TAREFA
                             </div>
                             <span id="modalTitle" class="px-3 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[10px] font-bold uppercase tracking-widest opacity-60">
                                 Nova Tarefa
                             </span>
                         </div>
                         
-                        <div class="relative group">
-                            <textarea id="taskTitle" required rows="1"
+                        <div class="sb-task-title-field relative group">
+                            <label for="taskTitle" class="sb-task-label">Título <span class="sb-task-required">(obrigatório)</span></label>
+                            <textarea id="taskTitle" aria-describedby="task-draft-notice" required rows="1"
                                 class="w-full bg-transparent border-none p-0 text-3xl md:text-5xl font-extrabold leading-tight tracking-tight text-custom-darkest dark:text-white placeholder-black/20 dark:placeholder-white/20 focus:ring-0 focus:outline-none resize-none overflow-hidden" 
                                 placeholder="Digite o título da tarefa..."
                                 oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
                             
-                            <button type="button" id="openAiModalBtn" class="absolute -right-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-xl hover:bg-purple-500/10 text-purple-500 hover:scale-110" title="Melhorar com IA">
-                                <i data-lucide="sparkles" class="w-6 h-6"></i>
+                            <button type="button" id="openAiModalBtn" aria-label="Melhorar título com IA" class="absolute -right-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-xl hover:bg-purple-500/10 text-purple-500 hover:scale-110" title="Melhorar com IA">
+                                <i data-lucide="sparkles" class="w-6 h-6" aria-hidden="true"></i><span>Melhorar título com IA</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="sb-task-reference flex items-center gap-2">
                          <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <label for="taskAzureLink" class="sb-task-label">Link DevOps / externo</label>
+                            <div class="sb-task-reference-icon absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i data-lucide="link" class="w-4 h-4 text-custom-dark dark:text-white/40 group-focus-within:text-blue-500 transition-colors"></i>
                             </div>
-                            <input type="url" id="taskAzureLink" placeholder="Link DevOps / Externo..." 
+                            <input type="url" id="taskAzureLink" aria-describedby="task-link-help" placeholder="Link DevOps / Externo..."
                                 class="pl-9 pr-4 py-2 bg-black/5 dark:bg-white/5 border border-transparent focus:border-white/20 rounded-xl text-sm text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 transition-all w-64 hover:bg-black/10 dark:hover:bg-white/10">
+                            <p id="task-link-help" class="sb-task-help">Referência externa opcional.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex-grow flex flex-col md:flex-row min-h-0">
+                <div class="sb-task-form-body flex-grow flex flex-col md:flex-row min-h-0">
                     
-                    <div class="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-8">
+                    <div class="sb-task-form-main flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-8">
                         
-                        <div class="mb-8 flex-grow flex flex-col">
-                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 ml-1">Descrição</h3>
-                            <div class="flex-grow rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-6 py-5 focus-within:bg-black/5 dark:focus-within:bg-white/5 transition-colors relative">
+                        <div class="sb-task-description-field mb-8 flex-grow flex flex-col">
+                            <label for="taskDescription" class="sb-task-label">Descrição <span class="sb-task-required">(obrigatória)</span></label>
+                            <div class="sb-task-description-surface flex-grow rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-6 py-5 focus-within:bg-black/5 dark:focus-within:bg-white/5 transition-colors relative">
                                 <textarea id="taskDescription" required
                                     class="w-full h-full bg-transparent border-none resize-none text-base font-medium text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 leading-relaxed custom-scrollbar focus:outline-none"
                                     placeholder="Descreva os detalhes e requisitos da tarefa..."></textarea>
                             </div>
                         </div>
 
-                        <div class="pt-6 border-t border-black/5 dark:border-white/5 mb-8 flex-shrink-0">
+                        <div class="sb-task-attachments-section pt-6 border-t border-black/5 dark:border-white/5 mb-8 flex-shrink-0">
                              <div class="flex items-center justify-between mb-4">
                                 <h3 class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 select-none">
                                     <i data-lucide="paperclip" class="w-4 h-4"></i> Anexos
@@ -198,26 +202,23 @@
                         </div>
                     </div>
 
-                    <div class="w-full md:w-[420px] flex flex-col glass-separator-v bg-black/[0.015] dark:bg-white/[0.015]">
+                    <div class="sb-task-form-sidebar w-full md:w-[420px] flex flex-col glass-separator-v bg-black/[0.015] dark:bg-white/[0.015]">
                         
-                        <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-grow">
+                        <div class="sb-task-form-fields p-8 space-y-8 overflow-y-auto custom-scrollbar flex-grow">
                             
                             <div>
-                                <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
-                                    <i data-lucide="users" class="w-3 h-3"></i> Responsáveis
-                                </h3>
+                                <label for="taskResponsible" class="sb-task-label"><i data-lucide="users" class="w-3 h-3"></i> Responsáveis</label>
                                 <div class="relative">
                                     <div id="responsible-input-container" class="flex flex-wrap gap-2 p-2 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 min-h-[46px] items-center focus-within:border-white/20 transition-colors">
-                                        <input type="text" id="taskResponsible" class="flex-grow bg-transparent border-none text-sm text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 focus:outline-none min-w-[80px] px-2" placeholder="Adicionar..." autocomplete="off">
+                                        <input type="text" id="taskResponsible" aria-describedby="task-responsible-help" class="flex-grow bg-transparent border-none text-sm text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 focus:outline-none min-w-[80px] px-2" placeholder="Adicionar..." autocomplete="off">
                                     </div>
+                                    <p id="task-responsible-help" class="sb-task-help">Adicione uma ou mais pessoas. A primeira é a responsável principal.</p>
                                     <div id="responsible-suggestions" class="absolute z-20 w-full bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar backdrop-blur-xl"></div>
                                 </div>
                             </div>
 
                             <div id="status-container" class="hidden">
-                                <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
-                                    <i data-lucide="activity" class="w-3 h-3"></i> Status
-                                </h3>
+                                <label for="taskStatus" class="sb-task-label"><i data-lucide="activity" class="w-3 h-3"></i> Status</label>
                                  <select id="taskStatus" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 cursor-pointer outline-none">
                                     <option value="todo">Fila</option>
                                     <option value="stopped">Parado</option>
@@ -229,20 +230,18 @@
                             </div>
 
                             <div>
-                                <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
-                                    <i data-lucide="folder" class="w-3 h-3"></i> Projeto
-                                </h3>
+                                <label for="taskProject" class="sb-task-label"><i data-lucide="folder" class="w-3 h-3"></i> Projeto</label>
                                 <div class="flex gap-2">
                                     <div class="relative flex-grow">
                                         <input type="text" id="taskProject" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 placeholder-black/30 dark:placeholder-white/20 outline-none" placeholder="Nome do projeto..." autocomplete="off">
                                         <div id="project-suggestions" class="absolute z-10 w-full bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar backdrop-blur-xl"></div>
                                     </div>
                                     <div class="relative flex-shrink-0">
-                                        <button type="button" id="color-picker-button" class="w-11 h-11 rounded-xl border border-black/5 dark:border-white/5 shadow-sm hover:scale-105 transition-all duration-300 flex items-center justify-center overflow-hidden relative group">
+                                        <button type="button" id="color-picker-button" aria-label="Escolher cor do projeto" class="w-11 h-11 rounded-xl border border-black/5 dark:border-white/5 shadow-sm hover:scale-105 transition-all duration-300 flex items-center justify-center overflow-hidden relative group">
                                             <div id="current-color-bg" class="absolute inset-0 transition-colors duration-500 bg-gray-400"></div>
                                             <i data-lucide="palette" class="w-4 h-4 text-white relative z-10 opacity-0 group-hover:opacity-100 transition-opacity"></i>
                                         </button>
-                                        <input type="color" id="taskProjectColor" value="#526D82" class="absolute top-0 left-0 opacity-0 pointer-events-none w-0 h-0">
+                                        <input type="color" id="taskProjectColor" aria-label="Cor personalizada do projeto" value="#526D82" class="absolute top-0 left-0 opacity-0 pointer-events-none w-0 h-0">
                                         
                                         <div id="color-palette" class="absolute z-50 mt-3 -right-2 w-[240px] p-4 bg-white/90 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl hidden transform transition-all duration-300 origin-top-right scale-95 opacity-0">
                                             <div class="flex justify-between items-center mb-3">
@@ -256,9 +255,7 @@
                             </div>
 
                              <div>
-                                <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
-                                    <i data-lucide="flag" class="w-3 h-3"></i> Prioridade
-                                </h3>
+                                <label for="taskPriority" class="sb-task-label"><i data-lucide="flag" class="w-3 h-3"></i> Prioridade</label>
                                  <select id="taskPriority" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 cursor-pointer outline-none">
                                     <option value="Baixa">Baixa</option>
                                     <option value="Média" selected>Média</option>
@@ -269,40 +266,37 @@
 
                             <div>
                                  <div class="flex justify-between items-center mb-3">
-                                    <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 flex items-center gap-2">
-                                        <i data-lucide="calendar" class="w-3 h-3"></i> Prazo
-                                    </h3>
+                                    <label for="taskDueDate" class="sb-task-label"><i data-lucide="calendar" class="w-3 h-3"></i> Prazo</label>
                                     <div class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
                                         <input type="checkbox" id="no-due-date-checkbox" class="rounded border-gray-300 dark:border-gray-600 bg-transparent text-custom-dark focus:ring-0 w-3.5 h-3.5 cursor-pointer">
                                         <label for="no-due-date-checkbox" class="text-[10px] text-custom-dark dark:text-white cursor-pointer select-none font-bold">Sem data</label>
                                     </div>
                                 </div>
-                                <input type="date" id="taskDueDate" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 outline-none">
+                                <input type="date" id="taskDueDate" aria-label="Prazo da tarefa" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 outline-none">
                             </div>
 
                         </div>
-
-                        <div class="p-6 mt-auto glass-separator-h border-t border-black/5 dark:border-white/5 flex flex-col gap-3 flex-shrink-0">
-                            <button type="submit" class="w-full py-4 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 dark:shadow-white/5 transition-transform active:scale-95 flex items-center justify-center gap-2 group">
-                                <i data-lucide="save" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> Salvar Tarefa
-                            </button>
-                            <button type="button" id="cancelBtn" class="w-full py-3 rounded-xl text-sm font-bold text-custom-dark dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-black/5 dark:hover:border-white/5">
-                                Cancelar
-                            </button>
-                        </div>
-
                     </div>
+                </div>
+                <div class="sb-task-form-footer p-6 mt-auto glass-separator-h border-t border-black/5 dark:border-white/5 flex flex-col gap-3 flex-shrink-0">
+                    <p id="task-draft-notice" class="sb-task-help">As alterações só são enviadas ao salvar. Ao sair, edições não salvas podem ser perdidas.</p>
+                    <button type="submit" class="w-full py-4 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 dark:shadow-white/5 transition-transform active:scale-95 flex items-center justify-center gap-2 group">
+                        <i data-lucide="save" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> Salvar Tarefa
+                    </button>
+                    <button type="button" id="cancelBtn" class="w-full py-3 rounded-xl text-sm font-bold text-custom-dark dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-black/5 dark:hover:border-white/5">
+                        Cancelar
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="taskHistoryModal" class="fixed inset-0 z-[1500] hidden flex items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
+    <div id="taskHistoryModal" role="dialog" aria-labelledby="modal-info-title" class="sb-task-dialog fixed inset-0 z-[1500] hidden flex items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
         
-        <div class="orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
-            
-            <div class="flex-shrink-0 px-8 pt-8 pb-6 flex justify-between items-start">
-                <div class="space-y-4 w-full max-w-4xl">
+        <div class="sb-task-panel orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
+
+            <div class="sb-task-detail-header flex-shrink-0 px-8 pt-8 pb-6 flex justify-between items-start">
+                <div class="sb-task-heading space-y-4 w-full max-w-4xl">
                     <div class="flex items-center gap-3">
                         <div class="task-id-badge bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg text-xs font-bold font-mono tracking-wider opacity-60">
                             #<span id="modal-task-id-display">0000</span>
@@ -317,42 +311,42 @@
                     </h2>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="sb-task-detail-actions flex items-center gap-2">
                     <div id="modal-info-azure-link-container" class="hidden mr-2">
-                         <a id="modal-info-azure-link" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all" title="Abrir no DevOps">
-                            <i data-lucide="git-branch" class="w-6 h-6"></i>
+                         <a id="modal-info-azure-link" rel="noopener noreferrer" aria-label="Abrir referência DevOps ou externa em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all" title="Abrir referência externa">
+                            <i data-lucide="git-branch" class="w-6 h-6" aria-hidden="true"></i><span>Link externo</span>
                         </a>
                     </div>
                     
-                    <button id="modal-approve-btn" class="hidden items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow-sm transition-transform active:scale-95 mr-2" title="Aprovar e Enviar para Publicação">
+                    <button id="modal-approve-btn" aria-label="Aprovar e enviar para Publicação" class="hidden items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow-sm transition-transform active:scale-95 mr-2" title="Aprovar e Enviar para Publicação">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Aprovar</span>
                     </button>
-                    <a id="modal-calendar-btn" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Agendar Reunião no Google Calendar">
-                        <i data-lucide="calendar-plus" class="w-6 h-6"></i>
+                    <a id="modal-calendar-btn" rel="noopener noreferrer" aria-label="Abrir rascunho no Google Calendar em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Abrir rascunho no Google Calendar; confirme e salve no Calendar">
+                        <i data-lucide="calendar-plus" class="w-6 h-6" aria-hidden="true"></i><span>Rascunho Calendar</span>
                     </a>
 
-                    <button id="modal-signal-btn" class="p-3 rounded-2xl hover:bg-orange-500/10 text-orange-500 hover:text-orange-600 transition-all opacity-80 hover:opacity-100" title="Chamar atenção dos Responsáveis">
+                    <button id="modal-signal-btn" aria-label="Chamar atenção dos responsáveis" class="p-3 rounded-2xl hover:bg-orange-500/10 text-orange-500 hover:text-orange-600 transition-all opacity-80 hover:opacity-100" title="Chamar atenção dos Responsáveis">
                         <i data-lucide="megaphone" class="w-6 h-6"></i>
                     </button>
 
-                    <button id="editTaskBtn" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-all" title="Editar">
+                    <button id="editTaskBtn" aria-label="Editar tarefa" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-all" title="Editar">
                         <i data-lucide="file-pen-line" class="w-6 h-6"></i>
                     </button>
-                    <button id="closeHistoryBtn" class="p-3 rounded-2xl hover:bg-red-500/10 text-red-500 hover:text-red-600 transition-all opacity-80 hover:opacity-100">
+                    <button id="closeHistoryBtn" aria-label="Fechar detalhe da tarefa" class="p-3 rounded-2xl hover:bg-red-500/10 text-red-500 hover:text-red-600 transition-all opacity-80 hover:opacity-100">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
             </div>
 
-            <div class="flex-grow flex flex-col md:flex-row min-h-0">
-                
-                <div class="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-8">
+            <div class="sb-task-detail-body flex-grow flex flex-col md:flex-row min-h-0">
+
+                <div class="sb-task-detail-main flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-8">
                     
                     <div class="flex-grow">
                         <div class="mb-8">
                             <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3">Descrição</h3>
-                            <div class="rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-4 py-3">
+                            <div class="sb-task-detail-description rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-4 py-3">
                                 <p id="modal-info-description" class="whitespace-pre-wrap leading-relaxed text-base font-medium opacity-90"></p>
                             </div>
                         </div>
@@ -376,9 +370,9 @@
                     </div>
                 </div>
 
-                <div class="w-full md:w-[500px] flex flex-col glass-separator-v">
+                <div class="sb-task-detail-sidebar w-full md:w-[500px] flex flex-col glass-separator-v">
                     
-                    <div class="p-8 pb-6 glass-separator-h flex justify-between items-start gap-6 flex-shrink-0 flex-wrap">
+                    <div class="sb-task-detail-context p-8 pb-6 glass-separator-h flex justify-between items-start gap-6 flex-shrink-0 flex-wrap">
         
                         <div class="flex-1 min-w-0">
                             <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
@@ -404,7 +398,7 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 flex flex-col min-h-0 relative">
+                    <div class="sb-task-detail-comments flex-1 flex flex-col min-h-0 relative">
                         <div class="px-8 py-4 flex items-center justify-between">
                             <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-60">Comentários</h3>
                         </div>
@@ -426,16 +420,17 @@
         </div>
     </div>
 
-    <div id="aiTitleModal" class="fixed inset-0 z-[1600] hidden flex items-center justify-center p-4 modal-backdrop">
-        <div class="bg-white dark:bg-[#1f2937] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md modal-content overflow-hidden">
-            <div class="bg-purple-600 p-6 flex justify-between items-center text-white">
+    <div id="aiTitleModal" role="dialog" aria-labelledby="ai-title-heading" aria-describedby="ai-review-help" class="sb-task-dialog fixed inset-0 z-[1600] hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="sb-task-assist-panel bg-white dark:bg-[#1f2937] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md modal-content overflow-hidden">
+            <div class="sb-task-assist-header bg-purple-600 p-6 flex justify-between items-center text-white">
                 <div class="flex items-center gap-3">
                     <div class="bg-white/20 p-2 rounded-lg"><i data-lucide="bot" class="w-6 h-6"></i></div>
-                    <h2 class="text-xl font-bold">Assistente IA</h2>
+                    <h2 id="ai-title-heading" class="text-xl font-bold">Revisar título com IA</h2>
                 </div>
-                <button id="closeAiModalBtn" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <button id="closeAiModalBtn" aria-label="Fechar sugestão de título" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="p-6 space-y-5">
+            <div class="sb-task-assist-body p-6 space-y-5">
+                <p id="ai-review-help" class="sb-task-help">Gere uma sugestão, revise o texto e escolha Aplicar. A tarefa só será enviada ao salvar o formulário.</p>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Título Original</label>
                     <p id="ai-original-title" class="text-sm italic text-gray-600 dark:text-gray-300 p-3 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-black/20">...</p>
@@ -449,11 +444,11 @@
                     </div>
                 </div>
                 <div id="ai-result-container" class="hidden animate-fade-in">
-                    <label class="block text-[10px] font-bold uppercase text-purple-600 mb-1">Sugestão Gerada</label>
+                    <label for="ai-result-text" class="sb-task-label">Sugestão para revisão · ainda não aplicada</label>
                     <textarea id="ai-result-text" rows="2" class="w-full bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800 rounded-xl p-3 text-custom-darkest dark:text-white font-medium focus:ring-0"></textarea>
                 </div>
             </div>
-            <div class="p-4 bg-gray-50 dark:bg-black/20 flex items-center justify-end gap-3">
+            <div class="sb-task-assist-footer p-4 bg-gray-50 dark:bg-black/20 flex items-center justify-end gap-3">
                 <button type="button" id="cancelAiBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 font-semibold py-2 px-4 rounded-lg text-sm">Cancelar</button>
                 <button type="button" id="generateAiBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-purple-500/20 transition-transform active:scale-95"><i data-lucide="sparkles" class="w-4 h-4"></i> Gerar</button>
                 <button type="button" id="applyAiBtn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-green-500/20 transition-transform active:scale-95"><i data-lucide="check" class="w-4 h-4"></i> Aplicar</button>
@@ -548,8 +543,8 @@
         </div>
     </div>
 
-    <div id="homologadorModal" role="dialog" aria-labelledby="homologadorTitle" aria-describedby="homologadorDescription" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
-        <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
+    <div id="homologadorModal" role="dialog" aria-labelledby="homologadorTitle" aria-describedby="homologadorDescription" class="sb-task-dialog fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+        <div class="sb-task-context-panel orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
             
             <div class="w-20 h-20 rounded-full bg-orange-500/10 dark:bg-orange-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-orange-500/20 shadow-inner">
                 <i data-lucide="shield-check" class="w-9 h-9 text-orange-600 dark:text-orange-400"></i>
@@ -562,7 +557,7 @@
             </p>
             
             <div class="relative mb-8">
-                <label class="sb-kanban-modal-label" for="homologadorSelect">Homologador</label>
+                <label for="homologadorSelect" class="sb-task-label sb-kanban-modal-label">Pessoa responsável pela homologação</label>
                 <select id="homologadorSelect" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl px-4 py-3.5 text-sm focus:ring-0 focus:border-white/20 text-custom-darkest dark:text-white outline-none cursor-pointer appearance-none">
                     </select>
                 <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-50">
@@ -605,6 +600,6 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
-    <script type="module" src="js/main.js?v=tc448-list-2"></script>
+    <script type="module" src="js/main.js?v=tc449-task-space-1"></script>
 </body>
 </html>
