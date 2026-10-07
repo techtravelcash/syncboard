@@ -98,3 +98,7 @@
   .sb-app .sb-people-dialog, .sb-app .sb-people-dialog *, .sb-app .sb-people-page * { animation: none !important; transition: none !important; }
   .sb-app .sb-notification-card { transform: none !important; }
 }
+
+/* TC-459: user form stays below the fixed app header on short viewports. */
+.sb-app #userFormModal { top: var(--sb-header-height, 66px); }
+.sb-app #userFormModal .sb-people-panel { max-height: calc(100dvh - var(--sb-header-height, 66px) - 32px); }
