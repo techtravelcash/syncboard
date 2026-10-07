@@ -741,10 +741,15 @@ function initializeEventListeners() {
                     state.tasks[taskIndex].progress = 100; // Reflete na UI instantaneamente
                 }
                 
-                ui.renderTaskHistory(taskId); 
+                // A delayed response must not reopen or replace a newer task detail.
+                if (state.lastInteractedTaskId === taskId &&
+                    !document.getElementById('taskHistoryModal').classList.contains('hidden') &&
+                    document.getElementById('taskHistoryModal').classList.contains('show')) {
+                    ui.renderTaskHistory(taskId);
+                }
                 ui.updateActiveView();
                 if (approvedTask?.status === 'publication') {
-                    try { showApprovalSuccess(); } catch { /* Cosmetic feedback must not fail persisted approval. */ }
+                    try { showApprovalSuccess(() => ui.closeApprovedTaskHistory(taskId)); } catch { /* Cosmetic feedback must not fail persisted approval. */ }
                 }
                 
             } catch (err) {

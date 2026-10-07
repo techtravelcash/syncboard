@@ -1488,6 +1488,37 @@ export function renderTaskHistory(taskId, fromNotification = false) {
 
 // --- FUNÇÃO AUXILIAR: FECHAR MODAL ---
 
+// Continue after approval closes only the originating detail, without a delayed
+// animation callback that could hide another task opened in the meantime.
+export function closeApprovedTaskHistory(taskId) {
+    const modal = document.getElementById('taskHistoryModal');
+    if (!modal || isAnimating || modal.classList.contains('hidden') || state.lastInteractedTaskId !== taskId) return;
+    const content = modal.querySelector('.orb-glass-unified');
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+    if (activeOriginEl) activeOriginEl.style.opacity = '1';
+    activeOriginEl = null;
+    activeOriginRect = null;
+    isAnimating = false;
+    state.returnToNotifications = false;
+    if (content) {
+        content.style.transform = '';
+        content.style.opacity = '';
+        content.style.borderRadius = '';
+        content.classList.remove('animating-morph');
+    }
+    const main = document.getElementById('main-content');
+    const task = [...(main?.querySelectorAll('[data-task-id]') || [])].find(el =>
+        el.dataset.taskId === taskId && !el.closest('.hidden, [hidden], [inert]') && el.getClientRects().length);
+    const detailControl = [...(task?.querySelectorAll('.fidelity-task-open:not([disabled]), .info-btn:not([disabled])') || [])]
+        .find(el => !el.closest('.hidden, [hidden], [inert], details:not([open])') && el.getClientRects().length);
+    const target = detailControl || task || main;
+    if (target) {
+        if (!target.hasAttribute('tabindex') && !target.matches('button, a[href], input, select, textarea')) target.tabIndex = -1;
+        target.focus({ preventScroll: true });
+    }
+}
+
 export function closeTaskHistory(taskId) {
     const modal = document.getElementById('taskHistoryModal');
     const modalContent = modal.querySelector('.orb-glass-unified');

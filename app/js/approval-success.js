@@ -1,5 +1,5 @@
 // TC461: cosmetic feedback only. The caller must first confirm approval with the API.
-export function showApprovalSuccess() {
+export function showApprovalSuccess(onContinue) {
     if (document.getElementById('approval-success-dialog')) return;
     const dialog = document.createElement('dialog');
     if (typeof dialog.showModal !== 'function') return; // The success toast remains available.
@@ -20,7 +20,13 @@ export function showApprovalSuccess() {
         img.dataset.fallback = 'true';
         img.src = 'assets/cube-static-512.png';
     });
-    dialog.querySelector('button').addEventListener('click', () => dialog.close());
+    let continued = false;
+    dialog.querySelector('button').addEventListener('click', () => {
+        if (continued) return;
+        continued = true;
+        dialog.close();
+        if (typeof onContinue === 'function') onContinue();
+    });
     dialog.addEventListener('close', () => dialog.remove(), { once: true });
     document.body.appendChild(dialog);
     try { dialog.showModal(); } catch { dialog.remove(); }
