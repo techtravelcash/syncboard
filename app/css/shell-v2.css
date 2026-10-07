@@ -2,7 +2,7 @@
 body.sb-app { --sb-sidebar-width: 232px; --sb-header-height: 80px; margin: 0; background: var(--sb-canvas); background-image: none; color: var(--sb-text); height: 100dvh; overflow: hidden; }
 .dark body.sb-app { background: var(--sb-canvas); background-image: none; color: var(--sb-text); }
 body.sb-app::before { display: none; }
-.sb-app .sb-shell-sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sb-sidebar-width); height: 100dvh; z-index: 1100; display: flex; flex-direction: column; background: var(--sb-ink); color: #C4CEDC; border-right: 1px solid #354052; padding: 28px 16px 20px; overflow-y: auto; }
+.sb-app #orb-nav.sb-shell-sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sb-sidebar-width); height: 100dvh; z-index: 1100; display: flex; flex-direction: column; background: var(--sb-ink); color: #C4CEDC; border-right: 1px solid #354052; padding: 28px 16px 20px; overflow-y: auto; }
 .sb-shell-brand { display: flex; align-items: center; min-height: 48px; padding: 0 8px; }
 .sb-shell-brand img { display: block; width: 176px; height: auto; }
 .sb-shell-sidebar .sb-shell-kicker { margin: 32px 12px 12px; color: #B5C1D0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
@@ -81,7 +81,7 @@ body.sb-app::before { display: none; }
 @media (max-width: 1023px) { .sb-app { --sb-sidebar-width: 212px; } .sb-app .sb-shell-topbar { padding: 16px; } .sb-shell-actions { gap: 8px; } .sb-shell-action-label { display: none; } .sb-app #homeView, .sb-app #listView, .sb-app #archivedView, .sb-app #userManagementView { padding: 20px 16px 32px; } }
 @media (max-width: 767px) {
   body.sb-app { --sb-sidebar-width: 0px; --sb-header-height: 72px; }
-  .sb-app .sb-shell-sidebar { width: min(296px, calc(100vw - 32px)); padding: 24px 16px; }
+  .sb-app #orb-nav.sb-shell-sidebar { width: min(296px, calc(100vw - 32px)); padding: 24px 16px; }
   .sb-shell-mobile-only { display: inline-flex; }
   .sb-shell-topbar .sb-shell-heading small { display: none; }
   .sb-shell-topbar .sb-shell-heading h1 { font-size: 14px; }
@@ -113,3 +113,10 @@ body.sb-app::before { display: none; }
 .sb-app #shell-filter-panel .filter-chip:hover { color: var(--sb-text); background: var(--sb-canvas); }
 .sb-app #shell-filter-panel .filter-chip.active, .sb-app #shell-filter-panel .filter-chip.active:hover { color: var(--sb-accent); background: var(--sb-ink); border-color: var(--sb-ink); }
 .dark .sb-app #shell-filter-panel .filter-chip.active { border-color: var(--sb-accent); }
+
+/* Legacy ID selectors must not reintroduce orbital geometry in the new shell. */
+body.sb-app #orb-sort:hover, html.dark body.sb-app #orb-sort:hover { transform: none !important; background: none; box-shadow: none; border: 0; }
+.sb-app #orb-tools #notification-orb-badge { top: 2px; right: 2px; bottom: auto; left: auto; }
+.sb-app #main-content.immersive-canvas { scrollbar-width: auto; }
+.sb-app #main-content.immersive-canvas::-webkit-scrollbar { display: block; width: 10px; height: 10px; }
+.sb-app #main-content.immersive-canvas::-webkit-scrollbar-thumb { background: var(--sb-border-strong); border-radius: 7px; }
