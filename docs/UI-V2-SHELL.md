@@ -67,3 +67,12 @@ The application catch-all route remains protected. `/login` is public, so its es
 Run `python scripts/embed_login_assets.py` whenever either shared foundation CSS, login CSS or a used brand SVG changes. Run `python scripts/embed_login_assets.py --check` and `python tests/check_login_assets.py` to verify synchronization and that login has no protected local subresource dependency.
 
 The application marker remains `tc445-shell-1`; the self-contained login marker is `tc445-login-2`. Public-route compatibility is checked statically against the current route configuration. Opening `/login` while authenticated does not prove an anonymous SSO round-trip; do not log out or switch a real account merely for visual QA. Record that end-to-end limit explicitly.
+
+
+## Live compatibility corrections
+
+Live integration exposed a legacy ID-selector collision absent from the first isolated preview. The navigation hotfix `aa81bd55ca179be42fa376429e791f2a398ce5d9` gives both sidebar breakpoints an ID-qualified selector, keeps sort hover geometry stable, positions the notification badge and exposes the board scrollbar. The preview now loads `custom.css` before the new foundation/shell CSS, exactly matching live cascade order. Do not validate replacement chrome against the new styles alone.
+
+The lighter canvas also exposed legacy white comment/history text. `detail-compat-v2.css` is a light-theme-only presentation shim scoped to the existing rendered detail IDs. It corrects author/date/body/mention/editor and project/due/homologator labels, keeping dark rendering, stored rich HTML, all callback/data IDs and project background/border colors unchanged. The project label's inherited opacity is removed for readable contrast. This is a compatibility repair, not completion of the later task-detail/collaboration redesign packages.
+
+Current markers: application `tc445-shell-2`, isolated preview `tc445-shell-preview-3`, self-contained login `tc445-login-2`. Run `python tests/check_detail_compat.py` with the other focused gates. Deployment and live computed-color/geometry checks remain required before human validation.

@@ -82,6 +82,6 @@ def main():
         for code in parsed.inline_scripts:subprocess.run(['node','--check'],input=code,text=True,check=True,capture_output=True)
     for path in (ROOT/'app/js').glob('*.js'):subprocess.run(['node','--check',str(path)],check=True,capture_output=True)
     checks.append('Local resources resolve; all frontend and inline JavaScript syntax passed')
-    print(json.dumps({'status':'passed','stage':'tc445-shell-1','checks':checks,'not_proven':'Browser layout, keyboard interactions, SSO flow, role-specific execution and physical mobile require separate evidence.'},indent=2,ensure_ascii=False))
+    print(json.dumps({'status':'passed','stage':'tc445-shell-2','checks':checks,'not_proven':'Browser layout, keyboard interactions, SSO flow, role-specific execution and physical mobile require separate evidence.'},indent=2,ensure_ascii=False))
 
 if __name__=='__main__':main()

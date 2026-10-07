@@ -39,6 +39,11 @@ def main():
     for id,target in [('shell-nav-toggle','orb-nav'),('shell-account-toggle','shell-account-panel'),('shell-filter-toggle','shell-filter-panel'),('shell-sort-toggle','shell-sort-panel')]:
         assert p.attrs[id]['aria-controls']==target and p.attrs[id]['aria-expanded']=='false'
     results.append('All five views, unique IDs, default-hidden administrator entry and menu controls preserved')
+    preview=(ROOT/'app/ui-v2-shell-preview.html').read_text()
+    assert preview.index('css/custom.css') < preview.index('css/fluxo-v2.css') < preview.index('css/shell-v2.css')
+    css=(ROOT/'app/css/shell-v2.css').read_text()
+    assert css.count('.sb-app #orb-nav.sb-shell-sidebar {')==2
+    results.append('Preview mirrors the live legacy-first cascade; both sidebar breakpoints use ID-qualified geometry')
     script=(ROOT/'app/js/shell-preview.js').read_text()
     shell=(ROOT/'app/js/shell-v2.js').read_text()
     assert not re.search(r'\b(fetch|XMLHttpRequest|WebSocket|localStorage|sessionStorage)\b',script+shell)
@@ -54,6 +59,6 @@ def main():
     results.append('Ordinary and destructive pilot confirmations have explicit blue/red intent')
     for file in (ROOT/'app/js').glob('*.js'):subprocess.run(['node','--check',str(file)],check=True,capture_output=True)
     results.append('All frontend JavaScript syntax passed; browser interaction verification still required')
-    print(json.dumps({'status':'passed','stage':'tc445-shell-preview-2','checks':results},indent=2,ensure_ascii=False))
+    print(json.dumps({'status':'passed','stage':'tc445-shell-preview-3','checks':results},indent=2,ensure_ascii=False))
 
 if __name__=='__main__':main()

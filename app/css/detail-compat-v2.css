@@ -1,0 +1,37 @@
+/* TC-445 compatibility: readable existing detail content on the lighter canvas.
+   Only light-theme presentation changes. No stored HTML, project colors or handlers change. */
+html:not(.dark) body.sb-app #taskHistoryModal .orb-glass-unified { background: var(--sb-surface); color: var(--sb-text); border-color: var(--sb-border); }
+html:not(.dark) body.sb-app #taskHistoryModal .task-id-badge { color: var(--sb-muted); opacity: 1; background: var(--sb-canvas); }
+html:not(.dark) body.sb-app #modal-info-project { color: var(--sb-text) !important; opacity: 1; }
+html:not(.dark) body.sb-app #modal-info-dueDate { color: var(--sb-text); }
+html:not(.dark) body.sb-app #modal-info-dueDate .text-red-400 { color: var(--sb-error-text); }
+html:not(.dark) body.sb-app #sidebar-responsibles-container [class~="text-white/20"],
+html:not(.dark) body.sb-app #sidebar-responsibles-container [class~="text-white/30"] { color: var(--sb-muted); }
+html:not(.dark) body.sb-app #modal-info-homologador .text-green-300,
+html:not(.dark) body.sb-app #modal-info-homologador .text-green-400 { color: var(--sb-publication-text); }
+html:not(.dark) body.sb-app #modal-info-homologador .text-orange-300,
+html:not(.dark) body.sb-app #modal-info-homologador .text-orange-400 { color: var(--sb-stopped-text); }
+html:not(.dark) body.sb-app #comments-feed [class~="text-white/90"],
+html:not(.dark) body.sb-app #comments-feed .text-gray-200,
+html:not(.dark) body.sb-app #history-feed [class~="text-white/80"],
+html:not(.dark) body.sb-app #history-feed .text-white { color: var(--sb-text); }
+html:not(.dark) body.sb-app #comments-feed [class~="text-white/20"],
+html:not(.dark) body.sb-app #comments-feed [class~="text-white/30"],
+html:not(.dark) body.sb-app #history-feed [class~="text-white/30"] { color: var(--sb-muted); }
+html:not(.dark) body.sb-app #comments-feed .text-gray-200 { border-color: var(--sb-border); }
+html:not(.dark) body.sb-app #comments-feed [title][class~="bg-white/10"] { color: var(--sb-accent); background: var(--sb-ink); border-color: var(--sb-ink); }
+html:not(.dark) body.sb-app #comments-feed .edit-comment-btn { color: var(--sb-action); }
+html:not(.dark) body.sb-app #comments-feed .delete-comment-btn { color: var(--sb-error-text); }
+html:not(.dark) body.sb-app #comments-feed .mention-tag { color: var(--sb-action) !important; background: var(--sb-inprogress-bg) !important; border-color: var(--sb-action) !important; }
+html:not(.dark) body.sb-app #comments-feed a { color: var(--sb-action); }
+html:not(.dark) body.sb-app #history-feed [class~="border-white/10"] { border-color: var(--sb-border); }
+html:not(.dark) body.sb-app #taskHistoryModal .rich-editor-wrapper { background: var(--sb-surface); border-color: var(--sb-border-strong); }
+html:not(.dark) body.sb-app #taskHistoryModal .editor-toolbar { border-color: var(--sb-border); }
+html:not(.dark) body.sb-app #taskHistoryModal .editor-tool-btn { color: var(--sb-muted); }
+html:not(.dark) body.sb-app #taskHistoryModal .editor-tool-btn:hover { color: var(--sb-text); background: var(--sb-canvas); }
+html:not(.dark) body.sb-app #taskHistoryModal .editor-tool-btn.active { color: var(--sb-action); background: var(--sb-inprogress-bg); }
+html:not(.dark) body.sb-app #comment-input-rich,
+html:not(.dark) body.sb-app #comment-input-rich b,
+html:not(.dark) body.sb-app #comment-input-rich strong { color: var(--sb-text); caret-color: var(--sb-text); }
+html:not(.dark) body.sb-app #comment-input-rich:empty::before { color: var(--sb-muted); }
+html:not(.dark) body.sb-app #comment-input-rich .mention-tag { color: var(--sb-action) !important; background: var(--sb-inprogress-bg) !important; }
