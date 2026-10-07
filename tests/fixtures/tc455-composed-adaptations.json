@@ -1,0 +1,59 @@
+{
+  "baseline": "20c48df793c91dd303abdfb0229701b64a905914",
+  "reviewedTestSha256": {
+    "tests/check_fidelity_v2.mjs": "e7cfdeaa7a4554ace4d9bf0ac5e73ffacf6a74499fc2708f0a1de06aa8e23290",
+    "tests/check_fidelity_secondary_v2.mjs": "e8ef086c50b9e1df017cc2e17dca14e3fc493ff8c5840ebe757690b476116314",
+    "tests/check_task_fidelity_adapter.mjs": "2c528a4f92185bbfd9b455d1bc120f12099f66368744c6aa4c5d5aa1293b42a2",
+    "tests/check_task_fidelity_flows.mjs": "3f7dfc63dba6edb5d973a1e5f92849cf34271ad3c49a6c382c5aec4abc0f5546",
+    "tests/check_startup_v2.mjs": "ac5fd4748517824980a68a836c9a544e52398ed5440b33ffb22e08ac4709be47",
+    "tests/check_profile_claims_recovery.mjs": "30af67829f7e990874ce29138dad15aa7fdbfe6efdc95a00334b64a7a5fd9310",
+    "tests/check_home_focus_v2.mjs": "d06519713e572dead3189396cf8839767d71fa082e079e85ebcc6602ddf38a17"
+  },
+  "secondaryOriginalSha256": "e8ef086c50b9e1df017cc2e17dca14e3fc493ff8c5840ebe757690b476116314",
+  "secondaryAdaptedSha256": "9978aaafd36b47d5d573ce0fc5596327695dd840b13d3aaa0de6b896ab72c383",
+  "secondaryUnchangedBehavioralBodySha256": "7e4c0d9a4a3920af3cf6e9fac2cf1aca6b953370986ba54457c5e6451ae2091c",
+  "exactStartupProfile": [
+    {
+      "start": "document.addEventListener('DOMContentLoaded', async () => {",
+      "sha256": "aafa3f7d2963d12089651bd6b374ba2123c6984beb7132019c8ea20e20fc6334"
+    },
+    {
+      "start": "function updateUserProfileUI()",
+      "sha256": "a16aed4081601c6a91848a629382e23363b9e752efe02f1fe2dc02b8867cb319"
+    }
+  ],
+  "adaptations": [
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed shell integration in main.js; startup/profile and existing handlers are separately frozen",
+      "before": "['app/index.html','app/js/main.js','app/js/state.js'",
+      "after": "['app/index.html','app/js/state.js'",
+      "beforeSha256": "2c0415c4ce92b37938c5290f02996954848d4fa8b03768d0a830f08e31eb379b",
+      "afterSha256": "444b2fd01303c01aa2dbfc0f7a297c4b309f71006e528ee95e3dd304b5efc29e"
+    },
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed opt-in filter tail; the composed case exercises its real five-filter intersection",
+      "before": " ['function filterTasks(tasks)','// --- RENDERIZAÇÃO: HOME'],\n",
+      "after": "",
+      "beforeSha256": "ccc5806667b0c4efbc3da62d4c302d52c268e22ad20eecf0ae7bc2c407a04d5c",
+      "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed router, badge and clear-filter integration; composed navigation executes these functions",
+      "before": " ['export function updateActiveView()','// --- MODAL: DETALHES ---']\n",
+      "after": "",
+      "beforeSha256": "a7a281607ded39d5eb1ceef15b37b958b4403a2c581ff792de4a542248c17388",
+      "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "fixture dependency",
+      "reason": "Load the real sibling helper in the existing secondary fixture context; no replacement functions or assertions",
+      "before": " vm.createContext(context);\n",
+      "after": " vm.createContext(context);\n vm.runInContext(strip(read('app/js/fidelity-v2.js')),context);\n",
+      "beforeSha256": "a25bbfc919ada6734311fb6730a0cd65d6641edb321d0339a2d5da91375f25d0",
+      "afterSha256": "7baf42c2aa2dd6b7db1ccc5170dde909673adc64f784cd6da1baa14b2cc22b66"
+    }
+  ]
+}

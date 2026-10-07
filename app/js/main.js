@@ -1,3 +1,4 @@
+import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
 import { state } from './state.js';
 import { escapePeopleText, peopleAvatar } from './people-v2.js';
 import * as api from './api.js';
@@ -128,12 +129,15 @@ function updateDragAndDropState() {
     kanbanSortableInstances.forEach(i => i.destroy());
     kanbanSortableInstances = [];
 
+    // Filtering must never submit a partial board order. Default-page behavior is unchanged.
+    if (typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state)) return;
     if (state.currentView === 'kanban') {
         const columns = document.querySelectorAll('.kanban-task-list');
         
         columns.forEach(list => {
             const sortable = new Sortable(list, {
                 group: 'kanban',
+                ...((typeof isFidelityV2 === 'function' && isFidelityV2()) ? { filter: 'button, summary, details, input, select, a', preventOnFilter: false } : {}),
                 animation: 150,
                 delay: 100,
                 delayOnTouchOnly: true,
@@ -141,6 +145,9 @@ function updateDragAndDropState() {
                 dragClass: 'rotate-2',
                 
                 onEnd: async (evt) => {
+                    if (typeof isFidelityV2 === 'function' && isFidelityV2() && hasFidelityFilters(state)) {
+                        ui.renderKanbanView(); updateDragAndDropState(); return;
+                    }
                     const itemEl = evt.item;
                     const taskId = itemEl.dataset.taskId;
                     const newStatus = evt.to.dataset.columnId;
@@ -286,6 +293,10 @@ function openHomologadorModal(task, oldStatus, newStatus) {
 
 // --- EVENT LISTENERS ---
 function initializeEventListeners() {
+    if (typeof isFidelityV2 === 'function' && isFidelityV2()) {
+        initializeFidelityControls(state, { refresh: () => { ui.updateActiveView(); } });
+        document.addEventListener('sb:fidelity-view-updated', updateDragAndDropState);
+    }
     // Shell presentation owns panel state and accessible focus.
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
         const btn = e.target.closest('button');

@@ -1,0 +1,158 @@
+/* TC-455: approved v2 geometry, preview-only. Load after legacy task/collaboration styles.
+   The form header and body deliberately share their tracks and rail inset. */
+body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) {
+  --sb-task-columns: minmax(0, 1fr) 260px;
+  --sb-task-main-inset: 28px;
+  --sb-task-rail-inset: 22px;
+  padding: 36px 24px;
+}
+body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) > .sb-task-panel {
+  max-width: 960px; height: min(860px, calc(100vh - 72px)); height: min(860px, calc(100dvh - 72px));
+  max-height: calc(100dvh - 72px); border-radius: 14px; overflow: hidden;
+}
+body.sb-app.sb-fidelity-v2 .sb-fidelity-task-topline,
+body.sb-app.sb-fidelity-v2 .sb-fidelity-detail-topline {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px var(--sb-task-main-inset); border-bottom: 1px solid var(--sb-border);
+  flex: 0 0 auto; background: var(--sb-surface);
+}
+body.sb-app.sb-fidelity-v2 .sb-fidelity-task-topline { justify-content: flex-start; flex-wrap: wrap; }
+body.sb-app.sb-fidelity-v2 .sb-fidelity-detail-identity { display: flex; align-items: center; gap: 12px; min-width: 0; flex-wrap: wrap; }
+body.sb-app.sb-fidelity-v2 .sb-fidelity-detail-dismiss {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 40px;
+  width: 40px; height: 40px; border: 1px solid var(--sb-border); border-radius: 7px;
+  color: var(--sb-muted); background: var(--sb-surface);
+}
+body.sb-app.sb-fidelity-v2 .sb-fidelity-detail-dismiss svg { width: 18px; height: 18px; }
+body.sb-app.sb-fidelity-v2 #taskForm { min-height: 0; }
+body.sb-app.sb-fidelity-v2 .sb-fidelity-form-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-header,
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-body {
+  display: grid; grid-template-columns: var(--sb-task-columns); gap: 0; padding: 0;
+  max-height: none; min-height: 0; overflow: visible; margin: 0;
+}
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-header { align-items: stretch; border-bottom: 1px solid var(--sb-border); }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-heading { padding: 24px var(--sb-task-main-inset) 20px; width: auto; min-width: 0; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-title-field { margin: 0; min-width: 0; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-reference {
+  display: block; align-self: stretch; width: auto; min-width: 0; flex: initial;
+  padding: 24px var(--sb-task-rail-inset) 20px; border-left: 1px solid var(--sb-border); background: var(--sb-canvas);
+}
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-label { font-size: 12px; line-height: 18px; margin: 0 0 8px; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-fidelity-reference-control { position: relative; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-reference-icon { top: 0; bottom: 0; height: auto; left: 0; padding-left: 12px; }
+body.sb-app.sb-fidelity-v2 #taskForm #taskAzureLink { min-height: 44px; width: 100%; padding-left: 36px; font-size: 13px; }
+body.sb-app.sb-fidelity-v2 #taskForm #taskTitle { font-size: 26px; line-height: 1.3; letter-spacing: -.7px; max-height: 144px; min-height: 44px; width: 100%; margin: 0; padding: 6px 9px; }
+body.sb-app.sb-fidelity-v2 #taskForm #openAiModalBtn { font-size: 12px; min-height: 36px; margin: 8px 0 0; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-main { padding: 24px var(--sb-task-main-inset) 28px; overflow: visible; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-sidebar { width: auto; overflow: visible; min-width: 0; border-left: 1px solid var(--sb-border); border-top: 0; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-fields { padding: 24px var(--sb-task-rail-inset) 28px; overflow: visible; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-fields > div + div { margin-top: 20px !important; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-description-field { min-height: 220px; flex: 0 0 auto; }
+body.sb-app.sb-fidelity-v2 #taskForm #taskDescription { font-size: 14px; min-height: 184px; height: 184px; line-height: 1.65; }
+body.sb-app.sb-fidelity-v2 #taskForm #responsible-input-container { gap: 6px; padding: 6px; }
+body.sb-app.sb-fidelity-v2 #taskForm #taskResponsible { width: 100%; min-width: 80px; padding: 4px; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer { flex: 0 0 auto; padding: 16px 24px; gap: 10px; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer .sb-task-help { flex: 1 1 260px; max-width: 460px; font-size: 12px; }
+body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer > button { font-size: 13px; min-height: 42px; padding: 10px 16px; }
+
+/* Real detail content is recomposed, without copying/replacing stored HTML or editor values. */
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-body {
+  display: grid; grid-template-columns: var(--sb-task-columns); align-items: stretch;
+  min-height: 0; flex: 1 1 auto; overflow-y: auto; overflow-x: hidden;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-main {
+  display: block; padding: 28px var(--sb-task-main-inset); overflow: visible; min-width: 0;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-title {
+  font-size: 26px; line-height: 1.3; letter-spacing: -.7px; font-weight: 700;
+  margin: 0 0 24px; max-height: none; overflow: visible; overflow-wrap: anywhere;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal :is(.sb-fidelity-detail-description-section, .sb-fidelity-detail-pending) { margin: 0 0 24px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal :is(.sb-fidelity-detail-description-section, .sb-fidelity-detail-pending) > h3 {
+  color: var(--sb-text); font-size: 13px; font-weight: 700; letter-spacing: 0; text-transform: none; opacity: 1; margin: 0 0 10px;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-description { padding: 0; background: transparent; border: 0; border-radius: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-description { font-size: 14px; line-height: 1.65; color: var(--sb-muted); }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-description:empty::after { content: 'Descrição não informada.'; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #fidelity-detail-missing {
+  font-size: 13px; line-height: 1.65; padding: 12px; margin: 0; border: 1px solid var(--sb-border-strong);
+  border-radius: 7px; min-height: 72px; color: var(--sb-text); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-sidebar {
+  width: auto; display: flex; flex-direction: column; gap: 22px;
+  padding: 28px var(--sb-task-rail-inset); background: var(--sb-canvas); border-left: 1px solid var(--sb-border); border-top: 0; min-width: 0;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal :is(.sb-fidelity-rail-field, .sb-task-detail-context) { min-width: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal :is(.sb-fidelity-rail-field, .sb-task-detail-context) h3 {
+  font-size: 12px !important; line-height: 1.5; color: var(--sb-muted); font-weight: 500; text-transform: none; letter-spacing: 0; margin: 0 0 9px; opacity: 1;
+}
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-rail-field > p { font-size: 13px; line-height: 1.5; margin: 0; overflow-wrap: anywhere; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-project { display: inline-block; max-width: 100%; padding: 4px 6px; border-radius: 4px; letter-spacing: 0; text-transform: none; font-size: 12px; line-height: 1.6; white-space: normal; overflow-wrap: anywhere; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-context { display: flex; flex-direction: column; gap: 22px; padding: 0; max-height: none; overflow: visible; border: 0; background: transparent; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-context > div { width: 100%; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #sidebar-responsibles-container { display: flex; align-items: flex-start; flex-direction: column; padding: 0; min-height: 0; gap: 9px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-person > div { width: 28px; height: 28px; box-shadow: none; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-person > div > span { font-size: 12px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-homologador { padding: 0; min-height: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-dueDate-container > div { padding: 0; background: none; border: 0; min-height: 0; min-width: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-dueDate { padding: 0; font-size: 13px; font-weight: 500; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-progress { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 0; text-align: left; color: var(--sb-muted); font-size: 12px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-progress strong { color: var(--sb-text); font-weight: 500; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-progress-track { grid-column: 1 / -1; display: block; height: 4px; background: var(--sb-border); border-radius: 4px; overflow: hidden; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #fidelity-detail-progress-fill { display: block; height: 100%; background: var(--sb-action); border-radius: 4px; width: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-rail-actions { display: flex; flex-direction: column; align-items: stretch; width: 100%; max-width: none; gap: 8px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-rail-actions :is(button, a) { justify-content: flex-start; width: 100%; font-size: 12px; line-height: 1.4; min-height: 40px; margin: 0; padding: 9px 10px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-tabs { display: flex; gap: 23px; border-bottom: 1px solid var(--sb-border); margin-top: 28px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-tabs > button { min-height: 44px; padding: 10px 0; font-size: 12px; color: var(--sb-muted); border: 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-tabs > button[aria-selected='true'] { border-color: var(--sb-action); color: var(--sb-action); }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-pane { padding: 18px 0 0; margin: 0; border: 0; min-height: 115px; overflow: visible; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-pane[hidden] { display: none !important; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-comments { display: flex; flex-direction: column; min-height: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-comments > div:first-child { display: none; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #comments-feed { padding: 0 !important; overflow: visible; flex: 0 0 auto; min-height: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-comments > .p-6.mt-auto { padding: 16px 0 0; margin: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-legacy-history-toggle { display: none; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #history-feed { margin: 0; padding: 0 0 0 12px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-attachments-container { margin: 0; padding: 0; border: 0; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-attachments-container > h3 { display: none; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-attachments { grid-template-columns: 1fr; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-empty { padding: 20px 12px; border: 1px dashed var(--sb-border-strong); border-radius: 9px; color: var(--sb-muted); font-size: 13px; line-height: 1.6; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border-top: 1px solid var(--sb-border); background: var(--sb-surface); }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer > .sb-task-help { margin: 0; max-width: 380px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer .sb-task-detail-actions { width: auto; max-width: none; flex-wrap: nowrap; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer .sb-task-detail-actions > button { min-height: 42px; font-size: 13px; padding: 10px 14px; }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #editTaskBtn { color: #fff; background: var(--sb-action); border-color: var(--sb-action); }
+body.sb-app.sb-fidelity-v2 #taskHistoryModal #closeHistoryBtn { margin-left: 0; color: var(--sb-text); }
+body.sb-app.sb-fidelity-v2 #confirmHomologadorBtn { background: var(--sb-action); color: #fff; box-shadow: none; }
+body.sb-app.sb-fidelity-v2 #confirmHomologadorBtn:hover { background: var(--sb-action-hover); }
+/* Shared confirmation remains blue; only its existing destructive intent becomes red. */
+body.sb-app.sb-fidelity-v2 #confirmDeleteBtn[data-intent='confirm'] { background: var(--sb-action); color: #fff; }
+body.sb-app.sb-fidelity-v2 #confirmDeleteBtn[data-intent='destructive'] { background: var(--sb-error-text); color: #fff; }
+html.dark body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-tabs > button[aria-selected='true'] { color: var(--sb-focus); border-color: var(--sb-focus); }
+@media (max-width: 680px) {
+  body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) { --sb-task-columns: minmax(0, 1fr); --sb-task-main-inset: 20px; --sb-task-rail-inset: 20px; padding: 12px 10px; }
+  body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) > .sb-task-panel { height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); border-radius: 12px; }
+  body.sb-app.sb-fidelity-v2 .sb-fidelity-task-topline,
+  body.sb-app.sb-fidelity-v2 .sb-fidelity-detail-topline { padding: 14px 18px; }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-heading { padding: 20px var(--sb-task-main-inset); }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-reference { border-left: 0; border-top: 1px solid var(--sb-border); padding: 20px var(--sb-task-rail-inset); }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-sidebar { border-left: 0; border-top: 1px solid var(--sb-border); }
+  body.sb-app.sb-fidelity-v2 #taskForm #taskTitle { font-size: 25px; }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer { padding: 12px 16px; }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer .sb-task-help { flex-basis: 100%; max-width: none; }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer > button { flex: 1 1 0; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-main { padding-top: 24px; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-task-detail-sidebar { border-left: 0; border-top: 1px solid var(--sb-border); padding-top: 24px; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal #modal-info-title { font-size: 25px; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-tabs { gap: 18px; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer { flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer > .sb-task-help { max-width: none; flex-basis: 100%; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer .sb-task-detail-actions { width: 100%; }
+  body.sb-app.sb-fidelity-v2 #taskHistoryModal .sb-fidelity-detail-footer .sb-task-detail-actions > button { flex: 1 1 0; }
+}
+@media (max-height: 540px) {
+  body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) { padding-top: 8px; padding-bottom: 8px; }
+  body.sb-app.sb-fidelity-v2 :is(#taskModal, #taskHistoryModal) > .sb-task-panel { height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); }
+  body.sb-app.sb-fidelity-v2 #taskForm .sb-task-form-footer .sb-task-help { display: block; }
+}

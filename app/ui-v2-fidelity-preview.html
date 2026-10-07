@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncBoard NT</title>
+    <meta name="syncboard-ui-release" content="tc455-fidelity-preview-1">
+    <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/custom.css">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc455-fidelity-preview-1">
+    
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/home-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/kanban-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/task-space-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/collaboration-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/archive-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/people-v2.css?v=tc455-fidelity-preview-1">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-darkest': '#27374D',
+                        'custom-header': '#28344c',
+                        'custom-dark': '#526D82',
+                        'custom-medium': '#9DB2BF',
+                        'custom-light': '#DDE6ED',
+                        'base-white': '#FFFFFF',
+                        'base-bg': '#F9FAFB',
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/list-filters-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/fidelity-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/fidelity-secondary-v2.css?v=tc455-fidelity-preview-1">
+    <link rel="stylesheet" href="css/task-fidelity-v2.css?v=tc455-task-1">
+</head>
+<body class="sb-scope sb-app sb-fidelity-v2 antialiased font-sans" data-ui-release="tc455-fidelity-preview-1">
+    <div id="loader-container" role="status" aria-live="polite">
+      <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
+      <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
+      <span class="sb-spinner" aria-hidden="true"></span>
+    </div>
+  <div id="app" inert>
+    <a class="sb-button sb-shell-skip" href="#main-content">Pular para o conteúdo</a>
+    <aside id="orb-nav" class="sb-shell-sidebar" aria-label="Navegação principal">
+      <div class="sb-shell-panel-head">
+        <a class="sb-shell-brand" href="/" aria-label="SyncBoard NT, início"><img class="fidelity-brand-lockup" src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="176" height="38"><img class="fidelity-brand-symbol" src="assets/brand-v2/mark-primary.svg" alt="" width="40" height="40"></a>
+        <button type="button" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-close aria-label="Fechar navegação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button>
+      </div>
+      <div class="fidelity-workspace"><span class="fidelity-workspace-icon" aria-hidden="true">NT</span><div><strong>SyncBoard NT</strong><small>Espaço de trabalho</small></div></div>
+      <p class="sb-shell-kicker">Trabalho</p>
+      <nav id="view-switcher-orb" class="sb-shell-nav" aria-label="Visualizações">
+        <button type="button" data-view="home" class="nav-item" aria-current="page"><i data-lucide="home" class="sb-shell-icon" aria-hidden="true"></i><span>Home</span></button>
+        <button type="button" data-view="kanban" class="nav-item"><i data-lucide="layout-grid" class="sb-shell-icon" aria-hidden="true"></i><span>Quadro</span><span id="fidelity-nav-task-count" class="fidelity-nav-count" aria-label="Tarefas ativas carregadas">0</span></button>
+        <button type="button" data-view="list" class="nav-item"><i data-lucide="list" class="sb-shell-icon" aria-hidden="true"></i><span>Lista</span></button>
+        <button type="button" data-view="archived" class="nav-item"><i data-lucide="archive" class="sb-shell-icon" aria-hidden="true"></i><span>Arquivados</span></button>
+        <button type="button" data-view="users" id="user-management-btn" class="nav-item hidden"><i data-lucide="users" class="sb-shell-icon" aria-hidden="true"></i><span>Utilizadores</span></button>
+      </nav>
+      <section class="fidelity-sidebar-projects" aria-labelledby="fidelity-projects-title"><h2 id="fidelity-projects-title" class="sb-shell-kicker">Projetos</h2><div id="fidelity-project-links"></div></section>
+      <button type="button" class="fidelity-sidebar-profile" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="fidelity-profile-avatar" aria-hidden="true"></span><span><strong id="fidelity-profile-name">Carregando perfil…</strong><small id="fidelity-profile-role">Aguarde a sessão</small></span><i data-lucide="chevrons-up-down" aria-hidden="true"></i></button>
+    </aside>
+    <button type="button" id="shell-backdrop" class="sb-shell-backdrop" hidden tabindex="-1" aria-label="Fechar navegação"></button>
+    <header id="shell-topbar" class="sb-shell-topbar">
+      <div class="sb-shell-heading">
+        <button type="button" id="shell-nav-toggle" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-toggle="orb-nav" aria-controls="orb-nav" aria-expanded="false" aria-label="Abrir navegação"><i data-lucide="menu" class="sb-shell-icon" aria-hidden="true"></i></button>
+        <div class="fidelity-breadcrumb"><span>Espaço de trabalho</span><span aria-hidden="true">/</span><span id="current-view-label" tabindex="-1">Home</span></div><img class="fidelity-mobile-brand fidelity-mobile-brand--light" src="assets/brand-v2/logo-primary-light.svg" alt="SyncBoard NT" width="176" height="38"><img class="fidelity-mobile-brand fidelity-mobile-brand--dark" src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="176" height="38">
+      </div>
+      <div class="sb-shell-actions">
+        <button type="button" id="fidelity-notifications-toggle" class="sb-shell-icon-button" aria-label="Abrir notificações"><i data-lucide="bell" class="sb-shell-icon" aria-hidden="true"></i><span id="notification-orb-badge" class="hidden" aria-label="Há notificações não lidas"></span></button>
+        <div id="orb-tools" class="sb-shell-anchor">
+          <button type="button" id="shell-account-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="orb-avatar-container"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></span></button>
+          <section id="shell-account-panel" class="sb-shell-panel" hidden aria-labelledby="shell-account-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-account-title">Perfil e ferramentas</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar perfil e ferramentas"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <div class="sb-shell-profile"><div id="user-avatar-menu"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></div><div><div id="user-name-display">Carregando perfil…</div><div id="user-role-display">Aguarde a sessão</div></div></div>
+            <button type="button" id="orb-notif-btn" class="sb-shell-menu-action"><i data-lucide="bell" class="sb-shell-icon" aria-hidden="true"></i>Notificações<span id="orb-notif-count" class="sb-shell-count hidden">0</span></button>
+            <button type="button" id="theme-toggle" class="sb-shell-menu-action"><i id="theme-icon" data-lucide="moon" class="sb-shell-icon" aria-hidden="true"></i><span>Tema</span></button>
+            <div class="sb-shell-divider"></div>
+            <a href="/logout" class="sb-shell-menu-action sb-shell-logout"><i data-lucide="log-out" class="sb-shell-icon" aria-hidden="true"></i>Sair</a>
+          </section>
+        </div>
+      </div>
+    </header>
+    <div id="orb-nav-label" hidden aria-hidden="true"><svg><path id="curvePath" d=""/></svg></div>
+    <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out" tabindex="-1" aria-busy="true">
+      <header id="fidelity-page-header"><div><p id="fidelity-page-eyebrow">SyncBoard NT</p><h1 id="fidelity-page-title">Visão geral</h1><p id="fidelity-page-subtitle">O que precisa da sua atenção, em cada etapa.</p></div><div id="fidelity-page-actions"><button type="button" id="addTaskBtn" title="Nova Tarefa" aria-label="Nova Tarefa"><i data-lucide="plus" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Nova Tarefa</span></button></div></header>
+      <div id="orb-filter" class="sb-task-filter-band hidden" role="region" aria-label="Busca, filtros e ordenação de tarefas">
+        <div class="fidelity-controls">
+          <div class="sb-list-search sb-field"><label class="fidelity-sr-only" for="search-input">Buscar tarefas</label><i data-lucide="search" aria-hidden="true"></i><input type="search" id="search-input" class="sb-input" placeholder="Buscar por título ou ID" autocomplete="off"></div>
+          <label class="fidelity-sr-only" for="fidelity-project-filter">Projeto</label><select id="fidelity-project-filter" aria-label="Filtrar por projeto"><option value="all">Todos os projetos</option></select>
+          <label class="fidelity-sr-only" for="fidelity-responsible-filter">Responsável</label><select id="fidelity-responsible-filter" aria-label="Filtrar por responsável"><option value="all">Todos os responsáveis</option></select>
+          <label class="fidelity-sr-only" for="fidelity-priority-filter">Prioridade</label><select id="fidelity-priority-filter" aria-label="Filtrar por prioridade"><option value="all">Todas as prioridades</option></select>
+          <label class="fidelity-sr-only" for="fidelity-status-filter">Estado</label><select id="fidelity-status-filter" aria-label="Filtrar por estado"><option value="all">Todos os estados</option><option value="todo">Fila</option><option value="stopped">Parado</option><option value="inprogress">Andamento</option><option value="homologation">Homologação</option><option value="publication">Publicação</option></select>
+          <button id="clear-task-filters" type="button" disabled>Limpar</button>
+        </div>
+      <div class="sb-shell-anchor sb-filter-anchor fidelity-legacy-filter-source" hidden>
+        <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button sb-filter-selection" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Escolher projeto e responsável" aria-describedby="selected-project-label selected-responsible-label task-filter-count">
+          <i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i>
+          <span><span class="sb-filter-selection-label">Projeto</span><span id="selected-project-label">Todos</span></span>
+          <span><span class="sb-filter-selection-label">Responsável</span><span id="selected-responsible-label">Todos</span></span>
+          <i data-lucide="chevron-down" class="sb-shell-icon" aria-hidden="true"></i>
+        </button>
+        <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
+          <div class="sb-shell-panel-head"><h2 id="shell-filter-title">Filtrar tarefas</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar filtros"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+          <div class="sb-shell-filter-group"><h3>Projetos</h3><div id="orb-project-filters"></div></div>
+          <div class="sb-shell-filter-group"><h3>Responsáveis</h3><div id="orb-responsible-filters"></div></div>
+        </section>
+      </div>
+        <div class="fidelity-results-line"><div class="fidelity-result-copy"><p id="fidelity-result-count" aria-live="polite"></p><p id="fidelity-filter-drag-note" hidden>Para mover ou reordenar, limpe os filtros.</p></div><span id="task-filter-count" class="fidelity-sr-only" aria-live="polite">Sem filtros ativos</span><div class="fidelity-results-tools">
+      <div id="orb-sort" class="sb-shell-anchor hidden">
+        <button type="button" id="shell-sort-toggle" class="sb-shell-icon-button sb-sort-selection" data-shell-toggle="shell-sort-panel" aria-controls="shell-sort-panel" aria-expanded="false" aria-label="Ordenar lista de tarefas" aria-describedby="selected-sort-label"><i data-lucide="arrow-up-down" class="sb-shell-icon" aria-hidden="true"></i><span><span class="sb-filter-selection-label">Ordenação</span><span id="selected-sort-label">Criação · decrescente</span></span></button>
+        <section id="shell-sort-panel" class="sb-shell-panel" hidden aria-labelledby="shell-sort-title">
+          <div class="sb-shell-panel-head"><h2 id="shell-sort-title">Ordenação</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar ordenação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+          <p class="sb-meta">Selecione novamente o critério ativo para inverter a direção.</p>
+          <div id="orb-sort-options"></div>
+        </section>
+      </div>
+          <div class="fidelity-view-switch" role="group" aria-label="Visualização de tarefas"><button type="button" data-fidelity-view="kanban" aria-pressed="false"><i data-lucide="columns-3" aria-hidden="true"></i>Quadro</button><button type="button" data-fidelity-view="list" aria-pressed="false"><i data-lucide="list" aria-hidden="true"></i>Lista</button></div>
+        </div></div>
+      </div>
+
+      <div id="homeView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto" aria-label="Quadro de tarefas, cinco etapas ativas"></div>
+      <div id="listView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="archivedView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <div id="userManagementView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+    </main>
+    <nav id="fidelity-mobile-nav" aria-label="Visualizações rápidas"><button type="button" data-fidelity-view="home"><i data-lucide="home" aria-hidden="true"></i>Home</button><button type="button" data-fidelity-view="kanban"><i data-lucide="columns-3" aria-hidden="true"></i>Quadro</button><button type="button" data-fidelity-view="list"><i data-lucide="list" aria-hidden="true"></i>Lista</button><button type="button" data-fidelity-view="archived"><i data-lucide="archive" aria-hidden="true"></i>Arquivo</button></nav>
+  </div>
+
+    <div id="taskModal" role="dialog" aria-labelledby="modalTitle" aria-describedby="task-draft-notice" class="sb-task-dialog fixed inset-0 flex items-center justify-center z-[1500] hidden modal-backdrop transition-opacity duration-300">
+        
+        <div class="sb-task-panel orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
+
+            <form id="taskForm" class="sb-task-form flex flex-col h-full">
+
+                <div class="sb-fidelity-form-scroll custom-scrollbar">
+<div class="sb-fidelity-task-topline">
+                            <div class="task-id-badge bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg text-xs font-bold font-mono tracking-wider opacity-60">
+                                TAREFA
+                            </div>
+                            <span id="modalTitle" class="px-3 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                Nova Tarefa
+                            </span>
+                        </div>
+                        
+                        <div class="sb-task-form-header flex-shrink-0 px-8 pt-8 pb-6 flex justify-between items-start">
+                    <div class="sb-task-heading">
+                        <div class="sb-task-title-field">
+                            <label for="taskTitle" class="sb-task-label">Título <span class="sb-task-required">(obrigatório)</span></label>
+                            <textarea id="taskTitle" aria-describedby="task-draft-notice" required rows="1" class="w-full bg-transparent border-none p-0 text-3xl md:text-5xl font-extrabold leading-tight tracking-tight text-custom-darkest dark:text-white placeholder-black/20 dark:placeholder-white/20 focus:ring-0 focus:outline-none resize-none overflow-hidden" placeholder="Digite o título da tarefa..." oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                            
+                            <button type="button" id="openAiModalBtn" aria-label="Melhorar título com IA" class="absolute -right-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-xl hover:bg-purple-500/10 text-purple-500 hover:scale-110" title="Melhorar com IA">
+                                <i data-lucide="sparkles" class="w-6 h-6" aria-hidden="true"></i><span>Melhorar título com IA</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sb-task-reference">
+                         <div class="sb-fidelity-reference-field">
+                            <label for="taskAzureLink" class="sb-task-label">Link DevOps / externo</label>
+                            <div class="sb-fidelity-reference-control">
+<div class="sb-task-reference-icon absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i data-lucide="link" class="w-4 h-4 text-custom-dark dark:text-white/40 group-focus-within:text-blue-500 transition-colors"></i>
+                            </div>
+                            <input type="url" id="taskAzureLink" aria-describedby="task-link-help" placeholder="Link DevOps / Externo..." class="pl-9 pr-4 py-2 bg-black/5 dark:bg-white/5 border border-transparent focus:border-white/20 rounded-xl text-sm text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 transition-all w-64 hover:bg-black/10 dark:hover:bg-white/10">
+                            </div>
+<p id="task-link-help" class="sb-task-help">Referência externa opcional.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sb-task-form-body flex-grow flex flex-col md:flex-row min-h-0">
+                    
+                    <div class="sb-task-form-main flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-8">
+                        
+                        <div class="sb-task-description-field mb-8 flex-grow flex flex-col">
+                            <label for="taskDescription" class="sb-task-label">Descrição <span class="sb-task-required">(obrigatória)</span></label>
+                            <div class="sb-task-description-surface flex-grow rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-6 py-5 focus-within:bg-black/5 dark:focus-within:bg-white/5 transition-colors relative">
+                                <textarea id="taskDescription" required class="w-full h-full bg-transparent border-none resize-none text-base font-medium text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 leading-relaxed custom-scrollbar focus:outline-none" placeholder="Descreva os detalhes e requisitos da tarefa..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="sb-task-attachments-section pt-6 border-t border-black/5 dark:border-white/5 mb-8 flex-shrink-0">
+                             <div class="flex items-center justify-between mb-4">
+                                <h3 class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 select-none">
+                                    <i data-lucide="paperclip" class="w-4 h-4"></i> Anexos
+                                </h3>
+                                <label for="task-attachment-input" class="cursor-pointer text-[10px] font-bold uppercase tracking-wider text-blue-500 hover:text-blue-400 transition-colors flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-lg hover:bg-blue-500/20">
+                                    <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                                </label>
+                                <input type="file" id="task-attachment-input" multiple class="sb-collab-file-input" aria-label="Adicionar anexos" aria-describedby="attachment-selection-help">
+                            </div>
+                            
+                            <p id="attachment-selection-help" class="sb-collab-help">Ao salvar, o sistema tentará enviar os arquivos selecionados. Um arquivo com link não confirma que as alterações foram salvas.</p>
+                            <div id="attachment-list" class="grid grid-cols-2 gap-3 empty:hidden"></div>
+                            
+                            <div id="empty-attachments-placeholder" class="hidden text-center py-8 border-2 border-dashed border-black/5 dark:border-white/5 rounded-xl">
+                                <p class="text-xs text-black/30 dark:text-white/30">Nenhum anexo adicionado</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sb-task-form-sidebar w-full md:w-[420px] flex flex-col glass-separator-v bg-black/[0.015] dark:bg-white/[0.015]">
+                        
+                        <div class="sb-task-form-fields p-8 space-y-8 overflow-y-auto custom-scrollbar flex-grow">
+                            
+                            <div>
+                                <label for="taskResponsible" class="sb-task-label"><i data-lucide="users" class="w-3 h-3"></i> Responsáveis</label>
+                                <div class="relative">
+                                    <div id="responsible-input-container" class="flex flex-wrap gap-2 p-2 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 min-h-[46px] items-center focus-within:border-white/20 transition-colors">
+                                        <input type="text" id="taskResponsible" aria-describedby="task-responsible-help" class="flex-grow bg-transparent border-none text-sm text-custom-darkest dark:text-white placeholder-black/30 dark:placeholder-white/20 focus:ring-0 focus:outline-none min-w-[80px] px-2" placeholder="Adicionar..." autocomplete="off">
+                                    </div>
+                                    <p id="task-responsible-help" class="sb-task-help">Adicione uma ou mais pessoas. A primeira é a responsável principal.</p>
+                                    <div id="responsible-suggestions" class="absolute z-20 w-full bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar backdrop-blur-xl"></div>
+                                </div>
+                            </div>
+
+                            <div id="status-container" class="hidden">
+                                <label for="taskStatus" class="sb-task-label"><i data-lucide="activity" class="w-3 h-3"></i> Status</label>
+                                 <select id="taskStatus" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 cursor-pointer outline-none">
+                                    <option value="todo">Fila</option>
+                                    <option value="stopped">Parado</option>
+                                    <option value="inprogress">Em Andamento</option>
+                                    <option value="homologation">Homologação</option>
+                                    <option value="publication">Publicação</option>
+                                    <option value="done">Concluída</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="taskProject" class="sb-task-label"><i data-lucide="folder" class="w-3 h-3"></i> Projeto</label>
+                                <div class="flex gap-2">
+                                    <div class="relative flex-grow">
+                                        <input type="text" id="taskProject" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 placeholder-black/30 dark:placeholder-white/20 outline-none" placeholder="Nome do projeto..." autocomplete="off">
+                                        <div id="project-suggestions" class="absolute z-10 w-full bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-600 rounded-xl mt-2 hidden shadow-2xl max-h-40 overflow-y-auto custom-scrollbar backdrop-blur-xl"></div>
+                                    </div>
+                                    <div class="relative flex-shrink-0">
+                                        <button type="button" id="color-picker-button" aria-label="Escolher cor do projeto" class="w-11 h-11 rounded-xl border border-black/5 dark:border-white/5 shadow-sm hover:scale-105 transition-all duration-300 flex items-center justify-center overflow-hidden relative group">
+                                            <div id="current-color-bg" class="absolute inset-0 transition-colors duration-500 bg-gray-400"></div>
+                                            <i data-lucide="palette" class="w-4 h-4 text-white relative z-10 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                        </button>
+                                        <input type="color" id="taskProjectColor" aria-label="Cor personalizada do projeto" value="#526D82" class="absolute top-0 left-0 opacity-0 pointer-events-none w-0 h-0">
+                                        
+                                        <div id="color-palette" class="absolute z-50 mt-3 -right-2 w-[240px] p-4 bg-white/90 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl hidden transform transition-all duration-300 origin-top-right scale-95 opacity-0">
+                                            <div class="flex justify-between items-center mb-3">
+                                                <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Tons</span>
+                                                <span id="hex-display" class="text-[10px] font-mono text-gray-500 dark:text-gray-300">#526D82</span>
+                                            </div>
+                                            <div id="palette-grid" class="grid grid-cols-5 gap-3 place-items-center"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <div>
+                                <label for="taskPriority" class="sb-task-label"><i data-lucide="flag" class="w-3 h-3"></i> Prioridade</label>
+                                 <select id="taskPriority" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 cursor-pointer outline-none">
+                                    <option value="Baixa">Baixa</option>
+                                    <option value="Média" selected>Média</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Urgente">Urgente</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                 <div class="flex justify-between items-center mb-3">
+                                    <label for="taskDueDate" class="sb-task-label"><i data-lucide="calendar" class="w-3 h-3"></i> Prazo</label>
+                                    <div class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
+                                        <input type="checkbox" id="no-due-date-checkbox" class="rounded border-gray-300 dark:border-gray-600 bg-transparent text-custom-dark focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                                        <label for="no-due-date-checkbox" class="text-[10px] text-custom-dark dark:text-white cursor-pointer select-none font-bold">Sem data</label>
+                                    </div>
+                                </div>
+                                <input type="date" id="taskDueDate" aria-label="Prazo da tarefa" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl text-sm text-custom-darkest dark:text-white focus:ring-0 focus:border-white/20 p-3 outline-none">
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                </div>
+<div class="sb-task-form-footer p-6 mt-auto glass-separator-h border-t border-black/5 dark:border-white/5 flex flex-col gap-3 flex-shrink-0">
+                    <p id="task-draft-notice" class="sb-task-help">As alterações só são enviadas ao salvar. Ao sair, edições não salvas podem ser perdidas.</p>
+                    <button type="button" id="cancelBtn" class="w-full py-3 rounded-xl text-sm font-bold text-custom-dark dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-colors border border-transparent hover:border-black/5 dark:hover:border-white/5">
+                        Cancelar
+                    </button>
+                <button type="submit" class="w-full py-4 rounded-xl text-sm font-bold bg-custom-darkest text-white hover:bg-custom-header dark:bg-white dark:text-custom-darkest shadow-lg shadow-custom-darkest/10 dark:shadow-white/5 transition-transform active:scale-95 flex items-center justify-center gap-2 group">
+                        <i data-lucide="save" class="w-4 h-4 group-hover:scale-110 transition-transform"></i> Salvar Tarefa
+                    </button>
+                    </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="taskHistoryModal" role="dialog" aria-labelledby="modal-info-title" class="sb-task-dialog fixed inset-0 z-[1500] hidden flex items-center justify-center p-4 modal-backdrop transition-opacity duration-300">
+        
+        <div class="sb-task-panel orb-glass-unified w-full max-w-7xl h-[90vh] flex flex-col relative animate-scale-up overflow-hidden">
+
+            <div class="sb-fidelity-detail-topline">
+<div class="sb-fidelity-detail-identity">
+<div class="task-id-badge bg-black/5 dark:bg-white/10 px-3 py-1 rounded-lg text-xs font-bold font-mono tracking-wider opacity-60">
+                            #<span id="modal-task-id-display">0000</span>
+                        </div>
+                        <span id="fidelity-detail-status" class="sb-badge">Estado não informado</span>
+</div>
+<button type="button" class="sb-fidelity-detail-dismiss" aria-label="Fechar detalhe da tarefa" data-fidelity-close-detail><i data-lucide="x" aria-hidden="true"></i></button>
+</div>
+<div class="sb-task-detail-body custom-scrollbar">
+<section class="sb-task-detail-main"><h2 id="modal-info-title" class="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight">
+                        Título da Tarefa
+                    </h2>
+                <div class="sb-fidelity-detail-description-section">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3">Descrição</h3>
+                            <div class="sb-task-detail-description rounded-2xl border border-black/5 dark:border-white/10 bg-black/[0.025] dark:bg-white/[0.03] px-4 py-3">
+                                <p id="modal-info-description" class="whitespace-pre-wrap leading-relaxed text-base font-medium opacity-90"></p>
+                            </div>
+                        </div>
+
+                        <section class="sb-fidelity-detail-pending"><h3>O que falta para concluir</h3>
+<p id="fidelity-detail-missing">Não informado.</p></section><div class="sb-fidelity-detail-tabs" role="tablist" aria-label="Informações da tarefa">
+<button type="button" role="tab" id="fidelity-tab-comments" aria-controls="fidelity-panel-comments" aria-selected="true" tabindex="0" data-fidelity-tab="comments">Comentários</button>
+<button type="button" role="tab" id="fidelity-tab-attachments" aria-controls="fidelity-panel-attachments" aria-selected="false" tabindex="-1" data-fidelity-tab="attachments">Anexos</button>
+<button type="button" role="tab" id="fidelity-tab-history" aria-controls="fidelity-panel-history" aria-selected="false" tabindex="-1" data-fidelity-tab="history">Histórico</button>
+</div>
+<div class="sb-task-detail-comments flex-1 flex flex-col min-h-0 relative glass-separator-v sb-fidelity-detail-pane" id="fidelity-panel-comments" role="tabpanel" aria-labelledby="fidelity-tab-comments" tabindex="0">
+                        <div class="px-8 py-4 flex items-center justify-between">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-60">Comentários</h3>
+                        </div>
+
+                        <div id="comments-feed" aria-label="Comentários da tarefa" class="flex-1 overflow-y-auto px-8 py-2 space-y-4 custom-scrollbar"></div>
+
+                        <div class="p-6 mt-auto">
+                            <div class="relative">
+                                <textarea id="comment-input" aria-label="Escrever comentário" class="chat-input-integrated w-full pl-5 pr-14 py-4 text-sm resize-none custom-scrollbar shadow-sm" placeholder="Escreva um comentário..." rows="1" style="min-height: 54px; max-height: 120px;"></textarea>
+                                <button id="add-comment-btn" aria-label="Enviar comentário" class="absolute right-3 bottom-3 p-2 bg-custom-darkest dark:bg-white text-white dark:text-custom-darkest rounded-full hover:scale-110 active:scale-95 transition-all shadow-md">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <section id="fidelity-panel-attachments" class="sb-fidelity-detail-pane" role="tabpanel" aria-labelledby="fidelity-tab-attachments" tabindex="0" hidden><div id="modal-info-attachments-container" class="hidden pt-6 border-t border-black/5 dark:border-white/5 mb-8">
+                             <h3 class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-50 mb-4 select-none">
+                                <i data-lucide="paperclip" class="w-4 h-4"></i> Anexos
+                            </h3>
+                            <div id="modal-info-attachments" class="grid grid-cols-2 gap-3"></div>
+                        </div>
+                    <p id="fidelity-attachments-empty" class="sb-fidelity-empty">Nenhum anexo informado.</p></section><div class="sb-fidelity-detail-pane" id="fidelity-panel-history" role="tabpanel" aria-labelledby="fidelity-tab-history" tabindex="0" hidden="">
+                        <button onclick="document.getElementById('history-feed').classList.toggle('hidden'); this.querySelector('.arrow-icon').classList.toggle('rotate-180')" class="w-full flex items-center justify-between p-4 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 transition-colors group sb-fidelity-legacy-history-toggle" tabindex="-1" aria-hidden="true">
+                            <span class="text-xs font-bold opacity-60 group-hover:opacity-100 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="history" class="w-4 h-4"></i> Histórico de Alterações
+                            </span>
+                            <i data-lucide="chevron-down" class="arrow-icon w-4 h-4 opacity-40 transition-transform duration-300"></i>
+                        </button>
+                        <div id="history-feed" class="hidden mt-4 pl-4 border-l-2 border-black/5 dark:border-white/5 space-y-4"></div>
+                    </div>
+                </section><aside class="sb-task-detail-sidebar" aria-label="Informações da tarefa"><section class="sb-fidelity-rail-field"><h3>Projeto</h3>
+<span id="modal-info-project" class="px-3 py-1 rounded-lg bg-black/5 dark:bg-white/10 text-[10px] font-bold uppercase tracking-widest opacity-60">
+                            Projeto
+                        </span>
+                    </section><section class="sb-fidelity-rail-field"><h3>Prioridade</h3>
+<p id="fidelity-detail-priority">Não informada</p></section><div class="sb-task-detail-context">
+        
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
+                                <i data-lucide="users" class="w-3 h-3"></i> Responsáveis
+                            </h3>
+                            <div id="sidebar-responsibles-container" class="flex items-center gap-2 pl-1 min-h-[42px]"></div>
+                        </div>
+
+                        <div id="modal-info-homologador-container" class="hidden flex-col">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
+                                <i data-lucide="shield-check" class="w-3 h-3"></i> Homologador
+                            </h3>
+                            <div id="modal-info-homologador" class="flex items-center gap-2 pl-1 min-h-[42px]"></div>
+                        </div>
+
+                        <div id="modal-info-dueDate-container" class="flex flex-col">
+                            <h3 class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-3 flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-3 h-3"></i> Prazo
+                            </h3>
+                            <div class="flex items-center gap-3 p-2.5 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/5 min-h-[42px] min-w-[140px] group relative">
+                                <div id="modal-info-dueDate" class="text-sm font-bold truncate text-custom-darkest dark:text-white pl-2">...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section id="fidelity-no-due-date" class="sb-fidelity-rail-field"><h3>Prazo</h3>
+<p>Sem prazo informado</p></section><section id="fidelity-no-validator" class="sb-fidelity-rail-field"><h3>Homologador</h3>
+<p>Não informado</p></section><section class="sb-fidelity-rail-field"><button type="button" id="fidelity-detail-progress" class="sb-fidelity-detail-progress" aria-label="Atualizar progresso"><span>Progresso informado</span><strong id="fidelity-detail-progress-value">Não informado</strong><span class="sb-fidelity-detail-progress-track" aria-hidden="true"><span id="fidelity-detail-progress-fill"></span></span></button><p class="sb-task-help">100% não substitui homologação e publicação.</p></section><div class="sb-task-detail-actions sb-fidelity-rail-actions">
+<button id="modal-approve-btn" aria-label="Aprovar e enviar para Publicação" class="hidden items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow-sm transition-transform active:scale-95 mr-2" title="Aprovar e Enviar para Publicação">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Aprovar</span>
+                    </button>
+                    <div id="modal-info-azure-link-container" class="hidden mr-2">
+                         <a id="modal-info-azure-link" rel="noopener noreferrer" aria-label="Abrir referência DevOps ou externa em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all" title="Abrir referência externa">
+                            <i data-lucide="git-branch" class="w-6 h-6" aria-hidden="true"></i><span>Link externo</span>
+                        </a>
+                    </div>
+                    
+                    <a id="modal-calendar-btn" rel="noopener noreferrer" aria-label="Abrir rascunho no Google Calendar em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Abrir rascunho no Google Calendar; confirme e salve no Calendar">
+                        <i data-lucide="calendar-plus" class="w-6 h-6" aria-hidden="true"></i><span>Rascunho Calendar</span>
+                    </a>
+
+                    <button id="modal-signal-btn" aria-label="Chamar atenção dos responsáveis" class="p-3 rounded-2xl hover:bg-orange-500/10 text-orange-500 hover:text-orange-600 transition-all opacity-80 hover:opacity-100" title="Chamar atenção dos Responsáveis">
+                        <i data-lucide="megaphone" class="w-6 h-6"></i>
+                    <span>Chamar responsáveis</span></button>
+
+                    </div></aside>
+</div>
+<div class="sb-fidelity-detail-footer">
+<span class="sb-task-help">Alterações e comentários usam as ações desta tarefa.</span><div class="sb-task-detail-actions">
+<button id="closeHistoryBtn" aria-label="Fechar detalhe da tarefa" class="p-3 rounded-2xl hover:bg-red-500/10 text-red-500 hover:text-red-600 transition-all opacity-80 hover:opacity-100">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    <span>Fechar</span></button>
+                <button id="editTaskBtn" aria-label="Editar tarefa" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-all" title="Editar">
+                        <i data-lucide="file-pen-line" class="w-6 h-6"></i>
+                    <span>Editar tarefa</span></button>
+                    </div>
+</div>
+</div>
+    </div>
+
+    <div id="aiTitleModal" role="dialog" aria-labelledby="ai-title-heading" aria-describedby="ai-review-help" class="sb-task-dialog fixed inset-0 z-[1600] hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="sb-task-assist-panel bg-white dark:bg-[#1f2937] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md modal-content overflow-hidden">
+            <div class="sb-task-assist-header bg-purple-600 p-6 flex justify-between items-center text-white">
+                <div class="flex items-center gap-3">
+                    <div class="bg-white/20 p-2 rounded-lg"><i data-lucide="bot" class="w-6 h-6"></i></div>
+                    <h2 id="ai-title-heading" class="text-xl font-bold">Revisar título com IA</h2>
+                </div>
+                <button id="closeAiModalBtn" aria-label="Fechar sugestão de título" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="sb-task-assist-body p-6 space-y-5">
+                <p id="ai-review-help" class="sb-task-help">Gere uma sugestão, revise o texto e escolha Aplicar. A tarefa só será enviada ao salvar o formulário.</p>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-gray-400 mb-1">Título Original</label>
+                    <p id="ai-original-title" class="text-sm italic text-gray-600 dark:text-gray-300 p-3 rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-black/20">...</p>
+                </div>
+                <div>
+                    <label for="ai-instruction" class="block text-sm font-bold mb-2 dark:text-white">Como posso melhorar?</label>
+                    <textarea id="ai-instruction" rows="2" class="w-full rounded-xl border-gray-300 dark:border-gray-600 dark:bg-black/20 text-sm focus:ring-purple-500 focus:border-purple-500" placeholder="Ex: Deixar mais formal, traduzir para inglês..."></textarea>
+                    <div class="flex gap-2 mt-3">
+                        <button type="button" class="ai-suggestion-chip text-xs bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-3 py-1 rounded-full border border-purple-100 dark:border-purple-800 hover:bg-purple-100 transition-colors">Resumir</button>
+                        <button type="button" class="ai-suggestion-chip text-xs bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-3 py-1 rounded-full border border-purple-100 dark:border-purple-800 hover:bg-purple-100 transition-colors">Profissional</button>
+                    </div>
+                </div>
+                <div id="ai-result-container" class="hidden animate-fade-in">
+                    <label for="ai-result-text" class="sb-task-label">Sugestão para revisão · ainda não aplicada</label>
+                    <textarea id="ai-result-text" rows="2" class="w-full bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800 rounded-xl p-3 text-custom-darkest dark:text-white font-medium focus:ring-0"></textarea>
+                </div>
+            </div>
+            <div class="sb-task-assist-footer p-4 bg-gray-50 dark:bg-black/20 flex items-center justify-end gap-3">
+                <button type="button" id="cancelAiBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 font-semibold py-2 px-4 rounded-lg text-sm">Cancelar</button>
+                <button type="button" id="generateAiBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-purple-500/20 transition-transform active:scale-95"><i data-lucide="sparkles" class="w-4 h-4"></i> Gerar</button>
+                <button type="button" id="applyAiBtn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-green-500/20 transition-transform active:scale-95"><i data-lucide="check" class="w-4 h-4"></i> Aplicar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteConfirmModal" role="dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-description" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+        <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
+            
+            <div class="w-20 h-20 rounded-full bg-red-500/10 dark:bg-red-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-red-500/20 shadow-inner">
+                <i id="modal-icon" data-lucide="trash-2" class="w-9 h-9 text-red-600 dark:text-red-400"></i>
+            </div>
+            
+            <h2 id="confirm-dialog-title" class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Tem a certeza?</h2>
+            
+            <p id="confirm-dialog-description" class="text-custom-dark dark:text-blue-100/70 mb-8 text-sm leading-relaxed font-medium">
+                Esta ação é irreversível e removerá o item permanentemente do quadro.
+            </p>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="cancelDeleteBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-gray-500/10 dark:bg-white/5 hover:bg-gray-500/20 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-colors border border-black/5 dark:border-white/5">
+                    Cancelar
+                </button>
+                
+                <button type="button" id="confirmDeleteBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-transform active:scale-95">
+                    Sim, remover
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="signalConfirmModal" role="dialog" aria-labelledby="signal-confirm-title" aria-describedby="signal-confirm-help" class="sb-people-dialog fixed inset-0 flex items-center justify-center z-[1700] hidden modal-backdrop">
+        <div class="sb-people-panel orb-glass-unified">
+            <div class="sb-attention-icon" aria-hidden="true"><i data-lucide="megaphone"></i></div>
+            <h2 id="signal-confirm-title">Quem deseja sinalizar?</h2>
+            <p id="signal-confirm-help">Selecione os responsáveis que devem receber um alerta imediato na tela:</p>
+            <div id="signal-targets-container" class="sb-signal-targets custom-scrollbar"></div>
+            <div class="sb-people-form-actions">
+                <button type="button" id="cancelSignalBtn" class="sb-button sb-button--secondary">Cancelar</button>
+                <button type="button" id="confirmSignalBtn" class="sb-button">Sinalizar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertModal" role="dialog" aria-labelledby="alert-modal-title" aria-describedby="alert-modal-help" class="sb-people-dialog fixed inset-0 flex items-center justify-center z-[1800] hidden modal-backdrop">
+        <div class="sb-people-panel sb-attention-panel orb-glass-unified">
+            <div class="sb-attention-icon" aria-hidden="true"><i data-lucide="megaphone"></i></div>
+            <h2 id="alert-modal-title">Atenção Solicitada</h2>
+            <p id="alert-modal-help"><span id="alert-signaled-by">Alguém</span> solicitou sua atenção na tarefa abaixo:</p>
+            <div id="alert-task-card" class="sb-alert-task">
+                <p>Tarefa <span id="alert-task-id">…</span></p>
+                <h3 id="alert-task-title">…</h3>
+            </div>
+            <button type="button" id="dismissAlertBtn" class="sb-button"><i data-lucide="check-circle" aria-hidden="true"></i> Recebido, vou olhar!</button>
+            <p class="sb-help sb-alert-help">Ao confirmar, a tarefa será aberta para você consultar.</p>
+            <p class="sb-alert-queue">Outros alertas na fila: <span id="alert-queue-count">0</span></p>
+        </div>
+    </div>
+
+    <div id="homologadorModal" role="dialog" aria-labelledby="homologadorTitle" aria-describedby="homologadorDescription" class="sb-task-dialog fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+        <div class="sb-task-context-panel orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
+            
+            <div class="w-20 h-20 rounded-full bg-orange-500/10 dark:bg-orange-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-orange-500/20 shadow-inner">
+                <i data-lucide="shield-check" class="w-9 h-9 text-orange-600 dark:text-orange-400"></i>
+            </div>
+            
+            <h2 id="homologadorTitle" class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Quem vai homologar?</h2>
+
+            <p id="homologadorDescription" class="text-custom-dark dark:text-blue-100/70 mb-6 text-sm leading-relaxed font-medium">
+                Selecione o responsável por validar esta tarefa antes da publicação.
+            </p>
+            
+            <div class="relative mb-8">
+                <label for="homologadorSelect" class="sb-task-label sb-kanban-modal-label">Pessoa responsável pela homologação</label>
+                <select id="homologadorSelect" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl px-4 py-3.5 text-sm focus:ring-0 focus:border-white/20 text-custom-darkest dark:text-white outline-none cursor-pointer appearance-none">
+                    </select>
+                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-50">
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-custom-darkest dark:text-white"></i>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="cancelHomologadorBtn" class="py-3.5 px-4 rounded-2xl font-bold text-sm bg-gray-500/10 dark:bg-white/5 hover:bg-gray-500/20 dark:hover:bg-white/10 text-custom-darkest dark:text-white transition-colors border border-black/5 dark:border-white/5">
+                    Cancelar
+                </button>
+                
+                <button type="button" id="confirmHomologadorBtn" class="py-3.5 px-4 flex items-center justify-center gap-2 rounded-2xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 transition-transform active:scale-95">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notificationsModal" role="dialog" aria-labelledby="notifications-title" class="sb-people-dialog fixed inset-0 z-[1600] hidden flex items-center justify-center modal-backdrop">
+        <div class="sb-people-panel sb-notifications-panel orb-glass-unified">
+            <header class="sb-people-dialog-header">
+                <div><h2 id="notifications-title">Notificações</h2><p>Selecione uma notificação para abrir a tarefa.</p></div>
+                <button type="button" id="closeNotificationsBtn" class="sb-people-close" aria-label="Fechar notificações"><i data-lucide="x" aria-hidden="true"></i></button>
+            </header>
+            <div id="modal-notifications-list" class="sb-notifications-list custom-scrollbar"><p class="sb-notifications-loading" role="status">Carregando notificações…</p></div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
+    
+    <script type="module" src="js/main.js?v=tc455-fidelity-preview-1"></script>
+    <script type="module" src="js/task-fidelity-v2.js?v=tc455-task-1"></script>
+</body>
+</html>

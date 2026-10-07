@@ -20,7 +20,7 @@ export function closeShellPanels(restoreFocus = true) {
   document.querySelectorAll('[data-shell-toggle]').forEach(button => button.setAttribute('aria-expanded', 'false'));
   const backdrop = document.getElementById('shell-backdrop');
   if (backdrop) backdrop.hidden = true;
-  for (const id of ['shell-topbar', 'orb-filter', 'main-content']) {
+  for (const id of ['shell-topbar', 'orb-filter', 'main-content', 'fidelity-mobile-nav']) {
     const element = document.getElementById(id);
     if (element) element.inert = false;
   }
@@ -41,7 +41,10 @@ function openPanel(panel, trigger) {
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
     document.getElementById('shell-backdrop').hidden = false;
-    for (const id of ['shell-topbar', 'orb-filter', 'main-content']) document.getElementById(id).inert = true;
+    for (const id of ['shell-topbar', 'orb-filter', 'main-content', 'fidelity-mobile-nav']) {
+      const element = document.getElementById(id);
+      if (element) element.inert = true;
+    }
   }
   focusable(panel)[0]?.focus();
 }
@@ -56,7 +59,7 @@ export function syncShellView(view) {
 export function initializeShell() {
   if (shellReady) return;
   shellReady = true;
-  mobileQuery = window.matchMedia('(max-width: 767px)');
+  mobileQuery = window.matchMedia(document.body?.classList.contains('sb-fidelity-v2') ? '(max-width: 680px)' : '(max-width: 767px)');
   const filterBand = document.querySelector('.sb-task-filter-band');
   if (filterBand) {
     const sizeFilterBand = () => document.body.style.setProperty('--sb-filter-height', `${filterBand.getBoundingClientRect().height}px`);

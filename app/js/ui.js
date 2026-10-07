@@ -1,5 +1,7 @@
+import { isFidelityV2, applyFidelityFilters, fidelityFilterCount, resetFidelityFilters, syncFidelityShell, finishFidelityView, renderFidelityCardMarkup } from './fidelity-v2.js';
 import { state } from './state.js';
-import { renderArchiveRows, renderArchiveShell, applyArchiveProjectColors } from './archive-v2.js';
+import { setFidelitySecondaryHeading, renderFidelityHomeShell, renderFidelityHomeRow, renderFidelityListRow, renderFidelityListShell, renderFidelityArchiveShell, renderFidelityArchiveRows, renderFidelityPeopleDirectory } from './fidelity-secondary-v2.js';
+import { renderArchiveRows, renderArchiveShell, applyArchiveProjectColors, archiveResponsibleNames, archiveUpdatedLabel } from './archive-v2.js';
 import { personCard, notificationCard } from './people-v2.js';
 import { buildHomeModel, selectHomeTasks, isPendingHomeValidation, escapeHomeText, restoreHomeTaskFocus } from './home-v2.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
@@ -257,7 +259,7 @@ export const createTaskElement = (task) => {
         <span class="sb-kanban-progress-track" aria-hidden="true"><span class="sb-kanban-progress-fill" style="width: ${escapeCardText(progress)}%"></span></span>
     </button>`;
 
-    taskCard.innerHTML = `
+    taskCard.innerHTML = (typeof isFidelityV2 === 'function' && isFidelityV2()) ? renderFidelityCardMarkup(task, { escape: escapeCardText, avatars: avatars + extra, responsibleNames, projectStrip, progressBarHtml, actionButtons, isOverdue }) : `
         <div class="sb-kanban-card-head"><span class="sb-kanban-id">${escapeCardText(task.id)}</span><span class="sb-kanban-priority">Prioridade: ${escapeCardText(task.priority || 'Não informada')}</span></div>
         <div class="task-body">
             <h3 class="sb-kanban-title">${escapeCardText(task.title)}</h3>
@@ -347,7 +349,7 @@ function filterTasks(tasks) {
             (t.id && t.id.toLowerCase().includes(q))
         );
     }
-    return filtered;
+    return (typeof isFidelityV2 === 'function' && isFidelityV2()) ? applyFidelityFilters(filtered) : filtered;
 }
 
 // --- RENDERIZAÇÃO: HOME (DASHBOARD DO USUÁRIO) ---
@@ -372,9 +374,11 @@ export function renderHomeView() {
         {key: 'publication', label: 'Publicação', icon: 'arrow-up-right', title: 'Tarefas em Publicação'},
         {key: 'overdue', label: 'Atrasadas', icon: 'calendar-clock', title: 'Tarefas Atrasadas'}
     ];
+    const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
+    if (fidelity) setFidelitySecondaryHeading(`${getGreeting()}, ${userName}!`, 'O trabalho em curso e o que precisa da sua atenção.');
     const previousFilter = container.dataset.homeFilter;
     const focusedFilter = container.contains(document.activeElement) ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;
-    container.innerHTML = `
+    container.innerHTML = fidelity ? renderFidelityHomeShell({myActiveTasks, counts, myHomologationsPending, views}) : `
         <section class="sb-home" aria-labelledby="home-greeting">
             <header class="sb-home-header">
                 <div><p class="sb-home-eyebrow">Seu fluxo de trabalho</p><h2 id="home-greeting">${getGreeting()}, ${escapeHomeText(userName)}!</h2><p>O que precisa da sua atenção, em cada etapa.</p></div>
@@ -409,6 +413,7 @@ export function renderHomeView() {
                 const status = views.find(view => view.key === task.status);
                 const pending = isPendingHomeValidation(task, myIdentifiers);
                 const overdue = isTaskOverdue(task);
+                if (fidelity) return renderFidelityHomeRow(task, {status, pending, overdue, formatDate});
                 return `<button type="button" class="list-row sb-home-row${pending ? ' sb-home-row--validation' : ''}" data-task-id="${escapeHomeText(task.id)}" aria-label="Abrir tarefa ${escapeHomeText(task.id)}: ${escapeHomeText(task.title)}. Estado: ${escapeHomeText(status?.label || 'não identificado')}.${pending ? ' Sua homologação pendente.' : ''}">
                     <span class="sb-home-row-main"><span class="sb-home-row-meta"><span class="sb-home-task-id">#${escapeHomeText(task.id)}</span><span class="sb-home-project"><span class="sb-home-project-dot" data-project-color="${escapeHomeText(task.projectColor || '#94A3B8')}" aria-hidden="true"></span>${escapeHomeText(task.project || 'Geral')}</span>${task.priority === 'Urgente' ? '<span class="sb-badge" data-status="error">Urgente</span>' : ''}${pending ? '<span class="sb-badge" data-status="homologation">Sua homologação</span>' : ''}</span><span class="sb-home-task-title">${escapeHomeText(task.title)}</span><span class="sb-home-row-meta"><span class="sb-badge" data-status="${escapeHomeText(task.status)}">${escapeHomeText(status?.label || 'Estado não identificado')}</span><span class="sb-home-meta">Prioridade: ${escapeHomeText(task.priority || 'não informada')}</span></span></span>
                     <span class="sb-home-row-end"><span class="sb-home-deadline${overdue ? ' sb-home-deadline--overdue' : ''}"><i data-lucide="${overdue ? 'calendar-clock' : 'calendar'}" aria-hidden="true"></i>${task.dueDate ? `${formatDate(task.dueDate)}${overdue ? ' · Atrasada' : ''}` : 'Sem prazo'}</span><span class="sb-home-open">Abrir tarefa <i data-lucide="arrow-up-right" aria-hidden="true"></i></span></span>
@@ -432,6 +437,7 @@ export function renderHomeView() {
 
 export function renderKanbanView() {
     const kanbanViewEl = document.getElementById('kanbanView');
+    const fidelity = typeof isFidelityV2 === 'function' && isFidelityV2();
     // Aplica o filtro
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
@@ -462,8 +468,8 @@ export function renderKanbanView() {
             columnEl.setAttribute('aria-labelledby', `kanban-heading-${col.id}`);
             columnEl.innerHTML = `
                 <div class="column-header sb-kanban-column-header">
-                    <div class="sb-kanban-column-heading"><h2 id="kanban-heading-${col.id}">${col.name}</h2><span class="column-count" aria-label="Tarefas nesta etapa">0</span></div>
-                    <p>${col.description}</p>
+                    <div class="sb-kanban-column-heading"><h2 id="kanban-heading-${col.id}">${fidelity ? `<i data-lucide="${({todo: 'circle', stopped: 'pause', inprogress: 'clock-3', homologation: 'shield-check', publication: 'upload'})[col.id]}" aria-hidden="true"></i>` : ''}${col.name}</h2><span class="column-count" aria-label="Tarefas nesta etapa">0</span></div>
+                    ${fidelity ? '' : `<p>${col.description}</p>`}
                 </div>
                 <div class="kanban-task-list custom-scrollbar" data-column-id="${col.id}"></div>
                 <p class="sb-kanban-empty">Nenhuma tarefa nesta etapa.</p>
@@ -495,6 +501,7 @@ function escapeListV2Text(value) {
 
 export function renderListView() {
     const container = document.getElementById('listView');
+    const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
     
     // 1. Filtragem Inicial
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
@@ -609,6 +616,7 @@ export function renderListView() {
         const homologadorName = typeof task.homologador === 'object' ? (task.homologador?.name || task.homologador?.email) : task.homologador;
         const homologadorHtml = homologadorName && ['homologation', 'publication'].includes(task.status)
             ? `<p class="sb-list-reviewer"><i data-lucide="${task.status === 'publication' ? 'check-circle' : 'shield-check'}" aria-hidden="true"></i>Homologador: ${esc(homologadorName)}</p>` : '';
+        if (fidelity) return renderFidelityListRow(task, {respNames, statusLabel, projectColor, progress, homologadorName, formatDate});
         return `
             <article class="task-list-row list-row sb-task-list-row" data-task-id="${esc(task.id)}" aria-labelledby="list-task-${esc(task.id)}">
                 <div class="sb-list-task-main">
@@ -631,7 +639,7 @@ export function renderListView() {
             </article>`;
     }).join('');
 
-    container.innerHTML = `<section class="sb-list-results" aria-label="Tarefas ativas">
+    container.innerHTML = fidelity ? renderFidelityListShell(rows, activeTasks.length) : `<section class="sb-list-results" aria-label="Tarefas ativas">
         <div class="sb-list-results-heading"><h2>Tarefas</h2><p>${activeTasks.length} ${activeTasks.length === 1 ? 'tarefa' : 'tarefas'}</p></div>
         <div class="sb-list-rows">${rows}</div>
     </section>`;
@@ -680,17 +688,20 @@ export function renderListView() {
 
 export async function renderArchivedTasks() {
     const container = document.getElementById('archivedView');
-    container.innerHTML = renderArchiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><span class="sb-spinner" aria-hidden="true"></span><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
+    const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
+    const archiveShell = fidelity ? renderFidelityArchiveShell : renderArchiveShell;
+    if (fidelity) setFidelitySecondaryHeading('Arquivados', 'Tarefas concluídas ficam separadas do fluxo ativo. Restaurar envia a tarefa para Fila.');
+    container.innerHTML = archiveShell('<div class="sb-empty sb-archive-state" role="status" aria-live="polite" aria-busy="true"><span class="sb-spinner" aria-hidden="true"></span><h3>Carregando arquivados…</h3><p>Aguarde a consulta das tarefas concluídas.</p></div>');
     lucide.createIcons();
 
     try {
         const tasks = await fetchArchivedTasks();
-        container.innerHTML = renderArchiveRows(tasks);
+        container.innerHTML = fidelity ? renderFidelityArchiveRows(tasks, {archiveResponsibleNames, archiveUpdatedLabel}) : renderArchiveRows(tasks);
         applyArchiveProjectColors(container);
         lucide.createIcons();
     } catch (e) {
         console.error(e);
-        container.innerHTML = renderArchiveShell('<div class="sb-notice sb-notice--error sb-archive-state" role="alert"><h3>Não foi possível carregar o arquivo</h3><p>Os dados não estão disponíveis. Tente abrir Arquivados novamente.</p></div>');
+        container.innerHTML = archiveShell('<div class="sb-notice sb-notice--error sb-archive-state" role="alert"><h3>Não foi possível carregar o arquivo</h3><p>Os dados não estão disponíveis. Tente abrir Arquivados novamente.</p></div>');
     }
 }
 
@@ -698,6 +709,8 @@ export async function renderArchivedTasks() {
 
 export function renderUserManagementView() {
     const container = document.getElementById('userManagementView');
+    const fidelity = document.body?.classList.contains('sb-fidelity-v2') === true;
+    if (fidelity) setFidelitySecondaryHeading('Utilizadores', 'Pessoas, papéis e acesso ao espaço de trabalho.');
     
     // Filtra o utilizador de sistema e ORDENA alfabeticamente pelo Nome de Exibição
     const allUsers = state.users
@@ -716,7 +729,7 @@ export function renderUserManagementView() {
         return personCard(user, activeTasksCount);
     }).join('');
 
-    container.innerHTML = `
+    container.innerHTML = `${fidelity ? renderFidelityPeopleDirectory(userCards, allUsers.length) : `
         <div class="sb-people-page">
             <header class="sb-people-header">
                 <div><p class="sb-people-kicker">Pessoas</p><h1>Gestão de Utilizadores</h1><p>Acessos e cargos</p></div>
@@ -731,7 +744,7 @@ export function renderUserManagementView() {
                 ${allUsers.length === 0 ? '<div class="sb-empty"><h2>Nenhum membro disponível</h2><p>A lista de utilizadores está vazia.</p></div>' : ''}
                 <div id="no-users-found" class="hidden sb-empty" role="status"><i data-lucide="users-2" aria-hidden="true"></i><p>Nenhum membro encontrado.</p></div>
             </div>
-        </div>
+        </div>`}
 
         <div id="userFormModal" role="dialog" aria-labelledby="user-form-title" aria-describedby="user-form-subtitle" class="sb-people-dialog fixed inset-0 z-[1500] hidden items-center justify-center p-4 modal-backdrop">
             <div class="absolute inset-0 close-user-modal" aria-hidden="true"></div>
@@ -793,6 +806,8 @@ export function renderUserManagementView() {
 // --- ROTEADOR UI (ATUALIZADO COM ANIMAÇÃO DE ENTRADA E SAÍDA) ---
 
 export function updateActiveView() {
+    // TC-455 preview shell renders first; per-view renderers can override the shared hero.
+    if (typeof isFidelityV2 === 'function' && isFidelityV2()) syncFidelityShell(state, filterTasks(state.tasks).filter(t => t.status !== 'done'));
     const home = document.getElementById('homeView');
     const kanban = document.getElementById('kanbanView');
     const list = document.getElementById('listView');
@@ -907,6 +922,7 @@ export function updateActiveView() {
             label.textContent = "Utilizadores";
         }
     }
+    if (typeof isFidelityV2 === 'function' && isFidelityV2()) finishFidelityView(state);
 }
 
 // --- FILTROS NO ORB + BADGE ---
@@ -916,7 +932,7 @@ function updateFilterBadge() {
     if (!filterOrb) return;
     const projectSelected = state.selectedProject && state.selectedProject !== 'all';
     const responsibleSelected = state.selectedResponsible && state.selectedResponsible !== 'all';
-    const activeCount = Number(Boolean(projectSelected)) + Number(Boolean(responsibleSelected)) + Number(Boolean(state.searchQuery));
+    const activeCount = Number(Boolean(projectSelected)) + Number(Boolean(responsibleSelected)) + Number(Boolean(state.searchQuery)) + ((typeof isFidelityV2 === 'function' && isFidelityV2()) ? fidelityFilterCount() : 0);
     const projectLabel = document.getElementById('selected-project-label');
     const responsibleLabel = document.getElementById('selected-responsible-label');
     const countLabel = document.getElementById('task-filter-count');
@@ -928,6 +944,7 @@ function updateFilterBadge() {
         clearButton.disabled = !activeCount;
         // Route clearing through the already-installed filter/search callbacks.
         clearButton.onclick = () => {
+            if (typeof isFidelityV2 === 'function' && isFidelityV2()) resetFidelityFilters();
             document.querySelector('#orb-project-filters .filter-chip')?.click();
             document.querySelector('#orb-responsible-filters .filter-chip')?.click();
             const search = document.getElementById('search-input');

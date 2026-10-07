@@ -1,0 +1,27 @@
+--- reviewed/check_fidelity_secondary_v2.mjs
++++ composed/runtime-secondary-fixture.mjs
+@@ -17,15 +17,13 @@
+ const home=await import('data:text/javascript;base64,'+Buffer.from(read('app/js/home-v2.js')).toString('base64'));
+ const archive=await import('data:text/javascript;base64,'+Buffer.from(read('app/js/archive-v2.js')).toString('base64'));
+ const people=await import('data:text/javascript;base64,'+Buffer.from(read('app/js/people-v2.js')).toString('base64'));
+-for(const p of ['app/index.html','app/js/main.js','app/js/state.js','app/js/api.js','app/js/signalr.js','app/js/home-v2.js','app/js/people-v2.js','app/js/archive-v2.js']) assert.equal(read(p),before(p),`Protected ${p}`);
++for(const p of ['app/index.html','app/js/state.js','app/js/api.js','app/js/signalr.js','app/js/home-v2.js','app/js/people-v2.js','app/js/archive-v2.js']) assert.equal(read(p),before(p),`Protected ${p}`);
+ for(const [a,b] of [
+- ['function filterTasks(tasks)','// --- RENDERIZAÇÃO: HOME'],
+  ['    activeTasks.sort((a, b) => {','    // POPULAR O ORB'],
+  ['    // POPULAR O ORB','    // Se não houver tarefas'],
+  ['    // --- EVENTOS ---\n\n    // Clique na linha','// --- RENDERIZAÇÃO: ARQUIVADOS'],
+  ['    // Filtra o utilizador de sistema','    container.innerHTML ='],
+  ['    const searchInput = document.getElementById(\'userSearchInput\');','// --- ROTEADOR UI'],
+- ['export function updateActiveView()','// --- MODAL: DETALHES ---']
+ ])assert.equal(between(source,a,b),between(baseline,a,b),`Exact existing contract ${a}`);
+ const afterModal=s=>s.slice(s.indexOf('// --- MODAL: DETALHES ---'));
+ assert.equal(afterModal(source),afterModal(baseline),'Task forms, focus-close recovery, notification and other behavior unchanged');
+@@ -73,6 +71,7 @@
+  const calls=[];let archiveResult=[];
+  const context={document:doc,state:stateFixture(),...home,...archive,...people,console:{error(){}},lucide:{createIcons(){}},formatDate:value=>value?new Date(value).toLocaleDateString('pt-PT',{timeZone:'UTC'}):'',isTaskOverdue:t=>Boolean(t.dueDate&&['stopped','inprogress','homologation'].includes(t.status)&&new Date(t.dueDate)<new Date('2026-10-07T00:00:00Z')),highlightTask:(...args)=>calls.push(['highlight',...args]),renderTaskHistory:(...args)=>calls.push(['detail',...args]),showDestructiveConfirmModal:(...args)=>calls.push(['confirm',args[0],args[1]]),showToast(){},fetchArchivedTasks:async()=>{if(archiveResult instanceof Error)throw archiveResult;return archiveResult;}};
+  vm.createContext(context);
++ vm.runInContext(strip(read('app/js/fidelity-v2.js')),context);
+  vm.runInContext(strip(read('app/js/fidelity-secondary-v2.js')),context);
+  const chunks=[between(code,'function filterTasks(tasks)','// --- RENDERIZAÇÃO: HOME'),between(code,'function getGreeting()','// --- RENDERIZAÇÃO: KANBAN'),between(code,'function escapeListV2Text','// --- ROTEADOR UI')];
+  vm.runInContext(strip(chunks.join('\n')),context);
