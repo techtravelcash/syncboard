@@ -307,7 +307,7 @@ function initializeEventListeners() {
     }
     // Shell presentation owns panel state and accessible focus.
     document.getElementById('view-switcher-orb').addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
+        const btn = e.target.closest('button[data-view]');
         if (!btn) return;
         state.currentView = btn.dataset.view;
         ui.updateActiveView();

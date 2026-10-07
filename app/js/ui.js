@@ -817,6 +817,8 @@ export function updateActiveView() {
     const list = document.getElementById('listView');
     const archived = document.getElementById('archivedView');
     const users = document.getElementById('userManagementView');
+    const workspace = document.getElementById('workspaceView');
+    const boards = document.getElementById('boardsView');
     const main = document.getElementById('main-content');
     const label = document.getElementById('current-view-label');
     const sortOrb = document.getElementById('orb-sort'); 
@@ -827,7 +829,7 @@ export function updateActiveView() {
         ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;
 
     // Esconde views de conteúdo imediatamente
-    [home, kanban, list, archived, users].forEach(el => el && el.classList.add('hidden'));
+    [home, kanban, list, archived, users, workspace, boards].forEach(el => el && el.classList.add('hidden'));
 
     // Atualiza botões do menu inferior
     document.querySelectorAll('#view-switcher-orb .nav-item').forEach(btn => {
@@ -923,7 +925,11 @@ export function updateActiveView() {
         } else if (state.currentView === 'users') {
             renderUserManagementView();
             users.classList.remove('hidden');
-            label.textContent = "Utilizadores";
+            label.textContent = "Users";
+        } else if (state.currentView === 'workspace' || state.currentView === 'boards') {
+            const placeholder = state.currentView === 'workspace' ? workspace : boards;
+            placeholder?.classList.remove('hidden');
+            label.textContent = state.currentView === 'workspace' ? 'Workspace' : 'Boards';
         }
     }
     if (typeof isFidelityV2 === 'function' && isFidelityV2()) finishFidelityView(state);

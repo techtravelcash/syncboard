@@ -50,7 +50,7 @@
         }
     </script>
     <link rel="stylesheet" href="css/list-filters-v2.css?v=tc455-fidelity-2">
-    <link rel="stylesheet" href="css/fidelity-v2.css?v=tc455-fidelity-2">
+    <link rel="stylesheet" href="css/fidelity-v2.css?v=tc463-menu-1">
     <link rel="stylesheet" href="css/fidelity-secondary-v2.css?v=tc455-fidelity-2">
     <link rel="stylesheet" href="css/task-fidelity-v2.css?v=tc455-fidelity-2">
     <link rel="stylesheet" href="css/cube-feedback.css?v=tc461-1">
@@ -70,15 +70,21 @@
         <button type="button" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-close aria-label="Fechar navegação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button>
       </div>
       <div class="fidelity-workspace"><span class="fidelity-workspace-icon" aria-hidden="true">NT</span><div><strong>SyncBoard NT</strong><small>Espaço de trabalho</small></div></div>
-      <p class="sb-shell-kicker">Trabalho</p>
-      <nav id="view-switcher-orb" class="sb-shell-nav" aria-label="Visualizações">
+      <nav id="view-switcher-orb" aria-label="Visualizações">
+      <section aria-labelledby="work-menu-title"><h2 id="work-menu-title" class="sb-shell-kicker">Trabalho</h2>
+      <div class="sb-shell-nav">
         <button type="button" data-view="home" class="nav-item" aria-current="page"><i data-lucide="home" class="sb-shell-icon" aria-hidden="true"></i><span>Home</span></button>
         <button type="button" data-view="kanban" class="nav-item"><i data-lucide="layout-grid" class="sb-shell-icon" aria-hidden="true"></i><span>Quadro</span><span id="fidelity-nav-task-count" class="fidelity-nav-count" aria-label="Tarefas ativas carregadas">0</span></button>
         <button type="button" data-view="list" class="nav-item"><i data-lucide="list" class="sb-shell-icon" aria-hidden="true"></i><span>Lista</span></button>
         <button type="button" data-view="archived" class="nav-item"><i data-lucide="archive" class="sb-shell-icon" aria-hidden="true"></i><span>Arquivados</span></button>
-        <button type="button" data-view="users" id="user-management-btn" class="nav-item hidden"><i data-lucide="users" class="sb-shell-icon" aria-hidden="true"></i><span>Utilizadores</span></button>
-      </nav>
+      </div></section>
       <section class="fidelity-sidebar-projects" aria-labelledby="fidelity-projects-title"><h2 id="fidelity-projects-title" class="sb-shell-kicker">Projetos</h2><div id="fidelity-project-links"></div></section>
+      <section class="fidelity-sidebar-settings" aria-labelledby="settings-menu-title"><h2 id="settings-menu-title" class="sb-shell-kicker">Configuração</h2><div class="sb-shell-nav">
+        <button type="button" data-view="workspace" class="nav-item"><i data-lucide="building-2" class="sb-shell-icon" aria-hidden="true"></i><span>Workspace</span></button>
+        <button type="button" data-view="boards" class="nav-item"><i data-lucide="panels-top-left" class="sb-shell-icon" aria-hidden="true"></i><span>Boards</span></button>
+        <button type="button" data-view="users" id="user-management-btn" class="nav-item hidden"><i data-lucide="users" class="sb-shell-icon" aria-hidden="true"></i><span>Users</span></button>
+      </div></section>
+      </nav>
       <button type="button" class="fidelity-sidebar-profile" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="fidelity-profile-avatar" aria-hidden="true"></span><span><strong id="fidelity-profile-name">Carregando perfil…</strong><small id="fidelity-profile-role">Aguarde a sessão</small></span><i data-lucide="chevrons-up-down" aria-hidden="true"></i></button>
     </aside>
     <button type="button" id="shell-backdrop" class="sb-shell-backdrop" hidden tabindex="-1" aria-label="Fechar navegação"></button>
@@ -145,6 +151,18 @@
       <div id="listView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
       <div id="archivedView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
       <div id="userManagementView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
+      <section id="workspaceView" class="hidden sb-settings-placeholder" aria-labelledby="workspace-placeholder-title">
+        <p class="sb-settings-placeholder-tag">Escopo futuro</p>
+        <h2 id="workspace-placeholder-title">Workspace em planejamento</h2>
+        <p>Esta página está reservada para futuras configurações de Workspace. Nenhuma configuração está disponível por aqui ainda.</p>
+        <button type="button" class="sb-button" data-fidelity-view="home">Voltar para Home</button>
+      </section>
+      <section id="boardsView" class="hidden sb-settings-placeholder" aria-labelledby="boards-placeholder-title">
+        <p class="sb-settings-placeholder-tag">Escopo futuro</p>
+        <h2 id="boards-placeholder-title">Boards em planejamento</h2>
+        <p>Esta página está reservada para futuras configurações de Boards. Nenhuma configuração está disponível por aqui ainda.</p>
+        <button type="button" class="sb-button" data-fidelity-view="home">Voltar para Home</button>
+      </section>
     </main>
     <nav id="fidelity-mobile-nav" aria-label="Visualizações rápidas"><button type="button" data-fidelity-view="home"><i data-lucide="home" aria-hidden="true"></i>Home</button><button type="button" data-fidelity-view="kanban"><i data-lucide="columns-3" aria-hidden="true"></i>Quadro</button><button type="button" data-fidelity-view="list"><i data-lucide="list" aria-hidden="true"></i>Lista</button><button type="button" data-fidelity-view="archived"><i data-lucide="archive" aria-hidden="true"></i>Arquivo</button></nav>
   </div>

@@ -24,7 +24,7 @@ body.sb-fidelity-v2 .fidelity-project-name { min-width: 0; overflow: hidden; tex
 body.sb-fidelity-v2 .fidelity-project-count { margin-left: auto; color: #A8B6CB; font-size: 12px; }
 body.sb-fidelity-v2 .fidelity-project-empty { padding: 8px 12px; font-size: 12px; color: #A8B6CB; }
 body.sb-fidelity-v2 .fidelity-sidebar-profile { width: 100%; margin-top: auto; padding: 19px 8px 0; border: 0; border-top: 1px solid #303B4F; display: flex; gap: 10px; align-items: center; background: transparent; text-align: left; color: #C4CEDC; cursor: pointer; }
-body.sb-fidelity-v2 .fidelity-sidebar-projects + .fidelity-sidebar-profile { margin-top: auto; }
+body.sb-fidelity-v2 #view-switcher-orb + .fidelity-sidebar-profile { margin-top: auto; }
 body.sb-fidelity-v2 .fidelity-sidebar-profile > span:nth-child(2) { min-width: 0; }
 body.sb-fidelity-v2 .fidelity-sidebar-profile strong { display: block; font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body.sb-fidelity-v2 .fidelity-sidebar-profile small { display: block; color: #ADBACE; font-size: 12px; }
@@ -201,3 +201,10 @@ body.sb-fidelity-v2 #shell-sort-panel { z-index: 1010; }
   body.sb-fidelity-v2 .sb-shell-mobile-only { display: none; }
   body.sb-fidelity-v2 #shell-account-panel { position: absolute; top: calc(100% + 12px); right: 0; left: auto; width: 320px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 112px); }
 }
+
+/* TC-463: grouped navigation and explicitly non-functional future settings. */
+body.sb-fidelity-v2 #view-switcher-orb { flex-shrink: 0; padding-bottom: 20px; }
+body.sb-fidelity-v2 .sb-settings-placeholder { max-width: 720px; margin: 0; padding: 28px; border: 1px solid var(--sb-border); border-radius: 12px; background: var(--sb-surface); color: var(--sb-text); }
+body.sb-fidelity-v2 .sb-settings-placeholder-tag { color: var(--sb-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+body.sb-fidelity-v2 .sb-settings-placeholder h2 { margin: 12px 0; font-size: 22px; }
+body.sb-fidelity-v2 .sb-settings-placeholder > p:not(.sb-settings-placeholder-tag) { color: var(--sb-muted); line-height: 1.6; margin-bottom: 24px; }

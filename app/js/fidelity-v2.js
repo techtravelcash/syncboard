@@ -24,7 +24,9 @@ const viewCopy = {
   kanban: ['Quadro', 'Quadro de trabalho', 'Da fila à publicação, com cada etapa à vista.'],
   list: ['Lista', 'Lista de tarefas', 'Todas as tarefas ativas, organizadas em uma só visão.'],
   archived: ['Arquivados', 'Tarefas arquivadas', 'Consulte as entregas que já passaram pela publicação.'],
-  users: ['Utilizadores', 'Utilizadores', 'As pessoas que fazem parte deste espaço de trabalho.']
+  users: ['Users', 'Users', 'As pessoas que fazem parte deste espaço de trabalho.'],
+  workspace: ['Workspace', 'Workspace', 'Configurações previstas para um escopo futuro.'],
+  boards: ['Boards', 'Boards', 'Configurações previstas para um escopo futuro.']
 };
 function syncSelect(id, values, selected, allLabel) {
   const node = document.getElementById(id);
@@ -57,7 +59,7 @@ export function syncFidelityShell(state, filteredTasks) {
   const dragNote = document.getElementById('fidelity-filter-drag-note');
   if (dragNote) dragNote.hidden = state.currentView !== 'kanban' || !hasFidelityFilters(state);
   const add = document.getElementById('addTaskBtn');
-  if (add) add.hidden = state.currentView === 'users';
+  if (add) add.hidden = ['users', 'workspace', 'boards'].includes(state.currentView);
   syncSelect('fidelity-project-filter', state.tasks.map(task => task.project), state.selectedProject, 'Todos os projetos');
   syncSelect('fidelity-responsible-filter', state.tasks.flatMap(task => Array.isArray(task.responsible) ? task.responsible.map(person => typeof person === 'object' ? person?.name : person) : []), state.selectedResponsible, 'Todos os responsáveis');
   syncSelect('fidelity-priority-filter', active.map(task => task.priority), localFilters.priority, 'Todas as prioridades');
@@ -115,7 +117,11 @@ export function initializeFidelityControls(state, {refresh}) {
     selectExisting('project', button.dataset.fidelityProject);
     document.querySelector('#view-switcher-orb [data-view="kanban"]')?.click();
   });
-  document.querySelectorAll('button[data-fidelity-view]').forEach(button => button.addEventListener('click', () => document.querySelector(`#view-switcher-orb [data-view="${button.dataset.fidelityView}"]`)?.click()));
+  document.querySelectorAll('button[data-fidelity-view]').forEach(button => button.addEventListener('click', () => {
+    document.querySelector(`#view-switcher-orb [data-view="${button.dataset.fidelityView}"]`)?.click();
+    // A placeholder's return button becomes hidden after navigation.
+    if (button.closest('.sb-settings-placeholder')) document.getElementById('current-view-label')?.focus({ preventScroll: true });
+  }));
   document.getElementById('fidelity-notifications-toggle')?.addEventListener('click', () => document.getElementById('orb-notif-btn')?.click());
   // Native details controls stay keyboard accessible; only one action disclosure is open.
   document.addEventListener('toggle', event => {
