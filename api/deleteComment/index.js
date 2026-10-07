@@ -24,7 +24,10 @@ module.exports = async function (context, req) {
             return;
         }
 
-        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask);
+        if (!existingTask._etag) throw new Error('ETag ausente na tarefa lida.');
+        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask, {
+            accessCondition: {type: 'IfMatch', condition: existingTask._etag}
+        });
 
         context.bindings.signalRMessage = {
             target: 'taskUpdated',
@@ -33,6 +36,10 @@ module.exports = async function (context, req) {
 
         context.res = { body: replaced };
     } catch (error) {
+        if (Number(error.code || error.statusCode) === 412) {
+            context.res = {status: 409, body: 'A tarefa foi alterada. Atualize e tente novamente.'};
+            return;
+        }
         context.log.error(`Erro ao excluir comentário: ${error.message}`);
         context.res = { status: 500, body: "Erro ao excluir comentário." };
     }

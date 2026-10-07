@@ -120,6 +120,11 @@ module.exports = async function (context, req) {
         // Filtra usuários pelo e-mail (resolvendo o problema)
         const mentionedUsers = allUsers.filter(u => u.email && mentionedEmails.includes(u.email.toLowerCase()));
         
+        if (!existingTask._etag) throw new Error('ETag ausente na tarefa lida.');
+        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask, {
+            accessCondition: {type: 'IfMatch', condition: existingTask._etag}
+        });
+
         if (mentionedUsers.length > 0) {
             for (const mentionedUser of mentionedUsers) {
                 const newNotification = {
@@ -133,11 +138,14 @@ module.exports = async function (context, req) {
                     isRead: false,
                     createdAt: new Date().toISOString()
                 };
-                await notificationsContainer.items.create(newNotification);
+                try {
+                    await notificationsContainer.items.create(newNotification);
+                } catch (notificationError) {
+                    // The comment is already committed: report success so a retry cannot duplicate it.
+                    context.log.error(`Erro ao notificar menção: ${notificationError.message}`);
+                }
             }
         }
-
-        const { resource: replaced } = await container.item(taskId, taskId).replace(existingTask);
 
         // 3. Notificar Discord (USA A VERSÃO LIMPA / MARKDOWN)
         const discordMessage = formatHtmlToDiscord(newComment.text);
@@ -160,6 +168,10 @@ module.exports = async function (context, req) {
 
         context.res = { body: replaced };
     } catch (error) {
+        if (Number(error.code || error.statusCode) === 412) {
+            context.res = {status: 409, body: 'A tarefa foi alterada. Atualize e tente novamente.'};
+            return;
+        }
         context.log.error(`Erro ao adicionar comentário: ${error.message}`);
         context.res = { status: 500, body: "Erro ao adicionar comentário." };
     }

@@ -1,3 +1,4 @@
+import { canDecideHomologation } from './homologation-v2.js';
 import { taskMatchesUser, taskUserFilterOptions } from './task-user-filter.js';
 import { isFidelityV2, applyFidelityFilters, fidelityFilterCount, resetFidelityFilters, syncFidelityShell, finishFidelityView, renderFidelityCardMarkup } from './fidelity-v2.js';
 import { state } from './state.js';
@@ -238,9 +239,12 @@ export const createTaskElement = (task) => {
         homologadorBadge = `<div class="sb-kanban-homologator"><i data-lucide="${isApproved ? 'check-circle' : 'shield-check'}" aria-hidden="true"></i>${avatarImg}<span><strong>${isApproved ? 'Homologado por' : 'Homologador'}</strong> ${escapeCardText(homolName)}</span></div>`;
     }
 
+    const decisionPending = state.pendingHomologationDecisions?.has(task.id) ? 'disabled aria-busy="true"' : '';
     let actionButtons = '';
-    if (task.status === 'homologation') {
-        actionButtons = `<button type="button" class="approve-btn sb-kanban-action sb-kanban-action--primary" title="Aprovar para Publicação" aria-label="Aprovar ${escapeCardText(task.id)} para Publicação" data-task-id="${escapeCardText(task.id)}"><i data-lucide="arrow-right" aria-hidden="true"></i><span>Aprovar</span></button>`;
+    if (canDecideHomologation(task, state.currentUser)) {
+        actionButtons = `<button type="button" ${decisionPending} class="approve-btn sb-kanban-action sb-kanban-action--primary" title="Aprovar para Publicação" aria-label="Aprovar ${escapeCardText(task.id)} para Publicação" data-task-id="${escapeCardText(task.id)}"><i data-lucide="arrow-right" aria-hidden="true"></i><span>Aprovar</span></button>
+        <button type="button" ${decisionPending} class="reject-btn sb-kanban-action sb-kanban-action--danger" title="Reprovar e devolver para Andamento" aria-label="Reprovar ${escapeCardText(task.id)} e devolver para Andamento" data-task-id="${escapeCardText(task.id)}"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Reprovar</span></button>
+        <button type="button" ${decisionPending} class="forward-btn sb-kanban-action" title="Encaminhar para novo responsável na Fila" aria-label="Encaminhar ${escapeCardText(task.id)} para novo responsável na Fila" data-task-id="${escapeCardText(task.id)}"><i data-lucide="forward" aria-hidden="true"></i><span>Encaminhar</span></button>`;
     } else if (task.status === 'publication') {
         actionButtons = `<button type="button" class="publish-btn sb-kanban-action sb-kanban-action--primary" title="Publicar Tarefa" aria-label="Publicar ${escapeCardText(task.id)} e enviar para Arquivados" data-task-id="${escapeCardText(task.id)}"><i data-lucide="check-circle" aria-hidden="true"></i><span>Publicar</span></button>`;
     }
@@ -1197,18 +1201,22 @@ export function renderTaskHistory(taskId, fromNotification = false) {
     }
 
     // Controle de Visibilidade do Botão de Aprovação
-    const modalApproveBtn = document.getElementById('modal-approve-btn');
-    if (modalApproveBtn) {
-        if (task.status === 'homologation') {
-            modalApproveBtn.classList.remove('hidden');
-            modalApproveBtn.classList.add('flex');
-            modalApproveBtn.dataset.taskId = task.id; // Guarda o ID para o click
-            modalApproveBtn.disabled = false;
-            modalApproveBtn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i><span class="hidden sm:inline">Aprovar</span>`;
-        } else {
-            modalApproveBtn.classList.add('hidden');
-            modalApproveBtn.classList.remove('flex');
-        }
+    const canDecide = canDecideHomologation(task, state.currentUser);
+    for (const [id, label, icon] of [['modal-approve-btn', 'Aprovar', 'check-circle'], ['modal-reject-btn', 'Reprovar', 'rotate-ccw'], ['modal-forward-btn', 'Encaminhar', 'forward']]) {
+        const button = document.getElementById(id);
+        if (!button) continue;
+        button.classList.toggle('hidden', !canDecide);
+        button.classList.toggle('flex', canDecide);
+        button.hidden = !canDecide;
+        button.dataset.taskId = canDecide ? task.id : '';
+        button.disabled = !!state.pendingHomologationDecisions?.has(task.id);
+        button.setAttribute('aria-busy', String(button.disabled));
+        button.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4" aria-hidden="true"></i><span>${label}</span>`;
+    }
+    const signalBtn = document.getElementById('modal-signal-btn');
+    if (signalBtn) {
+        signalBtn.hidden = task.status === 'homologation';
+        signalBtn.classList.toggle('hidden', signalBtn.hidden);
     }
 
     // Prazo
@@ -2330,6 +2338,10 @@ export function setupSortOrbEvents() {
 
 // --- MODAL DE ATUALIZAÇÃO DE PROGRESSO ---
 export function openProgressUpdateModal(task) {
+    if (task.status === 'homologation') {
+        showToast('O progresso fica preservado durante a homologação. Use uma decisão de homologação.', 'info');
+        return;
+    }
     // Evita abrir vários
     if (document.getElementById('progressUpdateModal')) return;
 

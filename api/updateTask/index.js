@@ -1,12 +1,14 @@
 const { CosmosClient } = require("@azure/cosmos");
 const axios = require('axios');
 const crypto = require('crypto');
+const { decisionUpdate, protectGenericUpdate, escapeHtml, homologatorEmail } = require('../shared/homologation');
 
 const connectionString = process.env.CosmosDB;
 const client = new CosmosClient(connectionString);
 const database = client.database("TasksDB");
 const container = database.container("Tasks");
 const notificationsContainer = database.container("Notifications");
+const usersContainer = database.container("Users");
 const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
 const statusLabels = {
@@ -29,10 +31,14 @@ async function sendDiscordNotification(payload) {
 
 module.exports = async function (context, req) {
     const taskId = context.bindingData.id;
-    const updatedData = req.body;
+    let updatedData = req.body;
     context.log(`A atualizar tarefa com ID: ${taskId}`);
 
     try {
+        if (!updatedData || typeof updatedData !== 'object' || Array.isArray(updatedData)) {
+            context.res = {status: 400, body: 'Dados da tarefa inválidos.'};
+            return;
+        }
         const { resource: existingTask } = await container.item(taskId, taskId).read();
         if (!existingTask) {
             context.res = { status: 404, body: "Tarefa não encontrada." };
@@ -40,15 +46,32 @@ module.exports = async function (context, req) {
         }
 
         const oldStatus = existingTask.status;
+        let decision = null;
+        if (Object.prototype.hasOwnProperty.call(updatedData, 'homologationAction')) {
+            decision = await decisionUpdate(existingTask, updatedData, req, usersContainer);
+            updatedData = decision.data;
+        } else {
+            protectGenericUpdate(existingTask, updatedData);
+            updatedData = {...updatedData};
+            // Identity, audit and Cosmos metadata are server-owned, including generic saves.
+            for (const key of ['id', 'history', '_etag', '_rid', '_self', '_attachments', '_ts',
+                'actor', 'actorEmail', 'expectedStatus', 'expectedEtag', 'newResponsibleEmail']) delete updatedData[key];
+            if (oldStatus === 'homologation') delete updatedData.homologador;
+        }
 
         // --- NOVO SISTEMA DE LOGS / HISTÓRICO ---
-        if (!existingTask.history) existingTask.history = [];
+        existingTask.history = Array.isArray(existingTask.history) ? [...existingTask.history] : [];
         
         let changes = [];
+        if (decision) {
+            const label = {approve: 'Homologação aprovada', reject: 'Homologação reprovada', forward: 'Homologação encaminhada'}[decision.action];
+            changes.push(`${label} por <span class="font-bold text-white">${escapeHtml(decision.actor)}</span>`);
+            if (decision.action === 'forward') changes.push(`Novo responsável: <span class="font-bold text-white">${escapeHtml(updatedData.responsible[0].name)} (${escapeHtml(updatedData.responsible[0].email)})</span>`);
+        }
         
         // 1. Mudança de Status
         if (updatedData.status && updatedData.status !== oldStatus) {
-            changes.push(`Status alterado para <span class="font-bold text-white">${statusLabels[updatedData.status] || updatedData.status}</span>`);
+            changes.push(`Status alterado para <span class="font-bold text-white">${escapeHtml(statusLabels[updatedData.status] || updatedData.status)}</span>`);
         }
 
         // 2. Mudança de Homologador
@@ -56,7 +79,7 @@ module.exports = async function (context, req) {
         const newHomolEmail = updatedData.homologador ? (typeof updatedData.homologador === 'object' ? updatedData.homologador.email : updatedData.homologador) : null;
         if (newHomolEmail && newHomolEmail !== oldHomolEmail) {
             const homolName = typeof updatedData.homologador === 'object' ? updatedData.homologador.name : updatedData.homologador;
-            changes.push(`Homologador designado: <span class="font-bold text-white">${homolName}</span>`);
+            changes.push(`Homologador designado: <span class="font-bold text-white">${escapeHtml(homolName)}</span>`);
         }
 
         // 3. Detecção de outros campos modificados
@@ -102,15 +125,19 @@ module.exports = async function (context, req) {
         }
 
         const taskToUpdate = { ...existingTask, ...updatedData };
-        const { resource: replaced } = await container.item(taskId, taskId).replace(taskToUpdate);
+        // A losing concurrent request must not append history or emit notifications.
+        if (!existingTask._etag) throw new Error('ETag ausente na tarefa lida.');
+        const { resource: replaced } = await container.item(taskId, taskId).replace(taskToUpdate, {
+            accessCondition: {type: 'IfMatch', condition: existingTask._etag}
+        });
 
         // --- GERAR NOTIFICAÇÃO PARA O HOMOLOGADOR ---
         try {
             const newStatus = updatedData.status || oldStatus;
             
             // Agora usamos o EMAIL como referência principal de troca e criação
-            const oldHomologadorEmail = existingTask.homologador ? existingTask.homologador.email : null;
-            const newHomologadorEmail = updatedData.homologador ? updatedData.homologador.email : oldHomologadorEmail;
+            const oldHomologadorEmail = homologatorEmail(existingTask.homologador);
+            const newHomologadorEmail = Object.prototype.hasOwnProperty.call(updatedData, 'homologador') ? homologatorEmail(updatedData.homologador) : oldHomologadorEmail;
 
             // Dispara a notificação se a tarefa acabou de entrar em homologação OU se trocaram o homologador
             if (newStatus === 'homologation' && newHomologadorEmail) {
@@ -148,6 +175,7 @@ module.exports = async function (context, req) {
         context.res = { body: replaced };
     } catch (error) {
         context.log.error(`Erro ao atualizar tarefa ${taskId}: ${error.message}`);
-        context.res = { status: 500, body: "Erro ao atualizar tarefa." };
+        const status = error.httpStatus || (Number(error.code || error.statusCode) === 412 ? 409 : Number(error.code || error.statusCode) === 404 ? 404 : 500);
+        context.res = { status, body: status === 409 ? 'A tarefa foi alterada. Atualize antes de decidir.' : error.httpStatus ? error.message : 'Erro ao atualizar tarefa.' };
     }
 };

@@ -61,7 +61,10 @@ module.exports = async function (context, req) {
             if (existingTask.pendingAlerts.length !== originalLength) {
                 context.log(`Alerta removido com sucesso.`);
                 
-                const { resource: replaced } = await tasksContainer.item(taskId, taskId).replace(existingTask);
+                if (!existingTask._etag) throw new Error('ETag ausente na tarefa lida.');
+                const { resource: replaced } = await tasksContainer.item(taskId, taskId).replace(existingTask, {
+                    accessCondition: {type: 'IfMatch', condition: existingTask._etag}
+                });
                 
                 // --- NOVO: CRIAR A NOTIFICAÇÃO NA FILA NORMAL DO USUÁRIO ---
                 try {
@@ -91,6 +94,10 @@ module.exports = async function (context, req) {
         }
 
     } catch (error) {
+        if (Number(error.code || error.statusCode) === 412) {
+            context.res = {status: 409, body: 'A tarefa foi alterada. Atualize e tente novamente.'};
+            return;
+        }
         context.log.error(`ERRO CRÍTICO ao dispensar alerta: ${error.message}`, error);
         context.res = { status: 500, body: `Erro interno: ${error.message}` };
     }

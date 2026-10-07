@@ -4,27 +4,29 @@ import vm from 'node:vm';
 const read = p => readFileSync(new URL('../' + p, import.meta.url), 'utf8');
 const classes = (...names) => { const s = new Set(names); return { contains: n => s.has(n), add: n => s.add(n), remove: n => s.delete(n) }; };
 const main = read('app/js/main.js');
-const handler = main.slice(main.indexOf('    const modalApproveBtn ='), main.indexOf("    document.getElementById('editTaskBtn')"));
+const handler = main.slice(main.indexOf("    for (const [id, decision] of [['modal-approve-btn'"), main.indexOf("    document.getElementById('editTaskBtn')"));
+const controller=main.slice(main.indexOf('const pendingHomologationDecisions'),main.indexOf('// --- PONTO DE ENTRADA ---'));
 const ui = read('app/js/ui.js');
 const closer = ui.slice(ui.indexOf('export function closeApprovedTaskHistory'), ui.indexOf('export function closeTaskHistory')).replace('export function', 'function');
 const dialogCode = read('app/js/approval-success.js').replace('export function', 'function');
 function setup() {
     let active = null, callback, resolve, writes = 0, renders = 0, focused = null;
-    const button = { dataset: { taskId: 'A' }, addEventListener(type, fn) { callback = fn; } };
+    const button = { dataset: { taskId: 'A' }, setAttribute() {}, removeAttribute() {}, addEventListener(type, fn) { callback = fn; } };
     const content = { style: {}, classList: classes('animating-morph') };
     const modal = { classList: classes('show'), querySelector: () => content };
     const target = { dataset: { taskId: 'A' }, closest: () => null, getClientRects: () => [1], querySelectorAll: () => [], hasAttribute: () => false, matches: () => false, focus() { focused = 'A'; } };
     const board = { querySelectorAll: () => [target], hasAttribute: () => false, matches: () => false, focus() { focused = 'board'; } };
     const document = {
-        getElementById(id) { return id === 'approval-success-dialog' ? active : id === 'modal-approve-btn' ? button : id === 'taskHistoryModal' ? modal : board; },
+        querySelectorAll() { return [button]; },
+        getElementById(id) { if (id==='modal-reject-btn'||id==='modal-forward-btn') return null; return id === 'approval-success-dialog' ? active : id === 'modal-approve-btn' ? button : id === 'taskHistoryModal' ? modal : board; },
         createElement() { const listeners = {}; const next = { addEventListener(n, fn) { this[n] = fn; } }; return { next, setAttribute() {}, querySelector: () => next, addEventListener(n, fn) { listeners[n] = fn; }, showModal() { this.open = true; }, close() { this.open = false; listeners.close(); }, remove() { active = null; } }; },
         body: { appendChild(dialog) { active = dialog; } }
     };
-    const context = { document, state: { lastInteractedTaskId: 'A', tasks: [{ id: 'A', status: 'homologation' }] }, pendingApprovalFeedback: new Set(), activeOriginEl: { style: { opacity: '0' } }, activeOriginRect: {}, isAnimating: false, window: {}, console,
-        api: { updateTask(id, data) { writes++; assert.equal(id, 'A'); assert.deepEqual(JSON.parse(JSON.stringify(data)), { status: 'publication', progress: 100 }); return new Promise(r => resolve = r); } },
+    const context = { canDecideHomologation:task=>task?.status==='homologation', document, state: { lastInteractedTaskId: 'A', tasks: [{ id: 'A', status: 'homologation' }] }, pendingApprovalFeedback: new Set(), activeOriginEl: { style: { opacity: '0' } }, activeOriginRect: {}, isAnimating: false, window: {}, console,
+        api: { updateTask(id, data) { writes++; assert.equal(id, 'A'); assert.deepEqual(JSON.parse(JSON.stringify(data)), { homologationAction: 'approve', expectedStatus: 'homologation' }); return new Promise(r => resolve = r); } },
         ui: { showToast() {}, updateActiveView() {}, renderTaskHistory(id) { renders++; assert.equal(id, 'A'); } } };
-    vm.createContext(context); vm.runInContext(closer + '\n' + dialogCode, context); context.ui.closeApprovedTaskHistory = context.closeApprovedTaskHistory; vm.runInContext(handler, context);
-    return { context, modal, target, content, callback: () => callback({ stopPropagation() {} }), resolve: () => resolve({ id: 'A', status: 'publication' }), get dialog() { return active; }, get writes() { return writes; }, get renders() { return renders; }, get focused() { return focused; } };
+    vm.createContext(context); vm.runInContext(closer + '\n' + dialogCode, context); context.ui.closeApprovedTaskHistory = context.closeApprovedTaskHistory; vm.runInContext(controller+'\n'+handler, context);
+    return { context, modal, target, content, callback: () => callback({ currentTarget: button, stopPropagation() {} }), resolve: () => resolve({ id: 'A', status: 'publication' }), get dialog() { return active; }, get writes() { return writes; }, get renders() { return renders; }, get focused() { return focused; } };
 }
 // Actual approval listener + actual native-dialog button listener + actual UI closer.
 const t = setup(); const pending = t.callback(); await t.callback(); assert.equal(t.writes, 1); assert.equal(t.dialog, null); t.resolve(); await pending;

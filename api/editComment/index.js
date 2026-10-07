@@ -1,3 +1,6 @@
+const { CosmosClient } = require("@azure/cosmos");
+const container = new CosmosClient(process.env.CosmosDB).database("TasksDB").container("Tasks");
+
 module.exports = async function (context, req, inputDocument) {
     if (!inputDocument) {
         context.res = { status: 404, body: "Tarefa não encontrada." };
@@ -44,12 +47,22 @@ module.exports = async function (context, req, inputDocument) {
     comment.text = text;
     comment.editedAt = new Date().toISOString();
 
-    context.bindings.outputDocument = inputDocument;
+    let replaced;
+    try {
+        if (!inputDocument._etag) throw new Error('ETag ausente na tarefa lida.');
+        ({resource: replaced} = await container.item(inputDocument.id, inputDocument.id).replace(inputDocument, {
+            accessCondition: {type: 'IfMatch', condition: inputDocument._etag}
+        }));
+    } catch (error) {
+        const conflict = Number(error.code || error.statusCode) === 412;
+        context.res = {status: conflict ? 409 : 500, body: conflict ? 'A tarefa foi alterada. Atualize e tente novamente.' : 'Erro ao editar comentário.'};
+        return;
+    }
 
     context.bindings.signalRMessage = {
         target: 'taskUpdated',
-        arguments: [inputDocument]
+        arguments: [replaced]
     };
 
-    context.res = { body: inputDocument };
+    context.res = { body: replaced };
 };

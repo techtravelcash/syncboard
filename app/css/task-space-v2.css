@@ -196,3 +196,23 @@
 
 /* Supplied validation state is always readable metadata, including inherited small spans. */
 .sb-app #modal-info-homologador .sb-task-validation-status { font-size: 12px; line-height: 1.5; color: var(--sb-text); opacity: 1; }
+
+/* TC462: homologator-only decisions, and no responsible ping during validation. */
+.sb-app #modal-signal-btn[hidden], .sb-app #modal-approve-btn[hidden], .sb-app #modal-reject-btn[hidden], .sb-app #modal-forward-btn[hidden] { display: none !important; }
+.sb-app .sb-task-detail-actions #modal-reject-btn { color: #B91C1C; background: transparent; border: 1px solid currentColor; }
+.dark .sb-app .sb-task-detail-actions #modal-reject-btn { color: #FCA5A5; background: transparent; border-color: currentColor; }
+.sb-app .sb-task-detail-actions #modal-reject-btn:hover { background: rgba(220, 38, 38, .1); }
+.sb-app .sb-task-detail-actions button:disabled, .sb-app .sb-kanban-action:disabled { opacity: .55; cursor: wait; }
+.sb-homologation-forward { box-sizing: border-box; width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 1px solid #CBD5E1; border-radius: 20px; background: #FFF; color: #172033; font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+.sb-homologation-forward::backdrop { background: #0F172A88; }
+.sb-homologation-forward h2 { margin: 0 0 12px; font-size: 22px; font-weight: 800; }
+.sb-homologation-forward p { margin: 12px 0; line-height: 1.5; }
+.sb-homologation-forward label { display: block; margin-bottom: 8px; font-weight: 700; }
+.sb-homologation-forward select { width: 100%; padding: 12px; border: 1px solid #94A3B8; border-radius: 10px; background: inherit; color: inherit; }
+.sb-forward-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.sb-forward-actions button { min-height: 44px; padding: 10px 18px; border: 1px solid #94A3B8; border-radius: 10px; font-weight: 700; }
+.sb-forward-actions button[type=submit] { background: #2549E7; color: #FFF; border-color: #2549E7; }
+.sb-homologation-forward :focus-visible { outline: 3px solid #5B75EF; outline-offset: 3px; }
+.sb-homologation-forward :disabled { opacity: .55; cursor: wait; }
+.dark .sb-homologation-forward { background: #172033; color: #F8FAFC; border-color: #475569; }
+.sb-forward-error { min-height: 24px; }
