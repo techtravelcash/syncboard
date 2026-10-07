@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Prévia de navegação · SyncBoard NT</title>
+<link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fluxo-v2.css?v=tc445-preview-1"><link rel="stylesheet" href="css/shell-v2.css?v=tc445-preview-1"><script src="https://unpkg.com/lucide@latest"></script><script type="module" src="js/shell-preview.js?v=tc445-preview-1"></script></head><body class="sb-scope sb-app" data-ui-release="tc445-shell-preview-1">    <a class="sb-button sb-shell-skip" href="#main-content">Pular para o conteúdo</a>
+    <aside id="orb-nav" class="sb-shell-sidebar" aria-label="Navegação principal">
+      <div class="sb-shell-panel-head">
+        <a class="sb-shell-brand" href="/" aria-label="SyncBoard NT, início"><img src="assets/brand-v2/logo-primary-dark.svg" alt="SyncBoard NT" width="176" height="38"></a>
+        <button type="button" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-close aria-label="Fechar navegação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button>
+      </div>
+      <p class="sb-shell-kicker">Seu espaço de trabalho</p>
+      <nav id="view-switcher-orb" class="sb-shell-nav" aria-label="Visualizações">
+        <button type="button" data-view="home" class="nav-item" aria-current="page"><i data-lucide="home" class="sb-shell-icon" aria-hidden="true"></i><span>Home</span></button>
+        <button type="button" data-view="kanban" class="nav-item"><i data-lucide="layout-grid" class="sb-shell-icon" aria-hidden="true"></i><span>Quadro</span></button>
+        <button type="button" data-view="list" class="nav-item"><i data-lucide="list" class="sb-shell-icon" aria-hidden="true"></i><span>Lista</span></button>
+        <button type="button" data-view="archived" class="nav-item"><i data-lucide="archive" class="sb-shell-icon" aria-hidden="true"></i><span>Arquivados</span></button>
+        <button type="button" data-view="users" id="user-management-btn" class="nav-item hidden"><i data-lucide="users" class="sb-shell-icon" aria-hidden="true"></i><span>Utilizadores</span></button>
+      </nav>
+      <div class="sb-shell-sidebar-footer">Clareza em cada etapa.<br>SyncBoard NT · Fluxo</div>
+    </aside>
+    <button type="button" id="shell-backdrop" class="sb-shell-backdrop" hidden tabindex="-1" aria-label="Fechar navegação"></button>
+    <header id="shell-topbar" class="sb-shell-topbar">
+      <div class="sb-shell-heading">
+        <button type="button" id="shell-nav-toggle" class="sb-shell-icon-button sb-shell-mobile-only" data-shell-toggle="orb-nav" aria-controls="orb-nav" aria-expanded="false" aria-label="Abrir navegação"><i data-lucide="menu" class="sb-shell-icon" aria-hidden="true"></i></button>
+        <div><small>SyncBoard NT</small><h1 id="current-view-label" tabindex="-1">Início</h1></div>
+      </div>
+      <div class="sb-shell-actions">
+        <div id="orb-filter" class="sb-shell-anchor hidden">
+          <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Buscar e filtrar tarefas"><i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Filtros</span></button>
+          <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-filter-title">Buscar e filtrar</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar filtros"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <label class="sb-label" for="search-input">Busca</label><input type="search" id="search-input" class="sb-input" placeholder="Buscar tarefas...">
+            <div class="sb-shell-filter-group"><h3>Projetos</h3><div id="orb-project-filters"></div></div>
+            <div class="sb-shell-filter-group"><h3>Responsáveis</h3><div id="orb-responsible-filters"></div></div>
+          </section>
+        </div>
+        <div id="orb-sort" class="sb-shell-anchor hidden">
+          <button type="button" id="shell-sort-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-sort-panel" aria-controls="shell-sort-panel" aria-expanded="false" aria-label="Ordenar lista de tarefas"><i data-lucide="arrow-up-down" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Ordenar</span></button>
+          <section id="shell-sort-panel" class="sb-shell-panel" hidden aria-labelledby="shell-sort-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-sort-title">Ordenação</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar ordenação"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <div id="orb-sort-options"></div>
+          </section>
+        </div>
+        <button type="button" id="addTaskBtn" title="Nova Tarefa" aria-label="Nova Tarefa"><i data-lucide="plus" class="sb-shell-icon" aria-hidden="true"></i><span class="sb-shell-action-label">Nova Tarefa</span></button>
+        <div id="orb-tools" class="sb-shell-anchor">
+          <button type="button" id="shell-account-toggle" class="sb-shell-icon-button" data-shell-toggle="shell-account-panel" aria-controls="shell-account-panel" aria-expanded="false" aria-label="Abrir perfil e ferramentas"><span id="orb-avatar-container"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></span><span id="notification-orb-badge" class="hidden" aria-label="Há notificações não lidas"></span></button>
+          <section id="shell-account-panel" class="sb-shell-panel" hidden aria-labelledby="shell-account-title">
+            <div class="sb-shell-panel-head"><h2 id="shell-account-title">Perfil e ferramentas</h2><button type="button" class="sb-shell-icon-button sb-shell-close" data-shell-close aria-label="Fechar perfil e ferramentas"><i data-lucide="x" class="sb-shell-icon" aria-hidden="true"></i></button></div>
+            <div class="sb-shell-profile"><div id="user-avatar-menu"><i data-lucide="user" class="sb-shell-icon" aria-hidden="true"></i></div><div><div id="user-name-display">Prévia do perfil</div><div id="user-role-display">Sem consulta de usuário</div></div></div>
+            <button type="button" id="orb-notif-btn" class="sb-shell-menu-action"><i data-lucide="bell" class="sb-shell-icon" aria-hidden="true"></i>Notificações<span id="orb-notif-count" class="sb-shell-count hidden">0</span></button>
+            <button type="button" id="theme-toggle" class="sb-shell-menu-action"><i id="theme-icon" data-lucide="moon" class="sb-shell-icon" aria-hidden="true"></i><span>Tema</span></button>
+            <div class="sb-shell-divider"></div>
+            <a href="#preview-content" data-preview-only="logout" class="sb-shell-menu-action sb-shell-logout"><i data-lucide="log-out" class="sb-shell-icon" aria-hidden="true"></i>Sair</a>
+          </section>
+        </div>
+      </div>
+    </header>
+<main id="main-content" class="sb-shell-preview-main" tabindex="-1"><section class="sb-panel" id="preview-content"><p class="sb-meta">TC-445 · PRÉVIA ISOLADA, SEM DADOS OU APIS</p><h2 id="preview-heading">Seu trabalho, à vista.</h2><p id="preview-description">Esta etapa valida a navegação. As telas e tarefas do SyncBoard NT continuam na aplicação principal, sem alterações nesta prévia.</p><div class="sb-shell-preview-tags"><span class="sb-badge" data-status="todo">Navegação visível</span><span class="sb-badge" data-status="inprogress">Foco por teclado</span><span class="sb-badge" data-status="homologation">Menu compacto</span></div><div class="sb-notice">Use o menu, o perfil e o tema para testar a composição. Nova Tarefa e notificações apenas mostram uma explicação nesta página.</div><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:24px"><button type="button" id="preview-admin" class="sb-button sb-button--secondary" aria-pressed="false">Demonstrar opção de administrador</button><a href="/" class="sb-button">Voltar ao aplicativo</a></div><p class="sb-meta" style="margin-top:24px">Revisão tc445-shell-preview-1 · Tema escuro de compatibilidade para validação. A navegação não salva dados.</p></section></main><div id="preview-toast" class="sb-toast" role="status" aria-live="polite" hidden></div></body></html>

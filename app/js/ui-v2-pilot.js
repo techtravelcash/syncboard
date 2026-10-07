@@ -6,6 +6,7 @@
   const dialogOpener = document.getElementById('pilot-dialog-open');
   const toast = document.getElementById('pilot-toast');
   let toastTimeout;
+  let activeOpener = dialogOpener;
   const showFeedback = message => {
     window.clearTimeout(toastTimeout);
     toast.textContent = message;
@@ -24,11 +25,21 @@
     });
   });
   document.getElementById('pilot-feedback').addEventListener('click', () => showFeedback('Feedback de exemplo. Nenhuma alteração foi salva.'));
-  dialogOpener.addEventListener('click', () => { if (!dialog.open) dialog.showModal(); });
+  const openExample = (opener, destructive) => {
+    activeOpener = opener;
+    document.getElementById('pilot-dialog-title').textContent = destructive ? 'Remover um exemplo?' : 'Confirmar uma ação de exemplo?';
+    const confirm = document.getElementById('pilot-dialog-confirm');
+    confirm.classList.toggle('sb-button--danger', destructive);
+    confirm.textContent = destructive ? 'Remover exemplo' : 'Confirmar exemplo';
+    if (!dialog.open) dialog.showModal();
+  };
+  dialogOpener.addEventListener('click', () => openExample(dialogOpener, false));
+  const dangerOpener = document.getElementById('pilot-danger-open');
+  dangerOpener.addEventListener('click', () => openExample(dangerOpener, true));
   document.getElementById('pilot-dialog-cancel').addEventListener('click', () => dialog.close());
   document.getElementById('pilot-dialog-confirm').addEventListener('click', () => {
     dialog.close();
     showFeedback('Demonstração confirmada. Nenhum dado real foi alterado.');
   });
-  dialog.addEventListener('close', () => dialogOpener.focus());
+  dialog.addEventListener('close', () => activeOpener.focus());
 })();
