@@ -1,3 +1,4 @@
+import { taskMatchesUser, taskUserFilterOptions } from './task-user-filter.js';
 import { isFidelityV2, applyFidelityFilters, fidelityFilterCount, resetFidelityFilters, syncFidelityShell, finishFidelityView, renderFidelityCardMarkup } from './fidelity-v2.js';
 import { state } from './state.js';
 import { setFidelitySecondaryHeading, renderFidelityHomeShell, renderFidelityHomeRow, renderFidelityListRow, renderFidelityListShell, renderFidelityArchiveShell, renderFidelityArchiveRows, renderFidelityPeopleDirectory } from './fidelity-secondary-v2.js';
@@ -332,14 +333,7 @@ function filterTasks(tasks) {
     }
 
     if (state.selectedResponsible && state.selectedResponsible !== 'all') {
-        const targetResp = String(state.selectedResponsible).trim().toLowerCase();
-        filtered = filtered.filter(t => 
-            Array.isArray(t.responsible) && 
-            t.responsible.some(r => {
-                const name = typeof r === 'object' ? r.name : r;
-                return String(name).trim().toLowerCase() === targetResp;
-            })
-        );
+        filtered = filtered.filter(t => taskMatchesUser(t, state.selectedResponsible, state.users));
     }
 
     if (state.searchQuery) {
@@ -1014,7 +1008,7 @@ export function populateResponsibleFilter() {
     const container = document.getElementById('orb-responsible-filters');
     if (!container) return;
 
-    const responsibles = [...new Set([...state.tasks.flatMap(t => t.responsible || []).map(r => (typeof r === 'object' ? r.name : r)), ...(state.selectedResponsible && state.selectedResponsible !== 'all' ? [state.selectedResponsible] : [])].filter(Boolean))].sort();
+    const responsibles = taskUserFilterOptions(state.tasks, state.selectedResponsible);
     
     container.innerHTML = '';
     

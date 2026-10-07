@@ -1,3 +1,4 @@
+import { taskUserFilterOptions } from './task-user-filter.js';
 /* TC-455: opt-in V2 presentation. No API, auth, storage or backend state changes.
  * Hooks: syncFidelityShell runs before the view renderer, allowing a view-specific
  * hero override. Extra filters apply to the existing loaded-data filter result.
@@ -61,7 +62,7 @@ export function syncFidelityShell(state, filteredTasks) {
   const add = document.getElementById('addTaskBtn');
   if (add) add.hidden = ['users', 'workspace', 'boards'].includes(state.currentView);
   syncSelect('fidelity-project-filter', state.tasks.map(task => task.project), state.selectedProject, 'Todos os projetos');
-  syncSelect('fidelity-responsible-filter', state.tasks.flatMap(task => Array.isArray(task.responsible) ? task.responsible.map(person => typeof person === 'object' ? person?.name : person) : []), state.selectedResponsible, 'Todos os responsáveis');
+  syncSelect('fidelity-responsible-filter', taskUserFilterOptions(state.tasks, state.selectedResponsible), state.selectedResponsible, 'Todos os usuários');
   syncSelect('fidelity-priority-filter', active.map(task => task.priority), localFilters.priority, 'Todas as prioridades');
   const status = document.getElementById('fidelity-status-filter');
   if (status) status.value = localFilters.status;

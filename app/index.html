@@ -139,16 +139,16 @@
         <div class="fidelity-controls">
           <div class="sb-list-search sb-field"><label class="fidelity-sr-only" for="search-input">Buscar tarefas</label><i data-lucide="search" aria-hidden="true"></i><input type="search" id="search-input" class="sb-input" placeholder="Buscar por título ou ID" autocomplete="off"></div>
           <label class="fidelity-sr-only" for="fidelity-project-filter">Projeto</label><select id="fidelity-project-filter" aria-label="Filtrar por projeto"><option value="all">Todos os projetos</option></select>
-          <label class="fidelity-sr-only" for="fidelity-responsible-filter">Responsável</label><select id="fidelity-responsible-filter" aria-label="Filtrar por responsável"><option value="all">Todos os responsáveis</option></select>
+          <label class="fidelity-sr-only" for="fidelity-responsible-filter">Usuário</label><select id="fidelity-responsible-filter" aria-label="Filtrar por usuário responsável ou homologador"><option value="all">Todos os usuários</option></select>
           <label class="fidelity-sr-only" for="fidelity-priority-filter">Prioridade</label><select id="fidelity-priority-filter" aria-label="Filtrar por prioridade"><option value="all">Todas as prioridades</option></select>
           <label class="fidelity-sr-only" for="fidelity-status-filter">Estado</label><select id="fidelity-status-filter" aria-label="Filtrar por estado"><option value="all">Todos os estados</option><option value="todo">Fila</option><option value="stopped">Parado</option><option value="inprogress">Andamento</option><option value="homologation">Homologação</option><option value="publication">Publicação</option></select>
           <button id="clear-task-filters" type="button" disabled>Limpar</button>
         </div>
       <div class="sb-shell-anchor sb-filter-anchor fidelity-legacy-filter-source" hidden>
-        <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button sb-filter-selection" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Escolher projeto e responsável" aria-describedby="selected-project-label selected-responsible-label task-filter-count">
+        <button type="button" id="shell-filter-toggle" class="sb-shell-icon-button sb-filter-selection" data-shell-toggle="shell-filter-panel" aria-controls="shell-filter-panel" aria-expanded="false" aria-label="Escolher projeto e usuário" aria-describedby="selected-project-label selected-responsible-label task-filter-count">
           <i data-lucide="list-filter" class="sb-shell-icon" aria-hidden="true"></i>
           <span><span class="sb-filter-selection-label">Projeto</span><span id="selected-project-label">Todos</span></span>
-          <span><span class="sb-filter-selection-label">Responsável</span><span id="selected-responsible-label">Todos</span></span>
+          <span><span class="sb-filter-selection-label">Usuário</span><span id="selected-responsible-label">Todos</span></span>
           <i data-lucide="chevron-down" class="sb-shell-icon" aria-hidden="true"></i>
         </button>
         <section id="shell-filter-panel" class="sb-shell-panel" hidden aria-labelledby="shell-filter-title">
