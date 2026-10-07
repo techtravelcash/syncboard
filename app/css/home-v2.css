@@ -1,0 +1,54 @@
+/* TC-446: personal Home, consuming only the already loaded task set. */
+.sb-app #homeView .sb-home { max-width: 1200px; margin: 0 auto; padding: 8px 0 24px; }
+.sb-app #homeView .sb-home-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.sb-app #homeView .sb-home-eyebrow { color: var(--sb-muted); font-size: 12px; line-height: 1.5; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin: 0 0 8px; }
+.sb-app #homeView #home-greeting { color: var(--sb-text); font-size: 28px; line-height: 1.25; letter-spacing: -.035em; font-weight: 800; margin: 0 0 12px; overflow-wrap: anywhere; }
+.sb-app #homeView .sb-home-header p:not(.sb-home-eyebrow) { font-size: 14px; color: var(--sb-muted); margin: 0; }
+.sb-app #homeView .sb-home-attention { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--sb-homologation-text); border-radius: 9px; color: var(--sb-homologation-text); background: var(--sb-homologation-bg); text-align: left; cursor: pointer; max-width: 380px; }
+.sb-app #homeView .sb-home-attention strong { display: block; font-size: 14px; line-height: 1.5; }
+.sb-app #homeView .sb-home-attention span span { display: block; font-size: 12px; margin-top: 4px; }
+.sb-app #homeView svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sb-app #homeView .sb-home-scope { font-size: 12px; line-height: 1.6; color: var(--sb-muted); margin: 0 0 20px; max-width: 820px; }
+.sb-app #homeView .sb-home-metrics { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 32px; }
+.sb-app #homeView .sb-home-metric { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 20px; border: 1px solid var(--sb-border-strong); border-radius: 9px; background: var(--sb-surface); color: var(--sb-text); text-align: left; cursor: pointer; }
+.sb-app #homeView .sb-home-metric:hover { border-color: var(--sb-action); background: var(--sb-canvas); }
+.sb-app #homeView .sb-home-metric[aria-pressed='true'] { border: 2px solid var(--sb-action); padding: 19px; box-shadow: 0 0 0 1px var(--sb-action); }
+.dark .sb-app #homeView .sb-home-metric[aria-pressed='true'] { border-color: var(--sb-focus); box-shadow: 0 0 0 1px var(--sb-focus); }
+.sb-app #homeView .sb-home-metric-label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.sb-app #homeView .sb-home-metric-value { font-size: 32px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sb-app #homeView .sb-home-metric-selected { visibility: hidden; font-size: 12px; font-weight: 700; color: var(--sb-action); }
+.sb-app #homeView .sb-home-metric[aria-pressed='true'] .sb-home-metric-selected { visibility: visible; }
+.dark .sb-app #homeView .sb-home-metric-selected { color: var(--sb-focus); }
+.sb-app #homeView .sb-home-list-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.sb-app #homeView #home-list-title { display: flex; align-items: center; gap: 10px; font-size: 20px; line-height: 1.4; font-weight: 700; margin: 0; color: var(--sb-text); }
+.sb-app #homeView .sb-home-meta { color: var(--sb-muted); font-size: 12px; line-height: 1.5; margin: 0; }
+.sb-app #homeView #home-selection-note { margin-bottom: 20px; }
+.sb-app #homeView .sb-home-list { display: grid; gap: 12px; }
+.sb-app #homeView .sb-home-row { display: flex; justify-content: space-between; gap: 20px; width: 100%; text-align: left; padding: 20px; border: 1px solid var(--sb-border); border-radius: 9px; background: var(--sb-surface); color: var(--sb-text); cursor: pointer; }
+.sb-app #homeView .sb-home-row:hover { border-color: var(--sb-border-strong); box-shadow: 0 4px 12px rgb(17 24 39 / 8%); }
+.sb-app #homeView .sb-home-row--validation { border-left: 4px solid var(--sb-homologation-text); padding-left: 17px; }
+.sb-app #homeView .sb-home-row-main { display: grid; min-width: 0; gap: 10px; }
+.sb-app #homeView .sb-home-row-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.sb-app #homeView .sb-home-task-id { font-size: 12px; color: var(--sb-muted); font-weight: 700; }
+.sb-app #homeView .sb-home-project { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sb-muted); overflow-wrap: anywhere; }
+.sb-app #homeView .sb-home-project-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.sb-app #homeView .sb-home-task-title { font-size: 16px; line-height: 1.5; font-weight: 700; overflow-wrap: anywhere; }
+.sb-app #homeView .sb-home-row-end { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 12px; flex-shrink: 0; }
+.sb-app #homeView .sb-home-deadline, .sb-app #homeView .sb-home-open { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sb-muted); }
+.sb-app #homeView .sb-home-open { color: var(--sb-action); font-weight: 700; }
+.sb-app #homeView .sb-home-deadline--overdue { color: var(--sb-error-text); font-weight: 700; }
+.dark .sb-app #homeView .sb-home-open { color: var(--sb-focus); }
+.dark .sb-app #homeView .sb-home-deadline--overdue { color: #FFB6AD; }
+@media (min-width: 1400px) { .sb-app #homeView .sb-home-metrics { grid-template-columns: repeat(6,minmax(0,1fr)); } }
+@media (max-width: 767px) {
+  .sb-app #homeView .sb-home-header { flex-direction: column; gap: 20px; }
+  .sb-app #homeView .sb-home-attention { max-width: none; width: 100%; }
+  .sb-app #homeView .sb-home-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .sb-app #homeView .sb-home-metric { padding: 16px; }
+  .sb-app #homeView .sb-home-metric[aria-pressed='true'] { padding: 15px; }
+  .sb-app #homeView .sb-home-row { flex-direction: column; padding: 16px; gap: 16px; }
+  .sb-app #homeView .sb-home-row--validation { padding-left: 13px; }
+  .sb-app #homeView .sb-home-row-end { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+}
+
+@media (max-width: 359px) { .sb-app #homeView .sb-home-metrics { grid-template-columns: 1fr; } }

@@ -1,4 +1,5 @@
 import { state } from './state.js';
+import { buildHomeModel, selectHomeTasks, isPendingHomeValidation, escapeHomeText } from './home-v2.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
 
@@ -426,269 +427,71 @@ function getGreeting() {
 
 export function renderHomeView() {
     const container = document.getElementById('homeView');
-
-    // 1. Identificar o usuário logado com precisão (Azure Auth)
-    const normalize = (val) => (val || '').toString().trim().toLowerCase();
-    
-    const emailClaim = (state.currentUser?.claims || []).find(c =>
-        c.typ === 'emails' ||
-        c.typ === 'email' ||
-        c.typ === 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-    )?.val;
-
-    const myIdentifiers = new Set([
-        state.currentUser?.userDetails,
-        state.currentUser?.userId,
-        emailClaim
-    ].map(normalize).filter(Boolean));
-
-    const dbUser = state.users.find(u => myIdentifiers.has(normalize(u.email)) || myIdentifiers.has(normalize(u.name)));
-    if (dbUser) {
-        if (dbUser.name) myIdentifiers.add(normalize(dbUser.name));
-        if (dbUser.email) myIdentifiers.add(normalize(dbUser.email));
-    }
-
-    // 2. Filtrar apenas tarefas ativas ONDE o usuário é um dos responsáveis OU o homologador
-    const myActiveTasks = state.tasks.filter(t => {
-        if (t.status === 'done') return false;
-        
-        // Verifica se é o responsável
-        const isResponsible = Array.isArray(t.responsible) && t.responsible.some(r => {
-            const rName = normalize(typeof r === 'object' ? r.name : r);
-            const rEmail = normalize(typeof r === 'object' ? r.email : null);
-            return myIdentifiers.has(rName) || myIdentifiers.has(rEmail);
-        });
-
-        // Verifica se é o homologador pendente
-        let isHomologador = false;
-        if (t.homologador && t.status === 'homologation') {
-            const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
-            const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
-            isHomologador = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
-        }
-
-        return isResponsible || isHomologador;
-    });
-
-    // 3. Calcular Métricas
-    const counts = {
-        todo: myActiveTasks.filter(t => t.status === 'todo').length,
-        inprogress: myActiveTasks.filter(t => t.status === 'inprogress').length,
-        homologation: myActiveTasks.filter(t => t.status === 'homologation').length,
-        overdue: myActiveTasks.filter(t => isTaskOverdue(t)).length
-    };
-
-    // NOVO: Calcular quantas tarefas dependem da homologação ESPECÍFICA do usuário logado
-    const myHomologationsPending = myActiveTasks.filter(t => {
-        if (t.status !== 'homologation' || !t.homologador) return false;
-        const hName = normalize(typeof t.homologador === 'object' ? t.homologador.name : t.homologador);
-        const hEmail = normalize(typeof t.homologador === 'object' ? t.homologador.email : null);
-        return myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
-    }).length;
-
-    // NOVO: Gerar o HTML do badge animado (se houver pendências)
-    const homologationBadge = myHomologationsPending > 0 
-        ? `<div class="absolute -top-2 -right-2 flex h-6 w-6 z-10" title="Você tem ${myHomologationsPending} homologação(ões) pendente(s)">
-             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-             <span class="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-[10px] font-bold items-center justify-center border-2 border-white dark:border-[#1E293B] shadow-sm">${myHomologationsPending}</span>
-           </div>`
-        : '';
-
+    const {myActiveTasks, myIdentifiers, dbUser, counts, myHomologationsPending} = buildHomeModel(state, isTaskOverdue);
     const displayFullName = dbUser?.name || state.currentUser?.userDetails || 'Visitante';
     const userName = displayFullName.split(' ')[0];
-    const greeting = getGreeting();
-
-    // 4. Estrutura Base HTML com Cards Interativos (metric-card)
+    const views = [
+        {key: 'todo', label: 'Fila', icon: 'list-todo', title: 'Tarefas na Fila'},
+        {key: 'stopped', label: 'Parado', icon: 'pause-circle', title: 'Tarefas paradas'},
+        {key: 'inprogress', label: 'Andamento', icon: 'play-circle', title: 'Tarefas em Andamento'},
+        {key: 'homologation', label: 'Homologação', icon: 'clipboard-check', title: 'Tarefas em Homologação'},
+        {key: 'publication', label: 'Publicação', icon: 'arrow-up-right', title: 'Tarefas em Publicação'},
+        {key: 'overdue', label: 'Atrasadas', icon: 'calendar-clock', title: 'Tarefas Atrasadas'}
+    ];
+    const previousFilter = container.dataset.homeFilter;
+    const focusedFilter = container.contains(document.activeElement) ? document.activeElement.closest('.metric-card')?.dataset.filter : undefined;
     container.innerHTML = `
-        <div class="max-w-4xl mx-auto space-y-10 animate-fade-in">
-            
-            <div class="pt-4">
-                <h1 class="text-3xl md:text-4xl font-extrabold text-custom-darkest dark:text-white tracking-tight">${greeting}, ${userName}!</h1>
-                <p class="text-custom-dark dark:text-gray-400 mt-2 font-medium">Aqui está o resumo do seu fluxo de trabalho.</p>
+        <section class="sb-home" aria-labelledby="home-greeting">
+            <header class="sb-home-header">
+                <div><p class="sb-home-eyebrow">Seu fluxo de trabalho</p><h2 id="home-greeting">${getGreeting()}, ${escapeHomeText(userName)}!</h2><p>O que precisa da sua atenção, em cada etapa.</p></div>
+                ${myHomologationsPending > 0 ? `<button type="button" id="home-homologation-alert" class="sb-home-attention" data-filter="homologation"><i data-lucide="clipboard-check" aria-hidden="true"></i><span><strong>${myHomologationsPending} aguardando sua homologação</strong><span>Ver tarefas para validar</span></span><i data-lucide="arrow-right" aria-hidden="true"></i></button>` : ''}
+            </header>
+            <p id="home-scope-note" class="sb-home-scope">Resumo das tarefas carregadas em que você é responsável ou homologador pendente. Os números não representam um total global.</p>
+            <div id="home-metric-cards" class="sb-home-metrics" aria-label="Selecionar etapa do resumo pessoal" aria-describedby="home-scope-note">
+                ${views.map(view => `<button type="button" class="metric-card sb-home-metric" data-filter="${view.key}" aria-pressed="false" aria-controls="home-dynamic-list"><span class="sb-home-metric-label"><i data-lucide="${view.icon}" aria-hidden="true"></i>${view.label}</span><span class="sb-home-metric-value">${counts[view.key]}</span><span class="sb-home-metric-selected" aria-hidden="true">✓ Selecionado</span></button>`).join('')}
             </div>
+            <section class="sb-home-list-section" aria-labelledby="home-list-title">
+                <div class="sb-home-list-heading"><h2 id="home-list-title"><i id="home-list-icon" data-lucide="play-circle" aria-hidden="true"></i><span>Tarefas em Andamento</span></h2><p id="home-list-count" class="sb-home-meta" aria-live="polite"></p></div>
+                <p id="home-selection-note" class="sb-home-meta"></p>
+                <div id="home-dynamic-list" class="sb-home-list"></div>
+            </section>
+        </section>`;
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" id="home-metric-cards">
-                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="inprogress">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="p-2.5 bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl"><i data-lucide="play-circle" class="w-5 h-5"></i></div>
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Em Andamento</h3>
-                    </div>
-                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.inprogress}</p>
-                </div>
-
-                <div class="metric-card relative cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="homologation">
-                    ${homologationBadge}
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="p-2.5 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl"><i data-lucide="eye" class="w-5 h-5"></i></div>
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Homologação</h3>
-                    </div>
-                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.homologation}</p>
-                </div>
-
-                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="todo">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="p-2.5 bg-gray-200 dark:bg-white/10 text-gray-600 dark:text-gray-300 rounded-xl"><i data-lucide="list-todo" class="w-5 h-5"></i></div>
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Na Fila</h3>
-                    </div>
-                    <p class="text-4xl font-black text-custom-darkest dark:text-white">${counts.todo}</p>
-                </div>
-
-                <div class="metric-card cursor-pointer bg-white/60 dark:bg-white/5 backdrop-blur-xl border ${counts.overdue > 0 ? 'border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10' : 'border-white/40 dark:border-white/10'} rounded-[28px] p-6 shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" data-filter="overdue">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="p-2.5 ${counts.overdue > 0 ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400'} rounded-xl">
-                            <i data-lucide="${counts.overdue > 0 ? 'alert-triangle' : 'check-circle'}" class="w-5 h-5"></i>
-                        </div>
-                        <h3 class="text-[10px] font-bold uppercase tracking-widest ${counts.overdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}">Atrasadas</h3>
-                    </div>
-                    <p class="text-4xl font-black ${counts.overdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-custom-darkest dark:text-white'}">${counts.overdue}</p>
-                </div>
-            </div>
-
-            <div>
-                <h2 id="home-list-title" class="text-lg font-bold text-custom-darkest dark:text-white mb-5 flex items-center gap-2 transition-colors">
-                    <i id="home-list-icon" data-lucide="play-circle" class="w-5 h-5 text-blue-500"></i>
-                    <span>Tarefas em Andamento</span>
-                </h2>
-                <div id="home-dynamic-list" class="space-y-3 min-h-[200px]">
-                    </div>
-            </div>
-        </div>
-    `;
-
-    lucide.createIcons({ root: container });
-
-    // 5. Função que renderiza a lista com base no filtro selecionado
-    const updateList = (filter) => {
-        // Atualiza a UI dos cards para mostrar qual está selecionado (efeito "anel luminoso")
-        container.querySelectorAll('.metric-card').forEach(card => {
-            if (card.dataset.filter === filter) {
-                card.classList.add('ring-4', 'ring-blue-500/40', 'dark:ring-blue-400/30');
-            } else {
-                card.classList.remove('ring-4', 'ring-blue-500/40', 'dark:ring-blue-400/30');
-            }
-        });
-
-        // Configurações baseadas no filtro
-        let filteredTasks = [];
-        let listTitle = '';
-        let listIcon = '';
-        let iconColor = '';
-
-        if (filter === 'inprogress') {
-            filteredTasks = myActiveTasks.filter(t => t.status === 'inprogress');
-            listTitle = 'Tarefas em Andamento';
-            listIcon = 'play-circle';
-            iconColor = 'text-blue-500';
-        } else if (filter === 'homologation') {
-            filteredTasks = myActiveTasks.filter(t => t.status === 'homologation');
-            listTitle = 'Tarefas em Homologação';
-            listIcon = 'eye';
-            iconColor = 'text-orange-500';
-        } else if (filter === 'todo') {
-            filteredTasks = myActiveTasks.filter(t => t.status === 'todo');
-            listTitle = 'Tarefas na Fila';
-            listIcon = 'list-todo';
-            iconColor = 'text-gray-500 dark:text-gray-400';
-        } else if (filter === 'overdue') {
-            filteredTasks = myActiveTasks.filter(t => isTaskOverdue(t));
-            listTitle = 'Tarefas Atrasadas';
-            listIcon = 'alert-triangle';
-            iconColor = 'text-red-500';
-        }
-
-        // Ordena as tarefas exibidas (Prazo mais próximo no topo)
-        filteredTasks.sort((a, b) => {
-            const dA = a.dueDate ? new Date(a.dueDate) : new Date(8640000000000000);
-            const dB = b.dueDate ? new Date(b.dueDate) : new Date(8640000000000000);
-            return dA - dB;
-        });
-
-        // Atualiza o título e ícone da lista
-       const titleEl = document.getElementById('home-list-title');
-        titleEl.innerHTML = `
-            <i data-lucide="${listIcon}" class="w-5 h-5 ${iconColor}"></i>
-            <span>${listTitle}</span>
-        `;
-        lucide.createIcons({ root: titleEl });
-
+    const updateList = filter => {
+        const selectedView = views.find(view => view.key === filter) || views[2];
+        filter = selectedView.key;
+        container.dataset.homeFilter = filter;
+        container.querySelectorAll('.metric-card').forEach(card => card.setAttribute('aria-pressed', String(card.dataset.filter === filter)));
+        const filteredTasks = selectHomeTasks(myActiveTasks, filter, isTaskOverdue);
+        const titleEl = document.getElementById('home-list-title');
+        titleEl.innerHTML = `<i id="home-list-icon" data-lucide="${selectedView.icon}" aria-hidden="true"></i><span>${selectedView.title}</span>`;
+        document.getElementById('home-list-count').textContent = `${filteredTasks.length} ${filteredTasks.length === 1 ? 'tarefa neste recorte' : 'tarefas neste recorte'}`;
+        document.getElementById('home-selection-note').textContent = filter === 'publication' ? 'Publicação é uma etapa ativa. Essas tarefas ainda não estão no arquivo.' : filter === 'stopped' ? 'Parado é o estado registrado. O motivo deve ser consultado na tarefa.' : 'Ordenadas pelo prazo mais próximo; tarefas sem prazo ficam ao final.';
         const listContainer = document.getElementById('home-dynamic-list');
-
-        // Estado Vazio
-        if (filteredTasks.length === 0) {
-            listContainer.innerHTML = `<div class="text-center py-10 bg-white/30 dark:bg-white/5 rounded-3xl border border-dashed border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 text-sm font-medium animate-fade-in">Não há tarefas aqui. 🎉</div>`;
-            return;
+        if (!filteredTasks.length) {
+            listContainer.innerHTML = `<div class="sb-empty"><i data-lucide="inbox" aria-hidden="true"></i><h3>${myActiveTasks.length ? 'Nenhuma tarefa nesta seleção' : 'Nenhuma tarefa pessoal carregada'}</h3><p class="sb-home-meta">${myActiveTasks.length ? 'Escolha outra etapa para consultar as suas tarefas.' : 'Este recorte reúne as tarefas carregadas em que você participa. Não há itens para exibir agora.'}</p></div>`;
+        } else {
+            listContainer.innerHTML = filteredTasks.map(task => {
+                const status = views.find(view => view.key === task.status);
+                const pending = isPendingHomeValidation(task, myIdentifiers);
+                const overdue = isTaskOverdue(task);
+                return `<button type="button" class="list-row sb-home-row${pending ? ' sb-home-row--validation' : ''}" data-task-id="${escapeHomeText(task.id)}" aria-label="Abrir tarefa ${escapeHomeText(task.id)}: ${escapeHomeText(task.title)}. Estado: ${escapeHomeText(status?.label || 'não identificado')}.${pending ? ' Sua homologação pendente.' : ''}">
+                    <span class="sb-home-row-main"><span class="sb-home-row-meta"><span class="sb-home-task-id">#${escapeHomeText(task.id)}</span><span class="sb-home-project"><span class="sb-home-project-dot" data-project-color="${escapeHomeText(task.projectColor || '#94A3B8')}" aria-hidden="true"></span>${escapeHomeText(task.project || 'Geral')}</span>${task.priority === 'Urgente' ? '<span class="sb-badge" data-status="error">Urgente</span>' : ''}${pending ? '<span class="sb-badge" data-status="homologation">Sua homologação</span>' : ''}</span><span class="sb-home-task-title">${escapeHomeText(task.title)}</span><span class="sb-home-row-meta"><span class="sb-badge" data-status="${escapeHomeText(task.status)}">${escapeHomeText(status?.label || 'Estado não identificado')}</span><span class="sb-home-meta">Prioridade: ${escapeHomeText(task.priority || 'não informada')}</span></span></span>
+                    <span class="sb-home-row-end"><span class="sb-home-deadline${overdue ? ' sb-home-deadline--overdue' : ''}"><i data-lucide="${overdue ? 'calendar-clock' : 'calendar'}" aria-hidden="true"></i>${task.dueDate ? `${formatDate(task.dueDate)}${overdue ? ' · Atrasada' : ''}` : 'Sem prazo'}</span><span class="sb-home-open">Abrir tarefa <i data-lucide="arrow-up-right" aria-hidden="true"></i></span></span>
+                </button>`;
+            }).join('');
+            listContainer.querySelectorAll('[data-project-color]').forEach(mark => { mark.style.backgroundColor = mark.dataset.projectColor; });
+            listContainer.querySelectorAll('.list-row').forEach(row => row.addEventListener('click', () => {
+                const taskId = row.dataset.taskId;
+                highlightTask(taskId, false);
+                renderTaskHistory(taskId);
+            }));
         }
-
-        // Renderiza as linhas
-        listContainer.innerHTML = filteredTasks.map(task => {
-            const isOverdue = isTaskOverdue(task);
-            const statusColors = {
-                todo: 'bg-gray-400', inprogress: 'bg-blue-500', homologation: 'bg-orange-500', stopped: 'bg-red-500', publication: 'bg-purple-500'
-            };
-            const sColor = statusColors[task.status] || 'bg-gray-400';
-
-            // NOVO: Verifica se o usuário logado é o homologador pendente DESSA tarefa
-            let isPendingMyHomologation = false;
-            if (task.homologador && task.status === 'homologation') {
-                const hName = normalize(typeof task.homologador === 'object' ? task.homologador.name : task.homologador);
-                const hEmail = normalize(typeof task.homologador === 'object' ? task.homologador.email : null);
-                isPendingMyHomologation = myIdentifiers.has(hName) || myIdentifiers.has(hEmail);
-            }
-
-            // Cria o Badge caso dependa dele
-            const homologadorBadge = isPendingMyHomologation 
-                ? `<span class="text-[10px] font-bold text-orange-600 bg-orange-100 dark:bg-orange-900/40 px-2 py-0.5 rounded-full border border-orange-300 dark:border-orange-700 animate-pulse flex items-center gap-1 shadow-sm"><i data-lucide="shield-alert" class="w-3 h-3"></i> SUA HOMOLOGAÇÃO</span>` 
-                : '';
-
-            return `
-            <div class="bg-white dark:bg-[#1E293B] border ${isPendingMyHomologation ? 'border-orange-300 dark:border-orange-500/50' : 'border-gray-100 dark:border-gray-700'} rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 cursor-pointer list-row group animate-fade-in" data-task-id="${task.id}">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-1.5 h-10 rounded-full ${sColor} shrink-0"></div>
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5 flex-wrap">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style="background-color: ${task.projectColor || '#94A3B8'}">${task.project || 'Geral'}</span>
-                            <span class="text-xs font-mono font-bold text-gray-400">#${task.id}</span>
-                            ${task.priority === 'Urgente' ? '<span class="text-[10px] font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">URGENTE</span>' : ''}
-                            ${homologadorBadge}
-                        </div>
-                        <h4 class="font-bold text-custom-darkest dark:text-white truncate pr-4">${task.title}</h4>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 shrink-0 text-right hidden sm:block">
-                    ${task.dueDate ? `
-                        <div class="text-xs font-semibold ${isOverdue ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}">
-                            <i data-lucide="${isOverdue ? 'alert-triangle' : 'calendar'}" class="w-3.5 h-3.5 inline mb-0.5"></i>
-                            ${formatDate(task.dueDate)}
-                        </div>
-                    ` : '<span class="text-xs text-gray-400 italic">Sem prazo</span>'}
-                </div>
-            </div>`;
-        }).join('');
-
-        lucide.createIcons({ root: listContainer });
-
-        // Adiciona eventos de clique nas tarefas recém renderizadas
-        listContainer.querySelectorAll('.list-row').forEach(row => {
-            row.addEventListener('click', (e) => {
-                if (!e.target.closest('button, a')) {
-                    const taskId = row.dataset.taskId;
-                    highlightTask(taskId, false);
-                    renderTaskHistory(taskId); // Abre o modal de detalhes
-                }
-            });
-        });
+        lucide.createIcons({root: container});
     };
-
-    // 6. Configurar os cliques nos Cards
-    container.querySelectorAll('.metric-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const filter = card.dataset.filter;
-            updateList(filter);
-        });
-    });
-
-    // 7. Renderização inicial: Mostrar as tarefas 'Em Andamento' por padrão
-    updateList('inprogress');
+    container.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => updateList(button.dataset.filter)));
+    updateList(views.some(view => view.key === previousFilter) ? previousFilter : 'inprogress');
+    if (focusedFilter) [...container.querySelectorAll('.metric-card')].find(button => button.dataset.filter === focusedFilter)?.focus({preventScroll: true});
 }
 
 // --- RENDERIZAÇÃO: KANBAN ---
