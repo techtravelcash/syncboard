@@ -58,3 +58,12 @@ The login theme preference keeps the existing light/dark/system-default behavior
 At delivery, record the exact integration commit and its successful deploy, the live marker and available browser QA, limitations, and Elmo’s pending human validation. Never mark the task approved or completed automatically.
 
 The startup regression test runs the real bootstrap callback in isolated DOM/API mocks. It covers success, late listener failure, late alert failure, shell failure, missing session and denied role. Loader dismissal occurs only after all synchronous setup succeeds, so a scheduled fade cannot hide a later retry/error card. This mock coverage does not replace browser/network/SSO tests.
+
+
+## Public login asset recovery
+
+The application catch-all route remains protected. `/login` is public, so its essential local CSS and brand images are now embedded directly in that HTML rather than requiring anonymous access to protected asset paths. The embedded SVG bytes are the exact approved v2 files. External font/icon sources are the same existing sources; the Google login URL, logout route, roles and permissions remain unchanged.
+
+Run `python scripts/embed_login_assets.py` whenever either shared foundation CSS, login CSS or a used brand SVG changes. Run `python scripts/embed_login_assets.py --check` and `python tests/check_login_assets.py` to verify synchronization and that login has no protected local subresource dependency.
+
+The application marker remains `tc445-shell-1`; the self-contained login marker is `tc445-login-2`. Public-route compatibility is checked statically against the current route configuration. Opening `/login` while authenticated does not prove an anonymous SSO round-trip; do not log out or switch a real account merely for visual QA. Record that end-to-end limit explicitly.
