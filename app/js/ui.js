@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { buildHomeModel, selectHomeTasks, isPendingHomeValidation, escapeHomeText } from './home-v2.js';
+import { buildHomeModel, selectHomeTasks, isPendingHomeValidation, escapeHomeText, restoreHomeTaskFocus } from './home-v2.js';
 import { markNotificationRead, fetchNotifications, fetchArchivedTasks } from './api.js';
 
 
@@ -1726,6 +1726,11 @@ export function closeTaskHistory(taskId) {
     const modal = document.getElementById('taskHistoryModal');
     const modalContent = modal.querySelector('.orb-glass-unified');
     const backdrop = modal;
+    const restoreHomeFocus = () => {
+        if (state.currentView === 'home' && !state.returnToNotifications) {
+            restoreHomeTaskFocus(document.getElementById('homeView'), taskId);
+        }
+    };
 
     if (isAnimating) return;
     isAnimating = true;
@@ -1758,6 +1763,7 @@ export function closeTaskHistory(taskId) {
             activeOriginRect = null;
             activeOriginEl = null;
             isAnimating = false;
+            restoreHomeFocus();
 
             // NOVO: Volta para o modal de notificações se tiver vindo de lá
             if (state.returnToNotifications) {
@@ -1774,6 +1780,7 @@ export function closeTaskHistory(taskId) {
     } else {
         modal.classList.add('hidden');
         isAnimating = false;
+        restoreHomeFocus();
         
         // Trata o caso em que o modal fecha sem origem animada
         if (state.returnToNotifications) {

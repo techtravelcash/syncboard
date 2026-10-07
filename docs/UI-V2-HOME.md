@@ -18,3 +18,8 @@ Validation:
 Known boundaries: whole-dataset pagination/summaries (PF-07/PF-23), canonical identity changes (PF-30), live reconciliation guarantees (PF-37), and full cross-modal draft/focus continuity (PF-58) are not implemented by this presentation slice. Physical mobile/touch and network/failure injection require a suitable test environment; report them separately from performed checks.
 
 Rollback uses a new revert commit returning this slice to the identified baseline while preserving subsequent unrelated work. Never reset or force-push main. TC-446 is handed to Elmo in Homologação after delivery and available QA; no automatic approval/publication/completion.
+
+
+## Home detail return-focus repair
+
+Live QA identified the pre-existing close handler's missing focus return after opening a Home row by keyboard. The repair adds a Home-only close hook: restore the current task's Home button, or the selected category if that task left the current recorte. Other views and notification-return flows are excluded. Both animated and immediate close paths are covered by isolated real-function tests. No general modal trapping, draft recovery, API or data behavior is added. Release marker: `tc446-home-2`.

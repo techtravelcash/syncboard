@@ -68,3 +68,13 @@ export function selectHomeTasks(tasks, filter, isTaskOverdue) {
 }
 
 export const escapeHomeText = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+
+// Return only to the current Home row or its selected category after detail closes.
+export function restoreHomeTaskFocus(container, taskId) {
+    if (!container) return false;
+    const row = [...container.querySelectorAll('.sb-home-row')].find(element => element.dataset.taskId === taskId);
+    const target = row || container.querySelector('.metric-card[aria-pressed="true"]');
+    if (!target?.isConnected) return false;
+    target.focus();
+    return true;
+}
