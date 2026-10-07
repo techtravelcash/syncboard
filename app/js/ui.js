@@ -173,171 +173,96 @@ export function renderModalAttachments(files) {
 // --- RENDERIZAÇÃO: CARD DE TAREFA ---
 
 export const createTaskElement = (task) => {
+    // Presentation only: the original listeners below still own every action.
+    const escapeCardText = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const taskCard = document.createElement('div');
     const isOverdue = isTaskOverdue(task);
     const isPop = task.priority === 'Urgente' || task.status === 'done';
-
-    let cardClasses = 'task-card group'; 
-    if (isOverdue) cardClasses += ' border-l-[4px] border-l-red-500';
+    let cardClasses = 'task-card group sb-kanban-card';
+    if (isOverdue) cardClasses += ' border-l-[4px] border-l-red-500 sb-kanban-card--overdue';
     if (isPop) cardClasses += ' card-pop';
-
     taskCard.className = cardClasses;
     taskCard.dataset.taskId = task.id;
+    taskCard.dataset.status = task.status;
+    taskCard.setAttribute('role', 'article');
+    taskCard.setAttribute('aria-label', `${task.id}: ${task.title}`);
 
+    // Project colors are retained as project metadata, separate from lane/status color.
     const pColor = task.projectColor || '#94A3B8';
-    const bgRgba = hexToRgba(pColor, 0.50); 
-    
-    const projectStrip = task.project 
-        ? `<div class="project-strip" style="background-color: ${bgRgba};">${task.project}</div>`
-        : `<div class="project-strip" style="background-color: ${hexToRgba('#94A3B8', 0.5)};">Geral</div>`;
-
-    let responsibleDisplay = '';
-    if (task.responsible && task.responsible.length > 0) {
-        const avatars = task.responsible.slice(0, 3).map(r => {
-            const name = typeof r === 'object' ? r.name : r;
-            const pic = typeof r === 'object' ? r.picture : null;
-            const userState = state.users.find(u => u.name === name);
-            const finalPic = userState?.picture || pic;
-
-            if (finalPic) {
-                return `<img src="${finalPic}" class="w-6 h-6 rounded-full border border-white dark:border-[#334155] object-cover" title="${name}">`;
-            }
-            return `<div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 border border-white dark:border-[#334155] flex items-center justify-center text-[9px] font-bold text-gray-600 dark:text-gray-300" title="${name}">${name.charAt(0)}</div>`;
-        }).join('');
-        
-        const extra = task.responsible.length > 3 ? `<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700 border border-white dark:border-[#334155] flex items-center justify-center text-[9px] font-bold text-gray-500">+${task.responsible.length - 3}</div>` : '';
-        responsibleDisplay = `<div class="flex -space-x-1.5">${avatars}${extra}</div>`;
-    }
+    const projectStrip = `<div class="project-strip sb-kanban-project"><span class="sb-kanban-project-swatch" aria-hidden="true"></span><span>${escapeCardText(task.project || 'Geral')}</span></div>`;
+    const responsible = Array.isArray(task.responsible) ? task.responsible : [];
+    const responsibleNames = responsible.map(r => (r && typeof r === 'object' ? (r.name || r.email) : r) || 'Nome não informado');
+    const avatars = responsible.slice(0, 3).map(r => {
+        const name = String((r && typeof r === 'object' ? r.name : r) || '');
+        const pic = r && typeof r === 'object' ? r.picture : null;
+        const userState = state.users.find(u => u.name === name);
+        const finalPic = userState?.picture || pic;
+        return finalPic
+            ? `<img src="${escapeCardText(finalPic)}" class="sb-kanban-avatar" alt="" title="${escapeCardText(name)}">`
+            : `<span class="sb-kanban-avatar" aria-hidden="true" title="${escapeCardText(name)}">${escapeCardText(name.charAt(0))}</span>`;
+    }).join('');
+    const extra = responsible.length > 3 ? `<span class="sb-kanban-avatar sb-kanban-avatar--extra" aria-hidden="true">+${responsible.length - 3}</span>` : '';
+    const responsibleDisplay = `<div class="sb-kanban-people"><div class="sb-kanban-avatars">${avatars}${extra}</div><div class="sb-kanban-people-copy">${responsible.length
+        ? `<span><strong>Principal:</strong> ${escapeCardText(responsibleNames[0])}</span>${responsible.length > 1 ? `<span><strong>Corresponsáveis:</strong> ${escapeCardText(responsibleNames.slice(1).join(', '))}</span>` : ''}`
+        : '<span>Responsável não definido</span>'}</div></div>`;
 
     const dateText = task.dueDate ? formatDate(task.dueDate) : '';
-    const dateClass = isOverdue ? 'text-red-500 font-bold opacity-100' : 'ox-text-secondary opacity-0 group-hover:opacity-100 transition-opacity duration-300';
-    
-    const dateBadge = dateText ? 
-        `<div class="flex items-center gap-1 ${dateClass} text-[10px]" title="Prazo"><i data-lucide="calendar" class="w-3 h-3"></i><span>${dateText}</span></div>` : '';
-
-    const attachmentIcon = (task.attachments?.length > 0) 
-        ? `<div class="flex items-center gap-1 ox-text-tertiary text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Anexos"><i data-lucide="paperclip" class="w-3 h-3"></i><span>${task.attachments.length}</span></div>` 
-        : '';
-
+    const dateBadge = `<span class="sb-kanban-date ${isOverdue ? 'sb-kanban-date--overdue' : ''}"><i data-lucide="calendar" aria-hidden="true"></i>${dateText ? `${isOverdue ? 'Atrasada · ' : 'Prazo · '}${escapeCardText(dateText)}` : 'Sem prazo'}</span>`;
+    const attachmentIcon = (task.attachments?.length > 0)
+        ? `<span class="sb-kanban-count" title="Anexos"><i data-lucide="paperclip" aria-hidden="true"></i>${task.attachments.length}<span class="sb-kanban-sr-only"> anexos</span></span>` : '';
     const commentsList = Array.isArray(task.comments) ? task.comments : [];
     const commentCount = commentsList.length;
-    
-    const commentIcon = (commentCount > 0) 
-        ? `<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-300" title="Comentários">
-             <i data-lucide="message-circle" class="w-3 h-3"></i>
-             <span class="font-semibold">${commentCount}</span>
-           </div>` 
-        : '';
-    
-    const idBadge = `<span class="font-mono text-xs font-bold ox-text-secondary tracking-wider mr-2">${task.id}</span>`;
+    const commentIcon = commentCount > 0
+        ? `<span class="sb-kanban-count" title="Comentários"><i data-lucide="message-circle" aria-hidden="true"></i>${commentCount}<span class="sb-kanban-sr-only"> comentários</span></span>` : '';
 
-    // --- BADGE DO HOMOLOGADOR ---
     let homologadorBadge = '';
-    
     if ((task.status === 'homologation' || task.status === 'publication') && task.homologador) {
-        const homolName = typeof task.homologador === 'object' ? task.homologador.name : task.homologador;
+        const homolName = String((typeof task.homologador === 'object' ? (task.homologador.name || task.homologador.email) : task.homologador) || 'Nome não informado');
         const homolPic = typeof task.homologador === 'object' ? task.homologador.picture : null;
-        
         const isApproved = task.status === 'publication';
-        
-        const badgeBg = isApproved 
-            ? 'bg-gradient-to-r from-green-500/10 to-green-500/5 border-green-500/20' 
-            : 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20';
-            
-        const iconName = isApproved ? 'check-circle' : 'shield-check';
-        const iconColor = isApproved ? 'text-green-500' : 'text-orange-500';
-        
-        const pingEffect = isApproved ? '' : '<span class="absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-30 group-hover/homol:animate-ping"></span>';
-        
-        const avatarBorder = isApproved ? 'border-green-200 dark:border-green-800' : 'border-orange-200 dark:border-orange-800';
-        const avatarFallbackBg = isApproved ? 'bg-green-200 dark:bg-green-800' : 'bg-orange-200 dark:bg-orange-800';
-        const avatarFallbackText = isApproved ? 'text-green-700 dark:text-green-200' : 'text-orange-700 dark:text-orange-200';
-        
-        const labelTextClass = isApproved ? 'text-green-600/70 dark:text-green-400/80' : 'text-orange-600/70 dark:text-orange-400/80';
-        const nameTextClass = isApproved ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300';
-        const labelText = isApproved ? 'Homologado por' : 'Homologador';
-
-        const avatarImg = homolPic 
-            ? `<img src="${homolPic}" class="w-5 h-5 rounded-full object-cover border ${avatarBorder}">` 
-            : `<div class="w-5 h-5 rounded-full ${avatarFallbackBg} flex items-center justify-center text-[9px] font-bold ${avatarFallbackText} shadow-inner">${homolName.charAt(0)}</div>`;
-
-        homologadorBadge = `
-            <div class="mt-3 flex items-center gap-2 px-2.5 py-1.5 ${badgeBg} border rounded-xl w-fit group/homol transition-colors duration-500">
-                <div class="relative flex items-center justify-center">
-                    ${pingEffect}
-                    <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor} relative z-10"></i>
-                </div>
-                ${avatarImg}
-                <div class="flex flex-col">
-                    <span class="text-[8px] font-bold uppercase tracking-widest ${labelTextClass} leading-none mb-0.5">${labelText}</span>
-                    <span class="text-[11px] font-extrabold ${nameTextClass} leading-none tracking-tight">${homolName.split(' ')[0]}</span>
-                </div>
-            </div>
-        `;
+        const avatarImg = homolPic
+            ? `<img src="${escapeCardText(homolPic)}" class="sb-kanban-avatar" alt="">`
+            : `<span class="sb-kanban-avatar" aria-hidden="true">${escapeCardText(homolName.charAt(0))}</span>`;
+        homologadorBadge = `<div class="sb-kanban-homologator"><i data-lucide="${isApproved ? 'check-circle' : 'shield-check'}" aria-hidden="true"></i>${avatarImg}<span><strong>${isApproved ? 'Homologado por' : 'Homologador'}</strong> ${escapeCardText(homolName)}</span></div>`;
     }
 
     let actionButtons = '';
     if (task.status === 'homologation') {
-        actionButtons = `<button class="approve-btn p-1 rounded-md bg-orange-500 hover:bg-orange-600 text-white shadow-sm" title="Aprovar para Publicação" data-task-id="${task.id}"><i data-lucide="arrow-right" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+        actionButtons = `<button type="button" class="approve-btn sb-kanban-action sb-kanban-action--primary" title="Aprovar para Publicação" aria-label="Aprovar ${escapeCardText(task.id)} para Publicação" data-task-id="${escapeCardText(task.id)}"><i data-lucide="arrow-right" aria-hidden="true"></i><span>Aprovar</span></button>`;
     } else if (task.status === 'publication') {
-        actionButtons = `<button class="publish-btn p-1 rounded-md bg-green-500 hover:bg-green-600 text-white shadow-sm" title="Publicar Tarefa" data-task-id="${task.id}"><i data-lucide="check-circle" class="w-3.5 h-3.5 pointer-events-none"></i></button>`;
+        actionButtons = `<button type="button" class="publish-btn sb-kanban-action sb-kanban-action--primary" title="Publicar Tarefa" aria-label="Publicar ${escapeCardText(task.id)} e enviar para Arquivados" data-task-id="${escapeCardText(task.id)}"><i data-lucide="check-circle" aria-hidden="true"></i><span>Publicar</span></button>`;
     }
+    const quickActions = `<div class="sb-kanban-actions">
+        <button type="button" class="expand-btn sb-kanban-action" title="Expandir Detalhes" aria-label="Abrir detalhes de ${escapeCardText(task.id)}" data-task-id="${escapeCardText(task.id)}"><i data-lucide="maximize-2" aria-hidden="true"></i><span>Detalhes</span></button>
+        ${actionButtons}
+        <button type="button" class="delete-task-btn sb-kanban-action sb-kanban-action--danger" title="Excluir" aria-label="Excluir ${escapeCardText(task.id)}" data-task-id="${escapeCardText(task.id)}"><i data-lucide="trash-2" aria-hidden="true"></i></button>
+    </div>`;
 
-    const quickActions = `
-        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-            <button class="delete-task-btn p-1 rounded-md bg-white/20 hover:bg-red-500 hover:text-white text-white backdrop-blur-sm transition-colors shadow-sm" title="Excluir" data-task-id="${task.id}">
-                <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
-            </button>
-
-            <button class="expand-btn p-1 rounded-md bg-white/20 hover:bg-white text-white hover:text-custom-dark backdrop-blur-sm transition-colors shadow-sm" title="Expandir Detalhes" data-task-id="${task.id}">
-                <i data-lucide="maximize-2" class="w-3.5 h-3.5 pointer-events-none"></i>
-            </button>
-
-            ${actionButtons}
-        </div>
-    `;
-
-    // --- NOVA LÓGICA DA BARRA DE PROGRESSO INTERATIVA ---
-    const progress = task.progress || 0; 
+    // Keep stored progress/payload semantics. Missing information is explicit in presentation.
+    const progress = task.progress || 0;
+    const hasProgress = task.progress !== null && task.progress !== undefined && task.progress !== '';
+    const progressLabel = hasProgress ? `${progress}%` : 'Não informado';
     const missingText = task.missingToComplete || "Nada especificado.";
-    const barColorClass = progress === 100 ? 'bg-green-500' : 'bg-blue-500';
-
-    const progressBarHtml = `
-        <div class="mt-4 mb-1 w-full group/progress cursor-pointer progress-update-btn transition-transform active:scale-[0.98]" data-task-id="${task.id}" title="Clique para atualizar o progresso">
-            <div class="flex justify-between items-center mb-1.5 pointer-events-none">
-                <span class="text-[9px] font-bold uppercase tracking-widest text-custom-dark/70 dark:text-gray-400">Progresso</span>
-                <span class="text-[10px] font-bold text-custom-darkest dark:text-white">${progress}%</span>
-            </div>
-            
-            <div class="h-1.5 w-full bg-black/5 dark:bg-white/10 rounded-full flex overflow-hidden shadow-inner">
-                <div class="h-full ${barColorClass} transition-all duration-1000 ease-out shadow-sm pointer-events-none" style="width: ${progress}%"></div>
-                
-                <div class="h-full hover:bg-black/10 dark:hover:bg-white/20 transition-colors" style="width: ${100 - progress}%" ${progress < 100 ? `title="Falta: ${missingText}"` : ''}></div>
-            </div>
-        </div>
-    `;
+    const progressBarHtml = `<button type="button" class="progress-update-btn sb-kanban-progress" data-task-id="${escapeCardText(task.id)}" title="Clique para atualizar o progresso" aria-label="Atualizar progresso de ${escapeCardText(task.id)}. ${escapeCardText(progressLabel)}">
+        <span class="sb-kanban-progress-heading"><span>Progresso informado</span><strong>${escapeCardText(progressLabel)}</strong></span>
+        <span class="sb-kanban-progress-track" aria-hidden="true"><span class="sb-kanban-progress-fill" style="width: ${escapeCardText(progress)}%"></span></span>
+    </button>`;
 
     taskCard.innerHTML = `
-        ${projectStrip}
-        ${quickActions}
-        
-        <div class="task-body flex flex-col h-full">
-            <h3 class="text-sm ox-text-primary leading-snug break-words pr-1">${task.title}</h3>
+        <div class="sb-kanban-card-head"><span class="sb-kanban-id">${escapeCardText(task.id)}</span><span class="sb-kanban-priority">Prioridade: ${escapeCardText(task.priority || 'Não informada')}</span></div>
+        <div class="task-body">
+            <h3 class="sb-kanban-title">${escapeCardText(task.title)}</h3>
+            ${projectStrip}
+            ${responsibleDisplay}
             ${homologadorBadge}
-            
             ${progressBarHtml}
-            
-            <div class="flex items-end justify-between mt-auto pt-3 border-t border-dashed border-gray-200 dark:border-white/5">
-                <div class="flex items-center gap-3 min-h-[24px]">
-                    ${idBadge}
-                    ${dateBadge}
-                    ${attachmentIcon}
-                    ${commentIcon}
-                </div>
-                ${responsibleDisplay}
-            </div>
+            <p class="sb-kanban-pending"><strong>Pendência:</strong> ${escapeCardText(missingText)}</p>
+            <div class="sb-kanban-metadata">${dateBadge}<span class="sb-kanban-counts">${attachmentIcon}${commentIcon}</span></div>
         </div>
+        ${quickActions}
     `;
+    // CSS assignment retains the source value without interpolating it into markup.
+    taskCard.querySelector('.sb-kanban-project-swatch').style.backgroundColor = pColor;
 
     // --- EVENT LISTENERS ---
     const expandBtn = taskCard.querySelector('.expand-btn');
@@ -502,11 +427,11 @@ export function renderKanbanView() {
     let activeTasks = filterTasks(state.tasks).filter(t => t.status !== 'done');
     
     const columns = [
-        { id: 'todo', name: 'Fila', color: 'bg-gray-400' },
-        { id: 'stopped', name: 'Parado', color: 'bg-red-500' },
-        { id: 'inprogress', name: 'Andamento', color: 'bg-blue-500' },
-        { id: 'homologation', name: 'Homologação', color: 'bg-orange-500' },
-        { id: 'publication', name: 'Publicação', color: 'bg-purple-500' }
+        { id: 'todo', name: 'Fila', description: 'Tarefas por iniciar' },
+        { id: 'stopped', name: 'Parado', description: 'Pausas e impedimentos' },
+        { id: 'inprogress', name: 'Andamento', description: 'Trabalho em curso' },
+        { id: 'homologation', name: 'Homologação', description: 'Aguardando validação' },
+        { id: 'publication', name: 'Publicação', description: 'Etapa ativa · antes do arquivo' }
     ];
 
     columns.forEach((col, index) => {
@@ -524,15 +449,15 @@ export function renderKanbanView() {
             columnEl.className = `board-column ${animClass}`;
             columnEl.setAttribute('data-column-id', col.id);
 
+            columnEl.setAttribute('role', 'region');
+            columnEl.setAttribute('aria-labelledby', `kanban-heading-${col.id}`);
             columnEl.innerHTML = `
-                <div class="column-header select-none group">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full ${col.color} ring-4 ring-transparent group-hover:ring-white/10 transition-all"></div>
-                        <h2 class="font-bold text-sm uppercase tracking-wider ox-text-primary opacity-70 group-hover:opacity-100 transition-opacity">${col.name}</h2>
-                    </div>
-                    <span class="column-count text-[10px] font-bold ox-text-secondary bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full">0</span>
+                <div class="column-header sb-kanban-column-header">
+                    <div class="sb-kanban-column-heading"><h2 id="kanban-heading-${col.id}">${col.name}</h2><span class="column-count" aria-label="Tarefas nesta etapa">0</span></div>
+                    <p>${col.description}</p>
                 </div>
-                <div class="kanban-task-list custom-scrollbar space-y-4" data-column-id="${col.id}"></div>
+                <div class="kanban-task-list custom-scrollbar" data-column-id="${col.id}"></div>
+                <p class="sb-kanban-empty">Nenhuma tarefa nesta etapa.</p>
             `;
             kanbanViewEl.appendChild(columnEl);
         } else {

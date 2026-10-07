@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncBoard NT</title>
-    <meta name="syncboard-ui-release" content="tc446-home-3">
+    <meta name="syncboard-ui-release" content="tc447-kanban-1">
     <link rel="icon" type="image/svg+xml" href="assets/brand-v2/favicon.svg">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,11 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="css/custom.css">
-    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc446-home-3">
+    <link rel="stylesheet" href="css/fluxo-v2.css?v=tc447-kanban-1">
     
-    <link rel="stylesheet" href="css/shell-v2.css?v=tc446-home-3">
-    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc446-home-3">
-    <link rel="stylesheet" href="css/home-v2.css?v=tc446-home-3">
+    <link rel="stylesheet" href="css/shell-v2.css?v=tc447-kanban-1">
+    <link rel="stylesheet" href="css/detail-compat-v2.css?v=tc447-kanban-1">
+    <link rel="stylesheet" href="css/home-v2.css?v=tc447-kanban-1">
+    <link rel="stylesheet" href="css/kanban-v2.css?v=tc447-kanban-1">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -45,7 +46,7 @@
         }
     </script>
 </head>
-<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc446-home-3">
+<body class="sb-scope sb-app antialiased font-sans" data-ui-release="tc447-kanban-1">
     <div id="loader-container" role="status" aria-live="polite">
       <img src="assets/brand-v2/mark-primary.svg" class="sb-brand-mark" alt="" width="64" height="64">
       <div class="sb-loader-copy">Carregando SyncBoard NT…</div>
@@ -108,7 +109,7 @@
     <div id="orb-nav-label" hidden aria-hidden="true"><svg><path id="curvePath" d=""/></svg></div>
     <main id="main-content" class="immersive-canvas opacity-0 transition-opacity duration-700 ease-out" tabindex="-1" aria-busy="true">
       <div id="homeView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
-      <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto"></div>
+      <div id="kanbanView" class="hidden flex gap-8 w-fit mx-auto" aria-label="Quadro de tarefas, cinco etapas ativas"></div>
       <div id="listView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
       <div id="archivedView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
       <div id="userManagementView" class="hidden w-full h-full overflow-y-auto custom-scrollbar"></div>
@@ -537,20 +538,21 @@
         </div>
     </div>
 
-    <div id="homologadorModal" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
+    <div id="homologadorModal" role="dialog" aria-labelledby="homologadorTitle" aria-describedby="homologadorDescription" class="fixed inset-0 bg-custom-darkest/20 dark:bg-black/60 flex items-center justify-center z-[1700] hidden modal-backdrop transition-opacity duration-300">
         <div class="orb-glass-unified backdrop-blur-[6px] w-full max-w-sm mx-4 p-10 text-center relative shadow-2xl border border-white/20 dark:border-white/10">
             
             <div class="w-20 h-20 rounded-full bg-orange-500/10 dark:bg-orange-500/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-orange-500/20 shadow-inner">
                 <i data-lucide="shield-check" class="w-9 h-9 text-orange-600 dark:text-orange-400"></i>
             </div>
             
-            <h2 class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Quem vai homologar?</h2>
-            
-            <p class="text-custom-dark dark:text-blue-100/70 mb-6 text-sm leading-relaxed font-medium">
+            <h2 id="homologadorTitle" class="text-2xl font-extrabold text-custom-darkest dark:text-white mb-3 tracking-tight">Quem vai homologar?</h2>
+
+            <p id="homologadorDescription" class="text-custom-dark dark:text-blue-100/70 mb-6 text-sm leading-relaxed font-medium">
                 Selecione o responsável por validar esta tarefa antes da publicação.
             </p>
             
             <div class="relative mb-8">
+                <label class="sb-kanban-modal-label" for="homologadorSelect">Homologador</label>
                 <select id="homologadorSelect" class="w-full bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-2xl px-4 py-3.5 text-sm focus:ring-0 focus:border-white/20 text-custom-darkest dark:text-white outline-none cursor-pointer appearance-none">
                     </select>
                 <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-50">
@@ -593,6 +595,6 @@
 
     <div id="toast-container" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[2000] space-y-3 flex flex-col items-center pointer-events-none"></div>
     
-    <script type="module" src="js/main.js?v=tc446-home-3"></script>
+    <script type="module" src="js/main.js?v=tc447-kanban-1"></script>
 </body>
 </html>

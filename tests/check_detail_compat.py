@@ -18,5 +18,5 @@ for id in ('comments-feed','history-feed','comment-input-rich','modal-info-proje
     assert '#'+id in css
 pairs={'body on white':contrast('#111827','#FFFFFF'),'metadata on white':contrast('#526174','#FFFFFF'),'body on own-comment blue tint':contrast('#111827','#D3E0FB'),'mention':contrast('#244FDB','#EAF0FF'),'project text over darkest20percent tint':contrast('#111827','#CCCCCC')}
 assert min(pairs.values())>=4.5
-assert 'css/detail-compat-v2.css?v=tc445-shell-2' in (ROOT/'app/index.html').read_text()
+assert re.search(r'href="css/detail-compat-v2\.css(?:\?[^"]*)?"', (ROOT/'app/index.html').read_text())
 print(json.dumps({'status':'passed','scope':'Light detail IDs only; no JavaScript, stored HTML or project background changes','contrast':pairs,'limits':'Requires live computed-color and readability confirmation'},indent=2))

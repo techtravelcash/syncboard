@@ -39,7 +39,9 @@ def main():
     assert len(after.ids)==len(set(after.ids)),'Duplicate ID'
     # Modal/task forms are outside the shell replacement and must preserve every field/data contract.
     old_modals=Page(old[old.index('<div id="taskModal"'):]);new_modals=Page(new[new.index('<div id="taskModal"'):])
-    assert Counter(old_modals.contracts)==Counter(new_modals.contracts),'Task/modal DOM contract changed'
+    # TC-447 adds only accessible labels to the existing homologator dialog.
+    kanban_label_ids = Counter({('h2', 'id', 'homologadorTitle'): 1, ('p', 'id', 'homologadorDescription'): 1})
+    assert Counter(old_modals.contracts)+kanban_label_ids==Counter(new_modals.contracts),'Task/modal DOM contract changed'
     checks.append(f'All {len(before.ids)} original IDs and every task/modal field/data contract preserved')
     assert 'hidden' in after.elements['user-management-btn']['class']
     assert 'href="/logout"' in new
