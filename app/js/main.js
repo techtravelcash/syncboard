@@ -478,6 +478,7 @@ function initializeEventListeners() {
                 document.getElementById('newUserEmail').value = user.email;
                 document.getElementById('newUserRole').value = user.role || '';
                 document.getElementById('newUserIsAdmin').checked = user.isAdmin;
+                document.getElementById('newUserIsAiAgent').checked = user.isAiAgent === true;
 
                 document.getElementById('user-form-title').textContent = 'Editar Membro';
                 document.getElementById('user-form-subtitle').textContent = 'Atualizar informações';
@@ -558,7 +559,8 @@ function initializeEventListeners() {
                 displayName: document.getElementById('newUserName').value,
                 email: document.getElementById('newUserEmail').value,
                 role: document.getElementById('newUserRole').value,
-                isAdmin: document.getElementById('newUserIsAdmin').checked
+                isAdmin: document.getElementById('newUserIsAdmin').checked,
+                isAiAgent: document.getElementById('newUserIsAiAgent').checked
             };
 
             try {

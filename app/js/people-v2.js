@@ -20,6 +20,7 @@ export function personCard(user, activeTasksCount) {
                 <p class="sb-person-email">${escapePeopleText(user.email || 'Email não informado')}</p>
                 <div class="sb-person-roles">
                     ${user.role ? `<span class="sb-person-role">Cargo: ${escapePeopleText(user.role)}</span>` : ''}
+                    ${user.isAiAgent === true ? '<span class="sb-person-admin sb-person-ai-agent"><i data-lucide="bot" aria-hidden="true"></i> Agente IA</span>' : ''}
                     ${user.isAdmin ? '<span class="sb-person-admin"><i data-lucide="shield-check" aria-hidden="true"></i> Administrador do sistema</span>' : ''}
                 </div>
             </div>

@@ -74,11 +74,13 @@ checks.push('Pure renderers: full names, roles, emails, literal escaping, missin
     f.context.state.users=[];f.context.renderUserManagementView();assert.ok(f.els.userManagementView.innerHTML.includes('Nenhum membro disponível'));
     checks.push('Actual people renderer: system exclusion, name sort, task counts, search/no match/reset, empty data and no state mutation');
 }
+const globalUserFixture = user;
 // The real delegated admin form callbacks, with all writes replaced by in-memory mocks.
-{
-    const f=fixture(['main-content','addUserForm','editUserId','user-form-title','user-form-subtitle','submitUserBtn','userFormModal','userFormModalContent','newUserName','newUserEmail','newUserRole','newUserIsAdmin']);
+for (const agentFlag of [undefined, false, true]) {
+    const user = {...globalUserFixture, isAiAgent: agentFlag};
+    const f=fixture(['main-content','addUserForm','editUserId','user-form-title','user-form-subtitle','submitUserBtn','userFormModal','userFormModalContent','newUserName','newUserEmail','newUserRole','newUserIsAdmin','newUserIsAiAgent']);
     f.context.state.users=[user];const calls=[];
-    f.els.addUserForm.reset=()=>{for(const id of ['editUserId','newUserName','newUserEmail','newUserRole'])f.els[id].value='';f.els.newUserIsAdmin.checked=false;};
+    f.els.addUserForm.reset=()=>{for(const id of ['editUserId','newUserName','newUserEmail','newUserRole'])f.els[id].value='';f.els.newUserIsAdmin.checked=false;f.els.newUserIsAiAgent.checked=false;};
     f.context.ui={showToast:(text,type)=>calls.push(['toast',type]),renderUserManagementView:()=>calls.push(['render']),showDestructiveConfirmModal:()=>calls.push(['confirm'])};
     f.context.api={updateUser:async(id,payload)=>calls.push(['update',id,stateCopy(payload)]),addUser:async payload=>calls.push(['add',stateCopy(payload)]),fetchUsers:async()=>[user]};
     f.context.updateUserProfileUI=()=>calls.push(['profile']);
@@ -87,12 +89,23 @@ checks.push('Pure renderers: full names, roles, emails, literal escaping, missin
     const trigger=selector=>({stopPropagation(){},target:{closest:s=>s===selector?{dataset:{userEmail:user.email}}:null}});
     await f.context.adminClick(trigger('.edit-user-btn'));
     assert.equal(f.els.newUserName.value,longName);assert.equal(f.els.newUserEmail.value,user.email);assert.equal(f.els.newUserRole.value,user.role);assert.equal(f.els.newUserIsAdmin.checked,true);
+    assert.equal(f.els.newUserIsAiAgent.checked, agentFlag === true);
+    f.els.newUserIsAiAgent.checked = !f.els.newUserIsAiAgent.checked;
     await f.context.adminClick(trigger('.close-user-modal'));f.flush();assert.ok(f.els.userFormModal.classList.contains('hidden'));assert.equal(calls.length,0);
-    await f.context.adminClick(trigger('#openNewUserModalBtn'));assert.equal(f.els.editUserId.value,'');assert.equal(f.els.newUserIsAdmin.checked,false);
+    await f.context.adminClick(trigger('#openNewUserModalBtn'));assert.equal(f.els.editUserId.value,'');assert.equal(f.els.newUserIsAdmin.checked,false);assert.equal(f.els.newUserIsAiAgent.checked,false);
     await f.context.adminClick(trigger('.edit-user-btn'));
     vm.runInNewContext(section(main,"    document.getElementById('main-content').addEventListener('submit'","    const fileInput = document.getElementById('task-attachment-input');"),f.context);
     await f.els['main-content'].fire('submit',{target:{id:'addUserForm'},preventDefault(){}});
-    assert.deepEqual(calls.find(c=>c[0]==='update'),['update','fixture-1',{displayName:longName,email:user.email,role:user.role,isAdmin:true}]);
+    assert.deepEqual(calls.find(c=>c[0]==='update'),['update','fixture-1',{displayName:longName,email:user.email,role:user.role,isAdmin:true,isAiAgent:agentFlag===true}]);
+    // Explicit unmark and a checked new-member payload both reach the API mock.
+    calls.length=0;f.els.newUserIsAiAgent.checked=false;
+    await f.els['main-content'].fire('submit',{target:{id:'addUserForm'},preventDefault(){}});
+    assert.equal(calls.find(c=>c[0]==='update')[2].isAiAgent,false);
+    calls.length=0;await f.context.adminClick(trigger('#openNewUserModalBtn'));
+    f.els.newUserIsAiAgent.checked=true;
+    await f.els['main-content'].fire('submit',{target:{id:'addUserForm'},preventDefault(){}});
+    assert.equal(calls.find(c=>c[0]==='add')[1].isAiAgent,true);
+    assert.equal(calls.find(c=>c[0]==='add')[1].isAdmin,false);
     checks.push('Actual admin callbacks: edit fields, cancel without writes, new form reset and exact update payload (mock only)');
 }
 // Preserve profile resolution and the existing photo persistence callback (mock only).

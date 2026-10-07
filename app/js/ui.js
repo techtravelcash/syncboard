@@ -762,6 +762,10 @@ export function renderUserManagementView() {
                         <label for="newUserIsAdmin"><input type="checkbox" id="newUserIsAdmin" aria-describedby="user-admin-help"><span>Privilégios Admin</span></label>
                         <p id="user-admin-help" class="sb-help">Permite editar projetos, gerir painéis e remover utilizadores.</p>
                     </div>
+                    <div class="sb-person-permissions">
+                        <label for="newUserIsAiAgent"><input type="checkbox" id="newUserIsAiAgent" aria-describedby="user-ai-agent-help"><span>Agente IA</span></label>
+                        <p id="user-ai-agent-help" class="sb-help">Identifica este utilizador como agente de inteligência artificial. Não altera permissões de acesso.</p>
+                    </div>
                     <div class="sb-people-form-actions">
                         <button type="button" class="sb-button sb-button--secondary close-user-modal">Cancelar</button>
                         <button type="submit" id="submitUserBtn" class="sb-button"><i data-lucide="save" aria-hidden="true"></i><span>Salvar Utilizador</span></button>

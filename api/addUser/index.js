@@ -35,7 +35,8 @@ module.exports = async function (context, req) {
             displayName: newUser.displayName,
             role: newUser.role || '',
             picture: '',
-            isAdmin: newUser.isAdmin === true
+            isAdmin: newUser.isAdmin === true,
+            isAiAgent: newUser.isAiAgent === true
         };
 
         const { resource: createdUser } = await usersContainer.items.create(userProfile);

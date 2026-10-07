@@ -33,6 +33,10 @@ module.exports = async function (context, req) {
         }
 
         const newId = updatedData.email.toLowerCase();
+        // Omitted by older clients: preserve the saved identification.
+        const isAiAgent = Object.prototype.hasOwnProperty.call(updatedData, 'isAiAgent')
+            ? updatedData.isAiAgent === true
+            : existingUser.isAiAgent === true;
 
         // Se o email (que é o ID) for alterado, criamos um novo e apagamos o antigo no BD
         if (newId !== userId) {
@@ -43,7 +47,8 @@ module.exports = async function (context, req) {
                 displayName: updatedData.displayName, // Grava o novo Display Name
                 role: updatedData.role || '',
                 picture: existingUser.picture || '',
-                isAdmin: updatedData.isAdmin === true
+                isAdmin: updatedData.isAdmin === true,
+                isAiAgent
             };
             await usersContainer.items.create(newUserProfile);
             await usersContainer.item(userId, userId).delete();
@@ -53,6 +58,7 @@ module.exports = async function (context, req) {
             existingUser.displayName = updatedData.displayName; // <-- Atualiza apenas o Display Name
             existingUser.role = updatedData.role || '';
             existingUser.isAdmin = updatedData.isAdmin === true;
+            existingUser.isAiAgent = isAiAgent;
             
             const { resource: replaced } = await usersContainer.item(userId, userId).replace(existingUser);
             context.res = { body: replaced };
