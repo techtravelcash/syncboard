@@ -1,0 +1,45 @@
+/* TC-451: archive only. Explicit selectors override the legacy list row cascade. */
+.sb-app #archivedView .sb-archive { max-width: 1200px; margin: 0 auto; padding: 8px 0 24px; }
+.sb-app #archivedView .sb-archive-header { margin-bottom: 24px; }
+.sb-app #archivedView .sb-archive-eyebrow { color: var(--sb-muted); font-size: 12px; line-height: 1.5; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin: 0 0 8px; }
+.sb-app #archivedView #sb-archive-title { color: var(--sb-text); font-size: 28px; line-height: 1.25; letter-spacing: -.035em; font-weight: 800; margin: 0 0 12px; }
+.sb-app #archivedView .sb-archive-header p:not(.sb-archive-eyebrow) { color: var(--sb-muted); font-size: 14px; line-height: 1.6; margin: 0; }
+.sb-app #archivedView .sb-archive-summary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 16px; }
+.sb-app #archivedView .sb-archive-summary p { color: var(--sb-muted); font-size: 12px; line-height: 1.6; margin: 0; }
+.sb-app #archivedView .sb-archive-summary p:first-child { font-weight: 700; }
+.sb-app #archivedView .sb-archive-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.sb-app #archivedView .sb-archive-row { display: grid; grid-template-columns: minmax(0, 1fr) 144px 240px; align-items: center; gap: 24px; padding: 24px; margin: 0; color: var(--sb-text); background: var(--sb-surface); border: 1px solid var(--sb-border); border-radius: var(--sb-radius-card); box-shadow: none; cursor: default; transform: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.sb-app #archivedView .sb-archive-row:hover { color: var(--sb-text); background: var(--sb-surface); border-color: var(--sb-border); box-shadow: none; transform: none; z-index: auto; }
+.sb-app #archivedView .sb-archive-main { min-width: 0; }
+.sb-app #archivedView .sb-archive-row-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.sb-app #archivedView .sb-archive-task-id { color: var(--sb-muted); font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+.sb-app #archivedView .sb-archive-status { color: var(--sb-todo-text); background: var(--sb-todo-bg); }
+.sb-app #archivedView .sb-archive-status--uncertain { color: var(--sb-error-text); background: var(--sb-error-bg); }
+.sb-app #archivedView .sb-archive-contract-note { margin: 0 0 16px; }
+.sb-app #archivedView .sb-archive-row h3 { color: var(--sb-text); font-size: 16px; line-height: 1.5; font-weight: 700; margin: 12px 0 8px; overflow-wrap: anywhere; }
+.sb-app #archivedView .sb-archive-project, .sb-app #archivedView .sb-archive-people { color: var(--sb-muted); font-size: 14px; line-height: 1.6; margin: 8px 0 0; overflow-wrap: anywhere; }
+.sb-app #archivedView .sb-archive-project { display: flex; align-items: center; gap: 8px; }
+.sb-app #archivedView .sb-archive-project-dot { width: 12px; height: 12px; flex-shrink: 0; border-radius: 4px; background: var(--sb-border-strong); border: 1px solid var(--sb-border-strong); }
+.sb-app #archivedView .sb-archive-people > span { font-weight: 700; }
+.sb-app #archivedView .sb-archive-updated { display: grid; gap: 4px; align-self: center; color: var(--sb-muted); font-size: 12px; line-height: 1.5; }
+.sb-app #archivedView .sb-archive-updated strong { color: var(--sb-text); font-size: 14px; font-weight: 600; }
+.sb-app #archivedView .sb-archive-actions { display: grid; gap: 8px; min-width: 0; }
+.sb-app #archivedView .sb-archive-actions .sb-button { min-width: 0; min-height: 44px; padding: 8px 12px; overflow-wrap: anywhere; }
+.sb-app #archivedView .sb-archive-delete { background: var(--sb-surface); color: var(--sb-error-text); border-color: var(--sb-error-border); }
+.sb-app #archivedView .sb-archive-delete:hover { background: var(--sb-error-bg); }
+.dark .sb-app #archivedView .sb-archive-delete { color: var(--sb-error-border); }
+.dark .sb-app #archivedView .sb-archive-delete:hover { background: var(--sb-ink); }
+.sb-app #archivedView svg { width: 16px; height: 16px; flex-shrink: 0; }
+.sb-app #archivedView .sb-archive-actions svg { pointer-events: none; }
+.sb-app #archivedView .sb-archive-state h3 { font-size: 18px; line-height: 1.4; font-weight: 700; margin: 0; }
+.sb-app #archivedView .sb-archive-state p { font-size: 14px; line-height: 1.6; margin: 8px 0 0; }
+.sb-app #archivedView .sb-empty { color: var(--sb-text); background: var(--sb-surface); }
+.sb-app #archivedView .sb-empty p { color: var(--sb-muted); }
+@media (max-width: 1199px) {
+  .sb-app #archivedView .sb-archive-row { grid-template-columns: minmax(0, 1fr) 144px; }
+  .sb-app #archivedView .sb-archive-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; }
+}
+@media (max-width: 599px) {
+  .sb-app #archivedView .sb-archive-row { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px; }
+  .sb-app #archivedView .sb-archive-actions { display: grid; }
+}
