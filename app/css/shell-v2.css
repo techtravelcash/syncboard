@@ -56,7 +56,7 @@ body.sb-app::before { display: none; }
 .sb-app #orb-sort-options .radial-content::after { content: attr(data-label); position: static; opacity: 1; visibility: visible; transform: none; color: inherit; font-size: 14px; font-weight: 600; letter-spacing: 0; text-shadow: none; }
 .sb-app #orb-sort-options .radial-content:hover, .sb-app #orb-sort-options .radial-content.active { background: var(--sb-canvas); color: var(--sb-text); }
 .sb-app #orb-sort-options .sort-indicator { right: 8px; bottom: auto; background: var(--sb-ink); color: #FFFFFF; }
-.sb-app #main-content { margin-left: var(--sb-sidebar-width); width: calc(100% - var(--sb-sidebar-width)); height: calc(100dvh - var(--sb-header-height)); margin-top: var(--sb-header-height); min-width: 0; padding: 0; overflow: hidden; }
+.sb-app #main-content { position: fixed; top: var(--sb-header-height); left: var(--sb-sidebar-width); margin: 0; width: calc(100% - var(--sb-sidebar-width)); height: calc(100dvh - var(--sb-header-height)); min-width: 0; padding: 0; overflow: hidden; }
 .sb-app #homeView, .sb-app #listView, .sb-app #archivedView, .sb-app #userManagementView { padding: 24px 28px 40px; height: 100%; overflow-y: auto; }
 .sb-app #main-content.immersive-canvas { display: block; overflow: auto; padding: 24px; }
 .sb-app #kanbanView { align-items: flex-start; min-width: 100%; height: 100%; gap: 16px; }
@@ -98,3 +98,18 @@ body.sb-app::before { display: none; }
 @media (prefers-reduced-motion: reduce) { .sb-app .sb-shell-sidebar, .sb-app .sb-shell-panel, .sb-app #orb-sort { animation: none !important; transition: none !important; } }
 .sb-app .hidden { display: none !important; }
 @media (max-width: 1023px) and (min-width: 768px) { body.sb-app { --sb-sidebar-width: 212px; } }
+/* Explicit non-destructive confirmations requested at the pilot review. */
+.sb-app #confirmSignalBtn, .sb-app #confirmHomologadorBtn { background: var(--sb-action); color: #FFFFFF; box-shadow: none; }
+.sb-app #confirmDeleteBtn[data-intent='confirm']:hover, .sb-app #confirmSignalBtn:hover, .sb-app #confirmHomologadorBtn:hover { background: var(--sb-action-hover); }
+.sb-app #confirmDeleteBtn[data-intent='destructive']:hover { background: #80221E; }
+.sb-app .sb-confirm-icon[data-intent='confirm'] { background: var(--sb-inprogress-bg); border-color: var(--sb-action); }
+.sb-app .sb-confirm-icon[data-intent='confirm'] svg { color: var(--sb-action); }
+.sb-app .sb-confirm-icon[data-intent='destructive'] { background: var(--sb-error-bg); border-color: var(--sb-error-text); }
+.sb-app .sb-confirm-icon[data-intent='destructive'] svg { color: var(--sb-error-text); }
+.sb-shell-sidebar .sb-shell-brand { padding: 0; flex-shrink: 0; }
+
+/* Filter options retain existing values/callbacks; colors stay legible on the new panel. */
+.sb-app #shell-filter-panel .filter-chip { min-height: 44px; padding: 8px 12px; border: 1px solid var(--sb-border-strong); border-radius: 7px; color: var(--sb-text); background: var(--sb-surface); font-size: 14px; box-shadow: none; white-space: normal; overflow-wrap: anywhere; }
+.sb-app #shell-filter-panel .filter-chip:hover { color: var(--sb-text); background: var(--sb-canvas); }
+.sb-app #shell-filter-panel .filter-chip.active, .sb-app #shell-filter-panel .filter-chip.active:hover { color: var(--sb-accent); background: var(--sb-ink); border-color: var(--sb-ink); }
+.dark .sb-app #shell-filter-panel .filter-chip.active { border-color: var(--sb-accent); }
