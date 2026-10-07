@@ -1,0 +1,71 @@
+{
+  "previewCommit": "d717428ecba55f7fd9752d30a13390462e725a0b",
+  "legacyCommit": "20c48df793c91dd303abdfb0229701b64a905914",
+  "activeEntry": "app/index.html",
+  "purpose": "Read-only synthetic composed scenario against the final active entry; inherited assertions unchanged, exact BODY attributes loaded from that entry. Legacy suites run separately with the historical index.",
+  "secondaryOriginalSha256": "e8ef086c50b9e1df017cc2e17dca14e3fc493ff8c5840ebe757690b476116314",
+  "caseOriginalSha256": "5c4f39c9fd27acded6a5dbe7224b42eee56b1b1c299339050c3f6a09bf7010cd",
+  "secondaryAdaptations": [
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed shell integration in main.js; startup/profile and existing handlers are separately frozen",
+      "before": "['app/index.html','app/js/main.js','app/js/state.js'",
+      "after": "['app/index.html','app/js/state.js'",
+      "beforeSha256": "2c0415c4ce92b37938c5290f02996954848d4fa8b03768d0a830f08e31eb379b",
+      "afterSha256": "444b2fd01303c01aa2dbfc0f7a297c4b309f71006e528ee95e3dd304b5efc29e"
+    },
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed opt-in filter tail; the composed case exercises its real five-filter intersection",
+      "before": " ['function filterTasks(tasks)','// --- RENDERIZAÇÃO: HOME'],\n",
+      "after": "",
+      "beforeSha256": "ccc5806667b0c4efbc3da62d4c302d52c268e22ad20eecf0ae7bc2c407a04d5c",
+      "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "obsolete sibling freeze",
+      "reason": "Allow reviewed router, badge and clear-filter integration; composed navigation executes these functions",
+      "before": " ['export function updateActiveView()','// --- MODAL: DETALHES ---']\n",
+      "after": "",
+      "beforeSha256": "a7a281607ded39d5eb1ceef15b37b958b4403a2c581ff792de4a542248c17388",
+      "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "kind": "fixture dependency",
+      "reason": "Load the real sibling helper in the existing secondary fixture context; no replacement functions or assertions",
+      "before": " vm.createContext(context);\n",
+      "after": " vm.createContext(context);\n vm.runInContext(strip(read('app/js/fidelity-v2.js')),context);\n",
+      "beforeSha256": "a25bbfc919ada6734311fb6730a0cd65d6641edb321d0339a2d5da91375f25d0",
+      "afterSha256": "7baf42c2aa2dd6b7db1ccc5170dde909673adc64f784cd6da1baa14b2cc22b66"
+    },
+    {
+      "kind": "active-entry source contract",
+      "reason": "The activation contract replaces the legacy index freeze with exact normalized pinned-preview equality; every runtime freeze remains.",
+      "before": "['app/index.html','app/js/state.js'",
+      "after": "['app/js/state.js'",
+      "beforeSha256": "444b2fd01303c01aa2dbfc0f7a297c4b309f71006e528ee95e3dd304b5efc29e",
+      "afterSha256": "c9af3f1304bbc6df5e96a5d4a865bd7d6117c710fa3285d25ac83cf6c9524253"
+    }
+  ],
+  "caseAdaptations": [
+    {
+      "kind": "active-entry selection",
+      "reason": "Execute the existing composed scenario directly against the final active HTML, never a copied or aliased preview path.",
+      "before": "const actualPreview = read('app/ui-v2-fidelity-preview.html');",
+      "after": "const actualPreview = read('app/index.html');",
+      "beforeSha256": "c6468daf72b5c22bf5f9dbb46f129f610bc4514fea01bd6c66912ac22baab378",
+      "afterSha256": "b4b3358d834cb1a6e8563764246fb03ac90de9b6bbf4df76167d0c4d916e9431"
+    },
+    {
+      "kind": "actual entry fixture root",
+      "reason": "Carry the active entry BODY class and release attributes into the composed DOM before production rendering/listener installation.",
+      "before": "const bodyMarkup = actualPreview.match(/<body\\b[^>]*>([\\s\\S]*?)<\\/body>/i);",
+      "after": "// Replace the helper's synthetic default class with the exact active BODY attrs.\nconst activeBodyTag = actualPreview.match(/<body\\b[^>]*>/i)?.[0];\nassert.ok(activeBodyTag, 'Final index has a real BODY opening tag');\nconst activeBodyParser = new Element('html');\nactiveBodyParser.innerHTML = activeBodyTag + '</body>';\nbody.attrs = {...activeBodyParser.querySelector('body').attrs};\nassert.equal(body.className, 'sb-scope sb-app sb-fidelity-v2 antialiased font-sans');\nassert.equal(body.getAttribute('data-ui-release'), 'tc455-fidelity-1');\nconst bodyMarkup = actualPreview.match(/<body\\b[^>]*>([\\s\\S]*?)<\\/body>/i);",
+      "beforeSha256": "be3a0d9e1ef2fd778981126b2dcd57a221aa09c66f7e3f0b8079c896f762768e",
+      "afterSha256": "3b05c000c781493d2ddfb32cba0c4ba4beae818cad2f4ecf26492debe3cb917c"
+    }
+  ],
+  "secondaryAdaptedSha256": "289c707008dfd20dfcd9b009e256adb8141724292b9e29ac756123a031615b6d",
+  "caseAdaptedSha256": "5490d97c6e69b2f76105fa866f43123cec18c13d84ec19d432f57a8e1bdf2b94",
+  "unchangedComposedBehaviorSha256": "b89eb3294849ee42baa089ac1790b9803394a5092b3bcfaeec5521ca93104ef7"
+}
