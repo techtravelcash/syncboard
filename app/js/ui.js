@@ -1496,7 +1496,7 @@ export function renderTaskHistory(taskId, fromNotification = false) {
 
 // --- FUNÇÃO AUXILIAR: FECHAR MODAL ---
 
-// Continue after approval closes only the originating detail, without a delayed
+// Successful forwarding and Continue after approval close only the originating detail, without a delayed
 // animation callback that could hide another task opened in the meantime.
 export function closeApprovedTaskHistory(taskId) {
     const modal = document.getElementById('taskHistoryModal');

@@ -42,7 +42,7 @@ async function decideHomologation(taskId, decision, newResponsibleEmail) {
         ui.showToast(forwarding ? 'Tarefa encaminhada para Fila com o novo responsável!' : rejecting ? 'Tarefa reprovada e devolvida para Andamento!' : 'Tarefa aprovada para Publicação!', 'success');
         const modal = document.getElementById('taskHistoryModal');
         // A delayed response must not reopen a closed detail or replace another task.
-        if (state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show')) ui.renderTaskHistory(taskId, state.returnToNotifications);
+        if (!forwarding && state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show')) ui.renderTaskHistory(taskId, state.returnToNotifications);
         ui.updateActiveView();
         if (decision === 'approve' && updatedTask.status === 'publication') {
             try { showApprovalSuccess(() => ui.closeApprovedTaskHistory(taskId)); } catch { /* Cosmetic feedback must not report a persisted approval as failed. */ }
@@ -76,7 +76,13 @@ function startHomologationDecision(taskId, decision) {
     const task = state.tasks.find(t => t.id === taskId);
     if (decision !== 'forward') return decideHomologation(taskId, decision);
     if (!canDecideHomologation(task, state.currentUser) || pendingHomologationDecisions.has(taskId)) return;
-    if (openForwardDialog(task, state.users, email => decideHomologation(taskId, 'forward', email)) === false) {
+    const modal = document.getElementById('taskHistoryModal');
+    const fromDetail = state.lastInteractedTaskId === taskId && modal && !modal.classList.contains('hidden') && modal.classList.contains('show');
+    if (openForwardDialog(task, state.users, email => decideHomologation(taskId, 'forward', email), () => {
+        // Restore focus only after the native dialog releases its modal focus trap.
+        // The closer also protects a different detail opened while awaiting the server.
+        if (fromDetail) ui.closeApprovedTaskHistory(taskId);
+    }) === false) {
         ui.showToast('Não foi possível abrir a seleção de responsável neste navegador.', 'error');
     }
 }

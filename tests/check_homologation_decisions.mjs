@@ -33,7 +33,8 @@ for(const action of ['approve','reject','forward']) {
  assert.equal(t.state.tasks[0].status,{approve:'publication',reject:'inprogress',forward:'todo'}[action]);
  assert.equal(t.state.tasks[0].progress,action==='approve'?100:63);
  assert.equal(t.calls.filter(c=>c[0]==='celebrate').length,action==='approve'?1:0);
- assert.deepEqual(t.calls.find(c=>c[0]==='detail'),['detail','T1',true]);
+ // Forward closes after its native dialog releases focus, rather than re-rendering detail.
+ assert.deepEqual(t.calls.find(c=>c[0]==='detail'),action==='forward'?undefined:['detail','T1',true]);
  assert.equal(t.state.tasks[0].history[0].description,'server audit');
  await t.decide('T1',action);assert.equal(t.calls.filter(c=>c[0]==='api').length,1);
 }

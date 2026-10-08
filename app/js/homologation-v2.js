@@ -31,7 +31,7 @@ export function forwardCandidates(task, users) {
         return true;
     }).sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'pt-BR'));
 }
-export function openForwardDialog(task, users, submit) {
+export function openForwardDialog(task, users, submit, onSuccess = () => {}) {
     if (document.getElementById('homologation-forward-dialog')) return;
     const dialog = document.createElement('dialog');
     if (typeof dialog.showModal !== 'function') return false;
@@ -72,7 +72,7 @@ export function openForwardDialog(task, users, submit) {
         buttons.forEach(button => { button.disabled = true; });
         error.textContent = 'Encaminhando…';
         try {
-            if (await submit(select.value)) { dialog.close(); return; }
+            if (await submit(select.value)) { dialog.close(); onSuccess(); return; }
             error.textContent = 'Não foi possível encaminhar. Confira a mensagem e tente novamente.';
         } catch { error.textContent = 'Não foi possível encaminhar. Tente novamente.'; }
         finally {
