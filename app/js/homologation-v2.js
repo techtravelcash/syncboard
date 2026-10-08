@@ -85,3 +85,23 @@ export function openForwardDialog(task, users, submit, onSuccess = () => {}) {
     try { dialog.showModal(); } catch { dialog.remove(); return false; }
     return true;
 }
+
+// Assignment editing is separate from approval/rejection/forwarding authority.
+export function canEditHomologationResponsible(task, user) {
+    return task?.status === 'homologation' && !!homologationUserEmail(user) &&
+        Array.isArray(user?.userRoles) && user.userRoles.includes('travelcash_user') && user.userRoles.includes('admin');
+}
+export function homologationEditPayload(snapshot, draft, user, initialDraft = snapshot) {
+    if (snapshot?.status !== 'homologation' || !snapshot._etag) throw new Error('Reabra a edição da tarefa.');
+    const payload = {expectedStatus: 'homologation', expectedEtag: snapshot._etag};
+    // Omitted fields stay server-owned/current. Never resend a whole task snapshot.
+    for (const key of ['title', 'description', 'project', 'projectColor', 'priority', 'dueDate', 'azureLink', 'attachments']) {
+        if (draft[key] !== undefined && JSON.stringify(draft[key]) !== JSON.stringify(initialDraft[key])) payload[key] = draft[key];
+    }
+    if (canEditHomologationResponsible(snapshot, user) && JSON.stringify(draft.responsible) !== JSON.stringify(snapshot.responsible)) {
+        const addresses = (draft.responsible || []).map(value => normalizeHomologationEmail(typeof value === 'object' ? value.email : value));
+        if (!addresses.length || addresses.some(value => !value) || new Set(addresses).size !== addresses.length) throw new Error('Selecione responsáveis válidos, sem duplicação.');
+        payload.responsible = addresses.map(email => ({email}));
+    }
+    return payload;
+}

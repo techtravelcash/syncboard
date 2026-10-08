@@ -1,4 +1,4 @@
-import { canDecideHomologation, openForwardDialog } from './homologation-v2.js';
+import { canDecideHomologation, openForwardDialog, canEditHomologationResponsible, homologationEditPayload } from './homologation-v2.js';
 import { showApprovalSuccess } from './approval-success.js';
 import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
 import { state } from './state.js';
@@ -12,8 +12,31 @@ import { initializeShell, closeShellPanels, syncShellView, showStartupState } fr
 let kanbanSortableInstances = [];
 let localFiles = [];
 let filesToDelete = [];
+let editingTaskSnapshot = null;
+let editingFormSnapshot = null;
 let alertQueue = [];
 let isAlertModalOpen = false;
+
+function taskFormDraft(attachments) {
+    const tags = document.querySelectorAll('#responsible-input-container > div span');
+    const responsiblePayload = document.getElementById('responsible-input-container').getResponsibles?.() || Array.from(tags).map(span => {
+        const name = span.textContent;
+        return state.users.find(u => u.name === name);
+    }).filter(Boolean);
+
+    return {
+        title: document.getElementById('taskTitle').value,
+        description: document.getElementById('taskDescription').value,
+        responsible: responsiblePayload,
+        project: document.getElementById('taskProject').value,
+        projectColor: document.getElementById('taskProjectColor').value,
+        priority: document.getElementById('taskPriority').value,
+        dueDate: document.getElementById('taskDueDate').value || null,
+        azureLink: document.getElementById('taskAzureLink').value,
+        attachments,
+        status: state.editingTaskId ? document.getElementById('taskStatus').value : 'todo'
+    };
+}
 
 // One in-flight decision per task, shared by card and detail actions.
 const pendingHomologationDecisions = state.pendingHomologationDecisions = new Set();
@@ -440,6 +463,8 @@ function initializeEventListeners() {
 
     addTaskBtn.addEventListener('click', () => {
         state.editingTaskId = null;
+        editingTaskSnapshot = null;
+        editingFormSnapshot = null;
         document.getElementById('modalTitle').textContent = 'Nova Tarefa';
         taskForm.reset();
         localFiles = [];
@@ -698,72 +723,64 @@ function initializeEventListeners() {
         e.preventDefault();
         const btn = taskForm.querySelector('button[type="submit"]');
         const originalText = btn.textContent;
+        if (btn.disabled) return;
+        const savingTaskId = state.editingTaskId;
+        const savingSnapshot = editingTaskSnapshot;
+        const savingFormSnapshot = editingFormSnapshot;
+        const savingFiles = [...localFiles];
+        const deletingFiles = [...filesToDelete];
+        const payload = taskFormDraft(savingFiles);
         btn.disabled = true;
         btn.textContent = 'Salvando...';
 
         try {
+            if (savingSnapshot?.status === 'homologation') homologationEditPayload(savingSnapshot, payload, state.currentUser, savingFormSnapshot);
             const uploadedAttachments = [];
-            for (const file of localFiles) {
+            for (const file of savingFiles) {
                 if (file instanceof File) {
                     try {
                         const uploaded = await api.uploadAttachment(file);
                         uploadedAttachments.push(uploaded);
-                    } catch (err) { console.error(err); }
+                    } catch (err) { throw err; }
                 } else {
                     uploadedAttachments.push(file);
                 }
             }
 
-            // --- NOVO: Apaga definitivamente os anexos da Azure ---
-            for (const blob of filesToDelete) {
-                try {
-                    await api.deleteAttachment(blob);
-                } catch (err) {
-                    console.error(`Não foi possível apagar o ficheiro órfão: ${blob}`, err);
-                }
-            }
-            filesToDelete = []; // Limpa o cesto de lixo
+            // Closing/canceling during an upload must not start a later task write.
+            if (state.editingTaskId !== savingTaskId || editingTaskSnapshot !== savingSnapshot) return;
+            payload.attachments = uploadedAttachments;
 
-            const tags = document.querySelectorAll('#responsible-input-container > div span');
-            const responsiblePayload = Array.from(tags).map(span => {
-                const name = span.textContent;
-                return state.users.find(u => u.name === name);
-            }).filter(Boolean);
-
-            const payload = {
-                title: document.getElementById('taskTitle').value,
-                description: document.getElementById('taskDescription').value,
-                responsible: responsiblePayload,
-                project: document.getElementById('taskProject').value,
-                projectColor: document.getElementById('taskProjectColor').value,
-                priority: document.getElementById('taskPriority').value,
-                dueDate: document.getElementById('taskDueDate').value || null,
-                azureLink: document.getElementById('taskAzureLink').value,
-                attachments: uploadedAttachments,
-                status: state.editingTaskId ? document.getElementById('taskStatus').value : 'todo'
-            };
-
-            if (state.editingTaskId) {
-                const editingTask = state.tasks.find(task => task.id === state.editingTaskId);
-                if (editingTask?.status === 'homologation') {
-                    payload.status = 'homologation';
-                    payload.responsible = editingTask.responsible;
-                }
-                await api.updateTask(state.editingTaskId, payload);
+            if (savingTaskId) {
+                const patch = savingSnapshot?.status === 'homologation'
+                    ? homologationEditPayload(savingSnapshot, payload, state.currentUser, savingFormSnapshot) : payload;
+                const beforeRequest = state.tasks.find(task => task.id === savingTaskId);
+                const updatedTask = await api.updateTask(savingTaskId, patch);
+                const index = state.tasks.findIndex(task => task.id === savingTaskId);
+                // SignalR may have delivered a newer decision while the HTTP response was in flight.
+                if (index !== -1 && state.tasks[index] === beforeRequest) state.tasks[index] = updatedTask;
+                ui.updateActiveView();
                 ui.showToast('Tarefa atualizada!', 'success');
             } else {
                 await api.createTask(payload);
                 ui.showToast('Tarefa criada!', 'success');
             }
 
-            taskModal.classList.remove('show');
-            setTimeout(() => {
-                taskModal.classList.add('hidden');
-            }, 300);
+            // Delete blobs only after the task save succeeds, never after an ETag conflict.
+            for (const blob of deletingFiles) {
+                try { await api.deleteAttachment(blob); } catch (err) { console.error(err); }
+            }
+            if (state.editingTaskId === savingTaskId && editingTaskSnapshot === savingSnapshot) {
+                filesToDelete = [];
+                taskModal.classList.remove('show');
+                setTimeout(() => {
+                    if (state.editingTaskId === savingTaskId && editingTaskSnapshot === savingSnapshot) taskModal.classList.add('hidden');
+                }, 300);
+            }
 
         } catch (error) {
             console.error(error);
-            ui.showToast('Erro ao salvar.', 'error');
+            ui.showToast(error.status === 409 ? 'A tarefa mudou. Cancele e reabra a edição antes de salvar.' : error.status === 403 ? 'Você não tem permissão para esta alteração.' : error.message || 'Erro ao salvar.', 'error');
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
@@ -771,15 +788,15 @@ function initializeEventListeners() {
     });
 
     document.getElementById('cancelBtn').addEventListener('click', () => {
+        const cancelledTaskId = state.editingTaskId;
+        state.editingTaskId = null;
+        editingTaskSnapshot = null;
+        editingFormSnapshot = null;
         taskModal.classList.remove('show');
-        
         setTimeout(() => {
-            taskModal.classList.add('hidden'); 
-            
-            if (state.editingTaskId) {
-                ui.renderTaskHistory(state.editingTaskId);
-                state.editingTaskId = null; 
-            }
+            if (state.editingTaskId !== null || taskModal.classList.contains('show')) return;
+            taskModal.classList.add('hidden');
+            if (cancelledTaskId) ui.renderTaskHistory(cancelledTaskId);
         }, 300);
     });
 
@@ -800,6 +817,7 @@ function initializeEventListeners() {
         document.getElementById('taskHistoryModal').classList.add('hidden');
         
         state.editingTaskId = taskId;
+        editingTaskSnapshot = JSON.parse(JSON.stringify(task));
         document.getElementById('modalTitle').textContent = 'Editar Tarefa';
         
         document.getElementById('taskTitle').value = task.title;
@@ -825,9 +843,10 @@ function initializeEventListeners() {
         localFiles = task.attachments ? [...task.attachments] : [];
         filesToDelete = [];
         ui.renderModalAttachments(localFiles);
-        document.getElementById('responsible-input-container').inert = task.status === 'homologation';
-        document.getElementById('responsible-input-container').title = task.status === 'homologation' ? 'Use Encaminhar para substituir o responsável durante a homologação.' : '';
+        document.getElementById('responsible-input-container').inert = task.status === 'homologation' && !canEditHomologationResponsible(task, state.currentUser);
+        document.getElementById('responsible-input-container').title = task.status === 'homologation' ? (canEditHomologationResponsible(task, state.currentUser) ? 'Alterar responsáveis mantém a tarefa em Homologação.' : 'Somente administradores podem editar responsáveis durante a homologação.') : '';
         ui.setupResponsibleInput(task.responsible || []);
+        editingFormSnapshot = taskFormDraft(localFiles);
         ui.setupProjectSuggestions();
         ui.setupCustomColorPicker();
 

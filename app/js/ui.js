@@ -2018,6 +2018,9 @@ export function setupResponsibleInput(initialResponsibles = []) {
     const input = document.getElementById('taskResponsible');
     const suggestions = document.getElementById('responsible-suggestions');
     let current = [...initialResponsibles];
+    container.getResponsibles = () => current.map(user => typeof user === 'object' ? {...user} : user);
+    const identity = user => typeof user === 'object' ? (user.email || user.name).toLowerCase() : user;
+    suggestions.classList.add('hidden');
 
     const renderTags = () => {
         Array.from(container.children).forEach(c => {
@@ -2041,7 +2044,7 @@ export function setupResponsibleInput(initialResponsibles = []) {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                current = current.filter(x => (typeof x === 'object' ? x.name : x) !== name);
+                current = current.filter(x => identity(x) !== identity(u));
                 renderTags();
             };
             
@@ -2056,7 +2059,7 @@ export function setupResponsibleInput(initialResponsibles = []) {
         const source = state.users.filter(u => u.name !== 'DEFINIR');
         
         const matches = source.filter(u => {
-            const isSelected = current.some(c => (typeof c === 'object' ? c.name : c) === u.name);
+            const isSelected = current.some(c => identity(c) === identity(u));
             if (isSelected) return false;
             if (!val) return true; 
             return u.name.toLowerCase().includes(val);

@@ -55,7 +55,43 @@ async function decisionUpdate(task, body, req, users) {
         email: selected, name: profile.name || profile.displayName || selected, picture: profile.picture || ''
     }]}, actor, action};
 }
-function protectGenericUpdate(task, body) {
+async function responsibleEditUpdate(task, body, req, users) {
+    if (body.expectedStatus !== undefined) {
+        if (body.expectedStatus !== 'homologation') fail(400, 'Estado esperado inválido.');
+        if (task.status !== 'homologation' || !body.expectedEtag || body.expectedEtag !== task._etag) {
+            fail(409, 'A tarefa foi alterada. Reabra a edição antes de salvar.');
+        }
+    }
+    if (task.status !== 'homologation' || body.responsible === undefined ||
+        JSON.stringify(body.responsible) === JSON.stringify(task.responsible)) return null;
+    const actor = actorEmail(req);
+    if (!actor) fail(403, 'Somente administradores podem alterar responsáveis em homologação.');
+    const principal = JSON.parse(Buffer.from(req.headers['x-ms-client-principal'], 'base64').toString('utf8'));
+    if (!principal.userRoles.includes('admin')) fail(403, 'Somente administradores podem alterar responsáveis em homologação.');
+    if (body.expectedStatus !== 'homologation' || !body.expectedEtag || body.expectedEtag !== task._etag) {
+        fail(409, 'A tarefa foi alterada. Reabra a edição antes de salvar.');
+    }
+    async function profileFor(selected) {
+        const {resources} = await users.items.query({
+            query: 'SELECT * FROM c WHERE LOWER(c.email) = @email',
+            parameters: [{name: '@email', value: selected}]
+        }).fetchAll();
+        return resources.find(user => email(user.email) === selected);
+    }
+    // Check the current profile too: a stale login must not retain revoked admin rights.
+    if ((await profileFor(actor))?.isAdmin !== true) fail(403, 'Perfil de administrador necessário.');
+    if (!Array.isArray(body.responsible) || !body.responsible.length) fail(400, 'Selecione ao menos um responsável cadastrado.');
+    const selected = body.responsible.map(user => homologatorEmail(user));
+    if (selected.some(value => !value) || new Set(selected).size !== selected.length) fail(400, 'Responsáveis inválidos ou duplicados.');
+    const responsible = [];
+    for (const address of selected) {
+        const profile = await profileFor(address);
+        if (!profile) fail(400, 'O responsável selecionado não existe.');
+        responsible.push({email: address, name: profile.name || profile.displayName || address, picture: profile.picture || ''});
+    }
+    return {responsible, actor};
+}
+function protectGenericUpdate(task, body, allowResponsibleEdit = false) {
     if (task.status !== 'homologation') return;
     if (body.status !== undefined && body.status !== task.status) fail(403, 'Use uma decisão de homologação para alterar este estado.');
     if (body.homologador !== undefined && homologatorEmail(body.homologador) !== homologatorEmail(task.homologador)) {
@@ -63,7 +99,8 @@ function protectGenericUpdate(task, body) {
     }
     // Protect outcome fields from generic updates, including full-task saves.
     for (const key of ['progress', 'responsible']) {
+        if (key === 'responsible' && allowResponsibleEdit) continue;
         if (body[key] !== undefined && JSON.stringify(body[key]) !== JSON.stringify(task[key])) fail(403, 'Use uma decisão de homologação para alterar os responsáveis ou o progresso.');
     }
 }
-module.exports = {email, homologatorEmail, actorEmail, decisionUpdate, protectGenericUpdate, escapeHtml};
+module.exports = {email, homologatorEmail, actorEmail, decisionUpdate, responsibleEditUpdate, protectGenericUpdate, escapeHtml};

@@ -1,7 +1,7 @@
 const { CosmosClient } = require("@azure/cosmos");
 const axios = require('axios');
 const crypto = require('crypto');
-const { decisionUpdate, protectGenericUpdate, escapeHtml, homologatorEmail } = require('../shared/homologation');
+const { decisionUpdate, responsibleEditUpdate, protectGenericUpdate, escapeHtml, homologatorEmail } = require('../shared/homologation');
 
 const connectionString = process.env.CosmosDB;
 const client = new CosmosClient(connectionString);
@@ -47,12 +47,15 @@ module.exports = async function (context, req) {
 
         const oldStatus = existingTask.status;
         let decision = null;
+        let responsibleEdit = null;
         if (Object.prototype.hasOwnProperty.call(updatedData, 'homologationAction')) {
             decision = await decisionUpdate(existingTask, updatedData, req, usersContainer);
             updatedData = decision.data;
         } else {
-            protectGenericUpdate(existingTask, updatedData);
+            responsibleEdit = await responsibleEditUpdate(existingTask, updatedData, req, usersContainer);
+            protectGenericUpdate(existingTask, updatedData, !!responsibleEdit);
             updatedData = {...updatedData};
+            if (responsibleEdit) updatedData.responsible = responsibleEdit.responsible;
             // Identity, audit and Cosmos metadata are server-owned, including generic saves.
             for (const key of ['id', 'history', '_etag', '_rid', '_self', '_attachments', '_ts',
                 'actor', 'actorEmail', 'expectedStatus', 'expectedEtag', 'newResponsibleEmail']) delete updatedData[key];
@@ -63,6 +66,9 @@ module.exports = async function (context, req) {
         existingTask.history = Array.isArray(existingTask.history) ? [...existingTask.history] : [];
         
         let changes = [];
+        if (responsibleEdit) {
+            changes.push(`Responsáveis alterados por administrador <span class="font-bold text-white">${escapeHtml(responsibleEdit.actor)}</span>: ${responsibleEdit.responsible.map(user => escapeHtml(`${user.name} (${user.email})`)).join(', ')}`);
+        }
         if (decision) {
             const label = {approve: 'Homologação aprovada', reject: 'Homologação reprovada', forward: 'Homologação encaminhada'}[decision.action];
             changes.push(`${label} por <span class="font-bold text-white">${escapeHtml(decision.actor)}</span>`);

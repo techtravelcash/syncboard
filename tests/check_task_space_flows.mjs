@@ -6,6 +6,7 @@ import vm from 'node:vm';
 const read = rel => readFileSync(new URL(rel, import.meta.url), 'utf8');
 const main = read('../app/js/main.js');
 const uiSource = read('../app/js/ui.js');
+const homologationHelpers = await import('data:text/javascript;base64,' + Buffer.from(read('../app/js/homologation-v2.js')).toString('base64'));
 const html = read('../app/index.html');
 const slice = (s,a,b) => s.slice(s.indexOf(a),s.indexOf(b,s.indexOf(a)));
 const normalize = value => JSON.parse(JSON.stringify(value));
@@ -35,11 +36,12 @@ function fixture() {
   const document={getElementById:id=>nodes.get(id)||null,createElement:()=>new Element(),body:{appendChild:n=>nodes.set(n.id,n)},querySelectorAll:selector=>selector==='#responsible-input-container > div span'?selected.map(name=>({textContent:name})):[]};
   const state={users:[{name:'Pessoa Á Fixture',email:'a@example.invalid'},{name:'Pessoa B Fixture',email:'b@example.invalid'}],tasks:[],editingTaskId:null,lastInteractedTaskId:null};
   let failSave=false;
-  const api={createTask:async payload=>{if(failSave)throw Error('fixture failure');writes.push({method:'createTask',payload:normalize(payload)});},updateTask:async(id,payload)=>{if(failSave)throw Error('fixture failure');writes.push({method:'updateTask',id,payload:normalize(payload)});},improveTitle:async(title,instruction)=>({title:`Revisar: ${title}`}),uploadAttachment:()=>{throw Error('Upload outside fixture scope');},deleteAttachment:()=>{throw Error('Deletion outside fixture scope');}};
-  const ui={renderModalAttachments(){},setupResponsibleInput:users=>selected=users.map(u=>typeof u==='object'?u.name:u),setupProjectSuggestions(){},setupCustomColorPicker(){},renderTaskHistory:id=>history.push(id),showToast:(text,type)=>notices.push({text,type})};
-  const context={document,state,api,ui,localFiles:[],filesToDelete:[],File:class{},window:{lucide:{createIcons(){}}},lucide:{createIcons(){}},console:{error(){}},requestAnimationFrame:fn=>fn(),setTimeout:fn=>{fn();return 0;},showToast:ui.showToast,updateActiveView(){},importFixtureApi:async()=>api};
+  const api={createTask:async payload=>{if(failSave)throw Error('fixture failure');writes.push({method:'createTask',payload:normalize(payload)});},updateTask:async(id,payload)=>{if(failSave)throw Error('fixture failure');writes.push({method:'updateTask',id,payload:normalize(payload)});return {...state.tasks.find(task=>task.id===id),...normalize(payload),id};},improveTitle:async(title,instruction)=>({title:`Revisar: ${title}`}),uploadAttachment:()=>{throw Error('Upload outside fixture scope');},deleteAttachment:()=>{throw Error('Deletion outside fixture scope');}};
+  const ui={updateActiveView(){},renderModalAttachments(){},setupResponsibleInput:users=>selected=users.map(u=>typeof u==='object'?u.name:u),setupProjectSuggestions(){},setupCustomColorPicker(){},renderTaskHistory:id=>history.push(id),showToast:(text,type)=>notices.push({text,type})};
+  const context={...homologationHelpers,editingTaskSnapshot:null,editingFormSnapshot:null,document,state,api,ui,localFiles:[],filesToDelete:[],File:class{},window:{lucide:{createIcons(){}}},lucide:{createIcons(){}},console:{error(){}},requestAnimationFrame:fn=>fn(),setTimeout:fn=>{fn();return 0;},showToast:ui.showToast,updateActiveView(){},importFixtureApi:async()=>api};
   vm.createContext(context);
   const snippets = [
+    slice(main,'function taskFormDraft(', '// One in-flight decision'),
     slice(main,"    const addTaskBtn = document.getElementById('addTaskBtn');","    document.getElementById('main-content').addEventListener"),
     slice(main,"    taskForm.addEventListener('submit'","    document.getElementById('closeHistoryBtn').addEventListener"),
     slice(main,"    document.getElementById('editTaskBtn').addEventListener","    // Evento para o botão de sinalização"),
