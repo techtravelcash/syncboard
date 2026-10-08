@@ -449,22 +449,22 @@
                     <section id="fidelity-no-due-date" class="sb-fidelity-rail-field"><h3>Prazo</h3>
 <p>Sem prazo informado</p></section><section id="fidelity-no-validator" class="sb-fidelity-rail-field"><h3>Homologador</h3>
 <p>Não informado</p></section><section class="sb-fidelity-rail-field"><button type="button" id="fidelity-detail-progress" class="sb-fidelity-detail-progress" aria-label="Atualizar progresso"><span>Progresso informado</span><strong id="fidelity-detail-progress-value">Não informado</strong><span class="sb-fidelity-detail-progress-track" aria-hidden="true"><span id="fidelity-detail-progress-fill"></span></span></button><p class="sb-task-help">100% não substitui homologação e publicação.</p></section><div class="sb-task-detail-actions sb-fidelity-rail-actions">
-<button type="button" id="modal-reject-btn" aria-label="Reprovar e devolver para Andamento" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Reprovar e devolver para Andamento"><i data-lucide="rotate-ccw" class="w-4 h-4" aria-hidden="true"></i><span>Reprovar</span></button>
-<button type="button" id="modal-recover-homologador-btn" hidden class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Atribuir homologador cadastrado sem decidir a tarefa">Atribuir homologador</button>
-<button type="button" id="modal-forward-btn" aria-label="Encaminhar para novo responsável na Fila" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Encaminhar para novo responsável na Fila"><i data-lucide="forward" class="w-4 h-4" aria-hidden="true"></i><span>Encaminhar</span></button>
 <button id="modal-approve-btn" aria-label="Aprovar e enviar para Publicação" class="hidden items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm shadow-sm transition-transform active:scale-95 mr-2" title="Aprovar e Enviar para Publicação">
                         <i data-lucide="check-circle" class="w-4 h-4"></i>
                         <span class="hidden sm:inline">Aprovar</span>
                     </button>
+<button type="button" id="modal-forward-btn" aria-label="Encaminhar para novo responsável na Fila" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Encaminhar para novo responsável na Fila"><i data-lucide="forward" class="w-4 h-4" aria-hidden="true"></i><span>Encaminhar</span></button>
+<button type="button" id="modal-reject-btn" aria-label="Reprovar e devolver para Andamento" class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Reprovar e devolver para Andamento"><i data-lucide="rotate-ccw" class="w-4 h-4" aria-hidden="true"></i><span>Reprovar</span></button>
+<a id="modal-calendar-btn" rel="noopener noreferrer" aria-label="Marcar reunião: abrir rascunho no Google Calendar em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Abrir rascunho no Google Calendar; confirme e salve no Calendar">
+                        <i data-lucide="calendar-plus" class="w-6 h-6" aria-hidden="true"></i><span>Marcar reunião</span>
+                    </a>
+<button type="button" id="modal-recover-homologador-btn" hidden class="hidden items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" title="Atribuir homologador cadastrado sem decidir a tarefa">Atribuir homologador</button>
                     <div id="modal-info-azure-link-container" class="hidden mr-2">
                          <a id="modal-info-azure-link" rel="noopener noreferrer" aria-label="Abrir referência DevOps ou externa em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all" title="Abrir referência externa">
                             <i data-lucide="git-branch" class="w-6 h-6" aria-hidden="true"></i><span>Link externo</span>
                         </a>
                     </div>
-                    
-                    <a id="modal-calendar-btn" rel="noopener noreferrer" aria-label="Abrir rascunho no Google Calendar em nova aba" href="#" target="_blank" class="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 text-blue-500 dark:text-blue-400 transition-all opacity-60 hover:opacity-100" title="Abrir rascunho no Google Calendar; confirme e salve no Calendar">
-                        <i data-lucide="calendar-plus" class="w-6 h-6" aria-hidden="true"></i><span>Rascunho Calendar</span>
-                    </a>
+
 
                     <button id="modal-signal-btn" aria-label="Chamar atenção dos responsáveis" class="p-3 rounded-2xl hover:bg-orange-500/10 text-orange-500 hover:text-orange-600 transition-all opacity-80 hover:opacity-100" title="Chamar atenção dos Responsáveis">
                         <i data-lucide="megaphone" class="w-6 h-6"></i>

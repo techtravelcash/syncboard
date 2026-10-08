@@ -19,7 +19,12 @@ for key,new in parts.items():
   ids+=1
   other=new.get_element_by_id(node.get('id'))
   assert node.tag==other.tag
-  for attr in protected: assert node.get(attr)==other.get(attr),(node.get('id'),attr)
+  for attr in protected:
+   # TC474 intentionally gives the renamed Calendar action a matching accessible name.
+   if node.get('id') == 'modal-calendar-btn' and attr == 'aria-label':
+    assert other.get(attr) == 'Marcar reunião: abrir rascunho no Google Calendar em nova aba'
+   else:
+    assert node.get(attr)==other.get(attr),(node.get('id'),attr)
   for attr,value in node.items():
    if attr.startswith('data-'):assert other.get(attr)==value,(node.get('id'),attr)
  for field in old.xpath('.//input|.//textarea|.//select'):
