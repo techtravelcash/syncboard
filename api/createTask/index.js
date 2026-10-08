@@ -33,13 +33,17 @@ module.exports = async function (context, req) {
 
     context.log('HTTP trigger function: Criando uma nova tarefa.');
     try {
+        const taskData = req.body;
+        if (!taskData || typeof taskData !== 'object' || Array.isArray(taskData) || (taskData.status !== undefined && taskData.status !== 'todo')) {
+            context.res = {status: 400, body: 'Novas tarefas devem começar em Fila. Designe um homologador ao entrar em Homologação.'};
+            return;
+        }
         const operations = [{ op: 'incr', path: '/currentId', value: 1 }];
         const { resource: updatedCounter } = await container.item("taskCounter", "taskCounter").patch(operations);
         const newNumericId = updatedCounter.currentId;
 
         const newTaskId = `TC-${String(newNumericId).padStart(3, '0')}`;
 
-        const taskData = req.body;
         if (!taskData.title || !taskData.description || !taskData.responsible) {
             context.res = { status: 400, body: "Título, Descrição e Responsável são obrigatórios." };
             return;
@@ -68,7 +72,7 @@ module.exports = async function (context, req) {
             attachments: taskData.attachments || []
         };
 
-        await container.items.create(newTask);
+        const {resource: createdTask} = await container.items.create(newTask);
 
         const responsibleNames = newTask.responsible.map(r => (typeof r === 'object' ? r.name : r)).join(', ');
         await sendDiscordNotification({
@@ -89,10 +93,10 @@ module.exports = async function (context, req) {
 
         context.bindings.signalRMessage = {
             target: 'taskCreated',
-            arguments: [newTask]
+            arguments: [createdTask]
         };
 
-        context.res = { body: newTask };
+        context.res = { body: createdTask };
     } catch (error) {
         context.log.error(`Erro ao criar tarefa: ${error.message}`);
         context.res = { status: 500, body: "Erro ao salvar tarefa." };

@@ -1,4 +1,4 @@
-import { canDecideHomologation, openForwardDialog, canEditHomologationResponsible, homologationEditPayload } from './homologation-v2.js';
+import { canDecideHomologation, openForwardDialog, canEditHomologationResponsible, homologationEditPayload, selectHomologador, homologationAssignmentPayload, canRecoverHomologador } from './homologation-v2.js';
 import { showApprovalSuccess } from './approval-success.js';
 import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
 import { state } from './state.js';
@@ -340,64 +340,42 @@ function updateDragAndDropState() {
     }
 }
 
-// Gerencia o modal de seleção do homologador
-function openHomologadorModal(task, oldStatus, newStatus) {
-    const modal = document.getElementById('homologadorModal');
-    const select = document.getElementById('homologadorSelect');
-    
-    select.innerHTML = '<option value="" disabled selected>Selecione um usuário...</option>' + 
-        state.users.filter(u => u.name !== 'DEFINIR').map(u => `<option value="${u.name}">${u.name}</option>`).join('');
-
-    const confirmBtn = document.getElementById('confirmHomologadorBtn');
-    const cancelBtn = document.getElementById('cancelHomologadorBtn');
-
-    confirmBtn.innerHTML = 'Confirmar';
-    confirmBtn.disabled = false;
-
-    const newConfirmBtn = confirmBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-    modal.classList.remove('hidden');
-    requestAnimationFrame(() => modal.classList.add('show'));
-
-    const closeModal = () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.classList.add('hidden'), 300);
-    };
-
-    newCancelBtn.onclick = closeModal;
-
-    newConfirmBtn.onclick = async () => {
-        const selectedName = select.value;
-        if (!selectedName) return ui.showToast('Selecione um homologador', 'info');
-        
-        newConfirmBtn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> ...';
-        newConfirmBtn.disabled = true;
-        lucide.createIcons();
-
-        const selectedUser = state.users.find(u => u.name === selectedName);
-        const homologadorData = { name: selectedUser.name, picture: selectedUser.picture, email: selectedUser.email };
-
-        try {
-            task.status = newStatus;
-            task.homologador = homologadorData;
-
-            // Enviamos o oldStatus para gerar o log duplo (Status alterado + Homologador designado)
-            await api.updateTask(task.id, { status: newStatus, oldStatus: oldStatus, homologador: homologadorData });
-            
-            ui.renderKanbanView(); 
-            updateDragAndDropState(); 
-            ui.showToast(`Enviado para Homologação com ${selectedName.split(' ')[0]}!`, 'success');
-            closeModal();
-        } catch (error) {
-            console.error(error);
-            ui.showToast('Erro ao mover tarefa', 'error');
-            newConfirmBtn.innerHTML = 'Confirmar'; 
-            newConfirmBtn.disabled = false;
+// Entry and orphan recovery persist only after an explicit email selection.
+const pendingHomologationAssignments = new Set();
+async function openHomologadorModal(task, oldStatus, newStatus, recovery = false) {
+    if (pendingHomologationAssignments.has(task.id)) return;
+    if (recovery && !canRecoverHomologador(task, state.currentUser, state.users)) return;
+    const snapshot = structuredClone(task);
+    pendingHomologationAssignments.add(task.id);
+    let persisted = false;
+    try {
+        state.users = await api.fetchUsers();
+        if (recovery && !canRecoverHomologador(snapshot, state.currentUser, state.users)) {
+            ui.showToast('A recuperação está indisponível. Confira seu acesso e o homologador atual.', 'error');
+            return;
         }
-    };
+        const email = await selectHomologador(state.users, recovery);
+        if (!email) return;
+        const payload = homologationAssignmentPayload(snapshot, email, state.users, recovery);
+        const beforeRequest = state.tasks.find(item => item.id === task.id);
+        const updatedTask = await api.updateTask(task.id, payload);
+        if (updatedTask?.status !== 'homologation' || !updatedTask?.homologador?.email) throw new Error('A atribuição não foi confirmada pelo servidor.');
+        persisted = true;
+        const index = state.tasks.findIndex(item => item.id === task.id);
+        // Do not replace a more recent SignalR update with a delayed HTTP response.
+        if (index !== -1 && state.tasks[index] === beforeRequest) state.tasks[index] = updatedTask;
+        ui.updateActiveView();
+        updateDragAndDropState();
+        const detail = document.getElementById('taskHistoryModal');
+        if (state.lastInteractedTaskId === task.id && detail && !detail.classList.contains('hidden') && detail.classList.contains('show')) ui.renderTaskHistory(task.id, state.returnToNotifications);
+        ui.showToast(recovery ? 'Homologador atribuído. A tarefa aguarda validação.' : 'Tarefa enviada para Homologação!', 'success');
+    } catch (error) {
+        if (persisted) { ui.showToast('Atribuição salva. Recarregue a página para atualizar a visualização.', 'success'); return; }
+        if (error.status === 409) {
+            try { state.tasks = await api.fetchTasks(); ui.updateActiveView(); } catch { /* Never retry an uncertain write automatically. */ }
+        }
+        ui.showToast(error.status === 409 ? 'A tarefa mudou. Reabra a tarefa e confira os dados antes de tentar novamente.' : error.status === 403 ? 'Você não tem permissão para esta atribuição.' : error.status === 400 ? 'O homologador selecionado é inválido ou não está mais cadastrado. Reabra a seleção para atualizar os usuários.' : error.message || 'Não foi possível atribuir o homologador.', 'error');
+    } finally { pendingHomologationAssignments.delete(task.id); }
 }
 
 // --- EVENT LISTENERS ---
@@ -636,7 +614,7 @@ function initializeEventListeners() {
                         state.users = await api.fetchUsers();
                         ui.renderUserManagementView();
                     } catch (err) { 
-                        ui.showToast('Erro ao remover membro.', 'error'); 
+                        ui.showToast(escapePeopleText(err.message || 'Erro ao remover membro.'), 'error');
                     }
                 }
             );
@@ -689,9 +667,14 @@ function initializeEventListeners() {
 
             } catch (error) {
                 console.error(error);
-                ui.showToast('Erro ao guardar as alterações.', 'error');
+                ui.showToast(escapePeopleText(error.message || 'Erro ao guardar as alterações.'), 'error');
             }
         }
+    });
+
+    document.getElementById('modal-recover-homologador-btn')?.addEventListener('click', () => {
+        const task = state.tasks.find(item => item.id === state.lastInteractedTaskId);
+        if (task) openHomologadorModal(task, task.status, task.status, true);
     });
 
     const fileInput = document.getElementById('task-attachment-input');
@@ -735,6 +718,13 @@ function initializeEventListeners() {
 
         try {
             if (savingSnapshot?.status === 'homologation') homologationEditPayload(savingSnapshot, payload, state.currentUser, savingFormSnapshot);
+            if (savingTaskId && savingSnapshot?.status !== 'homologation' && payload.status === 'homologation') {
+                state.users = await api.fetchUsers();
+                if (state.editingTaskId !== savingTaskId || editingTaskSnapshot !== savingSnapshot) return;
+                const email = await selectHomologador(state.users);
+                if (!email || state.editingTaskId !== savingTaskId || editingTaskSnapshot !== savingSnapshot) return;
+                Object.assign(payload, homologationAssignmentPayload(savingSnapshot, email, state.users));
+            }
             const uploadedAttachments = [];
             for (const file of savingFiles) {
                 if (file instanceof File) {
@@ -780,7 +770,7 @@ function initializeEventListeners() {
 
         } catch (error) {
             console.error(error);
-            ui.showToast(error.status === 409 ? 'A tarefa mudou. Cancele e reabra a edição antes de salvar.' : error.status === 403 ? 'Você não tem permissão para esta alteração.' : error.message || 'Erro ao salvar.', 'error');
+            ui.showToast(error.status === 409 ? 'A tarefa mudou. Cancele e reabra a edição antes de salvar.' : error.status === 403 ? 'Você não tem permissão para esta alteração.' : error.status === 400 && payload.status === 'homologation' && savingSnapshot?.status !== 'homologation' ? 'O homologador selecionado é inválido ou não está mais cadastrado. Tente salvar novamente para atualizar a seleção.' : error.message || 'Erro ao salvar.', 'error');
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;

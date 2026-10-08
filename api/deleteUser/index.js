@@ -1,3 +1,4 @@
+const { deleteReviewer } = require('../shared/reviewerGuard');
 const { CosmosClient } = require("@azure/cosmos");
 
 const connectionString = process.env.CosmosDB;
@@ -33,13 +34,13 @@ module.exports = async function (context, req) {
     context.log(`A eliminar utilizador com ID: ${userIdToDelete}`);
 
     try {
-        // O partition key é definido como "/email" no getRoles/index.js e addUser/index.js, 
-        // mas o ID do documento é o próprio email.
-        await usersContainer.item(userIdToDelete, userIdToDelete).delete();
+        await deleteReviewer(usersContainer, database.container("Tasks"), userIdToDelete);
 
         context.res = { status: 204 };
     } catch (error) {
-        if (error.code === 404) {
+        if (error.httpStatus === 409 || Number(error.code || error.statusCode) === 412) {
+            context.res = {status: 409, body: error.message};
+        } else if (error.code === 404) {
             context.res = { status: 404, body: "Utilizador não encontrado." };
         } else {
             context.log.error(`Erro ao eliminar utilizador ${userIdToDelete}: ${error.message}`);

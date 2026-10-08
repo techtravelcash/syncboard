@@ -1,4 +1,4 @@
-import { canDecideHomologation } from './homologation-v2.js';
+import { canDecideHomologation, canRecoverHomologador } from './homologation-v2.js';
 import { taskMatchesUser, taskUserFilterOptions } from './task-user-filter.js';
 import { isFidelityV2, applyFidelityFilters, fidelityFilterCount, resetFidelityFilters, syncFidelityShell, finishFidelityView, renderFidelityCardMarkup } from './fidelity-v2.js';
 import { state } from './state.js';
@@ -1198,6 +1198,14 @@ export function renderTaskHistory(taskId, fromNotification = false) {
         const respEmails = (task.responsible || []).map(r => (typeof r === 'object' ? r?.email : '')).filter(Boolean).join(',');
         const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&details=${encodeURIComponent(task.description || '')}&add=${respEmails}`;
         calendarBtn.href = googleUrl;
+    }
+
+    const recoveryBtn = document.getElementById('modal-recover-homologador-btn');
+    if (recoveryBtn) {
+        const canRecover = canRecoverHomologador(task, state.currentUser, state.users);
+        recoveryBtn.hidden = !canRecover;
+        recoveryBtn.classList.toggle('hidden', !canRecover);
+        recoveryBtn.dataset.taskId = canRecover ? task.id : '';
     }
 
     // Controle de Visibilidade do Botão de Aprovação

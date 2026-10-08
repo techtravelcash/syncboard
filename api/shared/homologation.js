@@ -27,6 +27,46 @@ function fail(status, message) { const error = new Error(message); error.httpSta
 function escapeHtml(value) {
     return String(value || '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
 }
+async function registeredProfile(value, users) {
+    const selected = homologatorEmail(value);
+    if (!selected) return null;
+    const {resources} = await users.items.query({
+        query: 'SELECT * FROM c WHERE LOWER(c.email) = @email',
+        parameters: [{name: '@email', value: selected}]
+    }).fetchAll();
+    return resources.find(user => email(user.email) === selected) || null;
+}
+async function requireReviewer(value, users) {
+    const profile = await registeredProfile(value, users);
+    if (!profile) fail(400, 'Selecione um homologador válido e cadastrado.');
+    return {email: email(profile.email), name: profile.name || profile.displayName || email(profile.email), picture: profile.picture || ''};
+}
+function requireSnapshot(task, body) {
+    if (body.expectedStatus !== task.status || !body.expectedEtag || body.expectedEtag !== task._etag) {
+        fail(409, 'A tarefa foi alterada. Reabra antes de salvar.');
+    }
+}
+async function recoveryUpdate(task, body, req, users) {
+    const actor = actorEmail(req);
+    const principal = actor && JSON.parse(Buffer.from(req.headers['x-ms-client-principal'], 'base64').toString('utf8'));
+    if (!actor || !principal.userRoles.includes('admin') || (await registeredProfile(actor, users))?.isAdmin !== true) {
+        fail(403, 'Somente administradores podem recuperar uma homologação sem homologador.');
+    }
+    if (body.homologationRecovery !== true) fail(400, 'Recuperação inválida.');
+    if (task.status !== 'homologation') fail(409, 'A tarefa não está em homologação.');
+    requireSnapshot(task, body);
+    if (await registeredProfile(task.homologador, users)) fail(409, 'A tarefa já possui homologador válido.');
+    // Recovery never doubles as a generic edit, decision or reassignment of an existing reviewer.
+    const allowed = new Set(['homologationRecovery', 'homologador', 'expectedStatus', 'expectedEtag']);
+    if (Object.keys(body).some(key => !allowed.has(key))) fail(400, 'A recuperação permite apenas designar o homologador.');
+    return {data: {homologador: await requireReviewer(body.homologador, users)}, actor};
+}
+async function validateEntry(task, body, users) {
+    if (task.status === 'homologation' || body.status !== 'homologation') return;
+    requireSnapshot(task, body);
+    // Require an explicit selection for every entry; never inherit a previous cycle's reviewer.
+    body.homologador = await requireReviewer(body.homologador, users);
+}
 async function decisionUpdate(task, body, req, users) {
     const actor = actorEmail(req);
     if (!actor) fail(401, 'Identidade autenticada necessária para homologar.');
@@ -35,7 +75,7 @@ async function decisionUpdate(task, body, req, users) {
     if (task.status !== 'homologation') fail(409, 'Esta tarefa já saiu de homologação. Atualize a lista.');
     if (!body.expectedEtag || body.expectedEtag !== task._etag) fail(409, 'A tarefa foi alterada. Atualize antes de decidir.');
     const assigned = homologatorEmail(task.homologador);
-    if (!assigned || assigned !== actor) fail(403, 'Somente o homologador designado pode decidir.');
+    if (!assigned || assigned !== actor || !await registeredProfile(assigned, users)) fail(403, 'Somente o homologador designado e cadastrado pode decidir.');
     const action = body.homologationAction;
     if (action === 'approve') return {data: {status: 'publication', progress: 100}, actor, action};
     if (action === 'reject') return {data: {status: 'inprogress', homologador: null}, actor, action};
@@ -56,7 +96,7 @@ async function decisionUpdate(task, body, req, users) {
     }]}, actor, action};
 }
 async function responsibleEditUpdate(task, body, req, users) {
-    if (body.expectedStatus !== undefined) {
+    if ((task.status === 'homologation' || body.expectedStatus === 'homologation') && body.expectedStatus !== undefined) {
         if (body.expectedStatus !== 'homologation') fail(400, 'Estado esperado inválido.');
         if (task.status !== 'homologation' || !body.expectedEtag || body.expectedEtag !== task._etag) {
             fail(409, 'A tarefa foi alterada. Reabra a edição antes de salvar.');
@@ -103,4 +143,4 @@ function protectGenericUpdate(task, body, allowResponsibleEdit = false) {
         if (body[key] !== undefined && JSON.stringify(body[key]) !== JSON.stringify(task[key])) fail(403, 'Use uma decisão de homologação para alterar os responsáveis ou o progresso.');
     }
 }
-module.exports = {email, homologatorEmail, actorEmail, decisionUpdate, responsibleEditUpdate, protectGenericUpdate, escapeHtml};
+module.exports = {registeredProfile, requireReviewer, recoveryUpdate, validateEntry, email, homologatorEmail, actorEmail, decisionUpdate, responsibleEditUpdate, protectGenericUpdate, escapeHtml};

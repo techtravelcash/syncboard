@@ -1,7 +1,8 @@
 const { CosmosClient } = require("@azure/cosmos");
 const axios = require('axios');
 const crypto = require('crypto');
-const { decisionUpdate, responsibleEditUpdate, protectGenericUpdate, escapeHtml, homologatorEmail } = require('../shared/homologation');
+const { reserveReviewer } = require('../shared/reviewerGuard');
+const { decisionUpdate, recoveryUpdate, validateEntry, requireReviewer, responsibleEditUpdate, protectGenericUpdate, escapeHtml, homologatorEmail } = require('../shared/homologation');
 
 const connectionString = process.env.CosmosDB;
 const client = new CosmosClient(connectionString);
@@ -48,10 +49,16 @@ module.exports = async function (context, req) {
         const oldStatus = existingTask.status;
         let decision = null;
         let responsibleEdit = null;
-        if (Object.prototype.hasOwnProperty.call(updatedData, 'homologationAction')) {
+        let recovery = null;
+        if (Object.prototype.hasOwnProperty.call(updatedData, 'homologationRecovery')) {
+            recovery = await recoveryUpdate(existingTask, updatedData, req, usersContainer);
+            updatedData = recovery.data;
+        } else if (Object.prototype.hasOwnProperty.call(updatedData, 'homologationAction')) {
             decision = await decisionUpdate(existingTask, updatedData, req, usersContainer);
             updatedData = decision.data;
         } else {
+            updatedData = {...updatedData};
+            await validateEntry(existingTask, updatedData, usersContainer);
             responsibleEdit = await responsibleEditUpdate(existingTask, updatedData, req, usersContainer);
             protectGenericUpdate(existingTask, updatedData, !!responsibleEdit);
             updatedData = {...updatedData};
@@ -59,13 +66,21 @@ module.exports = async function (context, req) {
             // Identity, audit and Cosmos metadata are server-owned, including generic saves.
             for (const key of ['id', 'history', '_etag', '_rid', '_self', '_attachments', '_ts',
                 'actor', 'actorEmail', 'expectedStatus', 'expectedEtag', 'newResponsibleEmail']) delete updatedData[key];
-            if (oldStatus === 'homologation') delete updatedData.homologador;
+            if (oldStatus === 'homologation') {
+                await requireReviewer(existingTask.homologador, usersContainer);
+                delete updatedData.homologador;
+            }
+        }
+
+        if (recovery || (oldStatus !== 'homologation' && updatedData.status === 'homologation')) {
+            await reserveReviewer(usersContainer, existingTask, homologatorEmail(updatedData.homologador));
         }
 
         // --- NOVO SISTEMA DE LOGS / HISTÓRICO ---
         existingTask.history = Array.isArray(existingTask.history) ? [...existingTask.history] : [];
         
         let changes = [];
+        if (recovery) changes.push(`Homologador recuperado por administrador <span class="font-bold text-white">${escapeHtml(recovery.actor)}</span>`);
         if (responsibleEdit) {
             changes.push(`Responsáveis alterados por administrador <span class="font-bold text-white">${escapeHtml(responsibleEdit.actor)}</span>: ${responsibleEdit.responsible.map(user => escapeHtml(`${user.name} (${user.email})`)).join(', ')}`);
         }

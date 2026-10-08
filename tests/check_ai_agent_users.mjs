@@ -3,23 +3,26 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const require = createRequire(import.meta.url);
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const clone = x => JSON.parse(JSON.stringify(x));
 function fixture(handler, initial = []) {
-    const records = new Map(initial.map(x => [x.id, clone(x)]));
+    const records = new Map(initial.map(x => [x.id, clone({...x,_etag:x._etag||'u1'})]));
     const writes=[];
     const container={items:{
-        async create(value){assert.ok(!records.has(value.id));records.set(value.id,clone(value));writes.push(['create',clone(value)]);return {resource:clone(value)};},
+        async create(value){value={...value,_etag:'created-v1'};assert.ok(!records.has(value.id));records.set(value.id,clone(value));writes.push(['create',clone(value)]);return {resource:clone(value)};},
         async upsert(value){records.set(value.id,clone(value));writes.push(['upsert',clone(value)]);},
         readAll(){return {async fetchAll(){return {resources:[...records.values()].map(clone)};}}}
     },item(id,partition){assert.equal(id,partition);return {
         async read(){return {resource:records.has(id)?clone(records.get(id)):undefined};},
         async replace(value){records.set(id,clone(value));writes.push(['replace',clone(value)]);return {resource:clone(value)};},
-        async delete(){records.delete(id);writes.push(['delete',id]);}
+        async patch(operations){const value=records.get(id);assert.ok(value);for(const operation of operations)value[operation.path.slice(1)]=clone(operation.value);value._etag+='x';writes.push(['patch',clone(value)]);return {resource:clone(value)};},
+        async delete(options){if(options?.accessCondition)assert.equal(options.accessCondition.condition,records.get(id)._etag);records.delete(id);writes.push(['delete',id]);}
     };}};
     const module={exports:{}};
-    const CosmosClient=class {database(){return {container:()=>container};}};
-    vm.runInNewContext(read(`api/${handler}/index.js`),{module,require:name=>{assert.equal(name,'@azure/cosmos');return {CosmosClient};},process:{env:{}},Buffer});
+    const CosmosClient=class {database(){return {container:name=>name==='Tasks'?{items:{query(spec,options){assert.equal(options.consistencyLevel,'Strong');return {async fetchAll(){return {resources:[]};}};}}}:container};}};
+    vm.runInNewContext(read(`api/${handler}/index.js`),{module,require:name=>{if(name==='../shared/reviewerGuard')return require('../api/shared/reviewerGuard.js');assert.equal(name,'@azure/cosmos');return {CosmosClient};},process:{env:{}},Buffer});
     async function call(body,roles=['admin'],id='fixture@example.test') {
         const log=()=>{};log.error=()=>{};log.warn=()=>{};
         const context={bindingData:{id},log};
@@ -43,8 +46,9 @@ for(const previous of [undefined,false,true])for(const next of [undefined,false,
     if(next!==undefined)body.isAiAgent=next;
     const response=await f.call(body);assert.equal(response.status,undefined);
     const expected=next===undefined?previous===true:next===true;
-    assert.equal(response.body.isAiAgent,expected);assert.equal(response.body.isAdmin,isAdmin);
-    assert.equal(f.records.size,1);assert.equal(f.records.get(body.email).isAiAgent,expected);
+    const expectedStored = next === undefined && !changeEmail ? previous : expected;
+    assert.equal(response.body.isAiAgent,expectedStored);assert.equal(response.body.isAdmin,isAdmin);
+    assert.equal(f.records.size,1);assert.equal(f.records.get(body.email).isAiAgent,expectedStored);
     assert.equal(f.records.get(body.email).name,'Original');cases++;
 }
 for(const handler of ['addUser','updateUser'])for(const roles of [null,[],['authenticated'],['travelcash_user']]) {

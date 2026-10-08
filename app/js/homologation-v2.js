@@ -105,3 +105,75 @@ export function homologationEditPayload(snapshot, draft, user, initialDraft = sn
     }
     return payload;
 }
+
+// Registered email, never a display name, is the assignment identity.
+export function homologationCandidates(users) {
+    const seen = new Set();
+    return (users || []).filter(user => {
+        const email = normalizeHomologationEmail(user?.email);
+        if (!email || seen.has(email)) return false;
+        seen.add(email);
+        return true;
+    }).sort((a, b) => normalizeHomologationEmail(a.email).localeCompare(normalizeHomologationEmail(b.email)));
+}
+export function hasRegisteredHomologador(task, users) {
+    const email = normalizeHomologationEmail(typeof task?.homologador === 'object' ? task.homologador?.email : task?.homologador);
+    return !!email && homologationCandidates(users).some(user => normalizeHomologationEmail(user.email) === email);
+}
+export function canRecoverHomologador(task, user, users) {
+    return canEditHomologationResponsible(task, user) &&
+        (users || []).some(profile => normalizeHomologationEmail(profile?.email) === homologationUserEmail(user) && profile.isAdmin === true) &&
+        !hasRegisteredHomologador(task, users);
+}
+export function homologationAssignmentPayload(snapshot, email, users, recovery = false) {
+    const normalized = normalizeHomologationEmail(email);
+    if (!normalized || !homologationCandidates(users).some(user => normalizeHomologationEmail(user.email) === normalized)) throw new Error('Selecione um homologador cadastrado com e-mail válido.');
+    if (!snapshot?._etag || !snapshot.status || (recovery ? snapshot.status !== 'homologation' : snapshot.status === 'homologation')) throw new Error('A tarefa mudou. Reabra a tarefa antes de atribuir o homologador.');
+    return {
+        ...(recovery ? {homologationRecovery: true} : {status: 'homologation'}),
+        homologador: {email: normalized}, expectedStatus: snapshot.status, expectedEtag: snapshot._etag
+    };
+}
+
+// One selection dialog; cancel/escape resolves without writing or changing the task.
+export function selectHomologador(users, recovery = false) {
+    if (document.getElementById('homologation-assignment-dialog')) return Promise.resolve(null);
+    return new Promise(resolve => {
+        const dialog = document.createElement('dialog');
+        if (typeof dialog.showModal !== 'function') { resolve(null); return; }
+        dialog.id = 'homologation-assignment-dialog';
+        dialog.className = 'sb-homologation-forward';
+        dialog.setAttribute('aria-labelledby', 'homologation-assignment-title');
+        dialog.setAttribute('aria-describedby', 'homologation-assignment-help');
+        dialog.innerHTML = `<form><h2 id="homologation-assignment-title">${recovery ? 'Recuperar homologador' : 'Enviar para Homologação'}</h2>
+            <p id="homologation-assignment-help">${recovery ? 'Atribua um homologador cadastrado. A tarefa permanece em Homologação, sem aprovação ou alteração dos responsáveis.' : 'Escolha por e-mail quem deverá validar a tarefa.'}</p>
+            <label for="homologation-assignment-person">Homologador</label>
+            <select id="homologation-assignment-person" required autofocus><option value="">Selecione um e-mail</option></select>
+            <p role="status" aria-live="polite"></p>
+            <div class="sb-forward-actions"><button type="button">Cancelar</button><button type="submit">${recovery ? 'Atribuir homologador' : 'Confirmar homologador'}</button></div></form>`;
+        const select = dialog.querySelector('select');
+        const buttons = [...dialog.querySelectorAll('button')];
+        for (const user of homologationCandidates(users)) {
+            const option = document.createElement('option');
+            option.value = normalizeHomologationEmail(user.email);
+            option.textContent = option.value;
+            select.appendChild(option);
+        }
+        if (select.options.length === 1) {
+            dialog.querySelector('[role="status"]').textContent = 'Nenhum homologador com e-mail válido disponível. Cadastre um usuário antes de continuar.';
+            buttons[1].disabled = true;
+        }
+        let selection = null;
+        buttons[0].addEventListener('click', () => dialog.close());
+        dialog.addEventListener('close', () => { dialog.remove(); resolve(selection); }, {once: true});
+        dialog.querySelector('form').addEventListener('submit', event => {
+            event.preventDefault();
+            if (!select.value || buttons[1].disabled) return;
+            selection = select.value;
+            buttons[1].disabled = true;
+            dialog.close();
+        });
+        document.body.appendChild(dialog);
+        try { dialog.showModal(); } catch { dialog.remove(); resolve(null); }
+    });
+}

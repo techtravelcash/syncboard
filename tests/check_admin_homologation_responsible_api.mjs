@@ -26,10 +26,11 @@ function fixture(initial=base) {
         }
     };}};
     const users={items:{query(spec){assert.equal(spec.parameters[0].name,'@email');return {async fetchAll(){return {resources:profiles.filter(p=>p.email.toLowerCase()===spec.parameters[0].value)};}};}}};
+    users.item=(id)=>({async read(){const profile=profiles.find(p=>p.email===id);return {resource:profile?clone({...profile,_etag:profile._etag||'user-v1'}):null};},async replace(value,options){const profile=profiles.find(p=>p.email===id);if(!profile)throw Object.assign(new Error('missing'),{code:404});if(options.accessCondition.condition!==(profile._etag||'user-v1'))throw Object.assign(new Error('stale'),{code:412});Object.assign(profile,clone(value));profile._etag=(profile._etag||'user-v1')+'x';return {resource:clone(profile)};}});
     const notifications={items:{async create(value){notices.push(clone(value));}}};
     const CosmosClient=class{database(){return {container(name){return {Tasks:tasks,Users:users,Notifications:notifications}[name];}};}};
     const module={exports:{}};
-    vm.runInNewContext(source,{module,require(name){if(name==='@azure/cosmos')return {CosmosClient};if(name==='axios')return {async post(url,payload){discord.push(payload);}};if(name==='crypto')return {randomUUID:()=>String(notices.length+1)};if(name==='../shared/homologation')return helpers;throw new Error(name);},process:{env:{DISCORD_WEBHOOK_URL:'mock://discord'}},console});
+    vm.runInNewContext(source,{module,require(name){if(name==='@azure/cosmos')return {CosmosClient};if(name==='axios')return {async post(url,payload){discord.push(payload);}};if(name==='crypto')return {randomUUID:()=>String(notices.length+1)};if(name==='../shared/homologation')return helpers;if(name==='../shared/reviewerGuard')return require('../api/shared/reviewerGuard.js');throw new Error(name);},process:{env:{DISCORD_WEBHOOK_URL:'mock://discord'}},console});
     async function call(body,actor=reviewer,roles=['authenticated','travelcash_user']) {
         const log=()=>{};log.error=()=>{};
         const context={bindingData:{id:base.id},bindings:{},log};

@@ -4,8 +4,8 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 const source=readFileSync(new URL('../app/js/main.js',import.meta.url),'utf8');
 const slice=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
-const dragSource=slice('function updateDragAndDropState() {','// Gerencia o modal de seleção do homologador');
-const modalSource=slice('function openHomologadorModal(','// --- EVENT LISTENERS ---');
+const dragSource=slice('function updateDragAndDropState() {','// Entry and orphan recovery');
+const modalSource=slice('const pendingHomologationAssignments =','// --- EVENT LISTENERS ---');
 function classes(initial=[]){const set=new Set(initial);return{add(...xs){xs.forEach(x=>set.add(x))},remove(...xs){xs.forEach(x=>set.delete(x))},contains(x){return set.has(x)}};}
 function list(status,children=[]){return{dataset:{columnId:status},children,parentElement:{querySelector(){return{textContent:String(children.length)}}},insertBefore(item,anchor){this.children=this.children.filter(x=>x!==item);this.children.splice(this.children.indexOf(anchor),0,item)},appendChild(item){this.children=this.children.filter(x=>x!==item);this.children.push(item)}};}
 async function dragCase(oldStatus,newStatus,{fail=false,same=false}={}){
@@ -26,20 +26,19 @@ result=await dragCase('inprogress','publication');assert.equal(result.task.progr
 result=await dragCase('inprogress','homologation');assert.equal(result.calls.filter(x=>['update','order'].includes(x[0])).length,0);assert.equal(result.calls[0][0],'modal');assert.equal(result.task.status,'inprogress');assert.equal(result.from.children[0].dataset.taskId,'FIX-1');
 result=await dragCase('homologation','inprogress');assert.equal(result.task.status,'homologation');assert.ok(result.task.homologador);assert.equal(result.calls.filter(x=>x[0]==='update'||x[0]==='order').length,0);assert.equal(result.calls.filter(x=>x[0]==='render').length,1);
 result=await dragCase('todo','inprogress',{fail:true});assert.ok(result.calls.some(x=>x[0]==='toast'&&x[2]==='error'));assert.ok(!result.calls.some(x=>x[0]==='toast'&&x[2]==='success'));assert.equal(result.task.status,'inprogress','Known baseline: failed save does not roll optimistic state back');
+const helpers=await import('data:text/javascript;base64,'+Buffer.from(readFileSync(new URL('../app/js/homologation-v2.js',import.meta.url),'utf8')).toString('base64'));
 async function modalCase(action,fail=false){
- const registry={},calls=[];const task={id:'FIX-1',status:'inprogress',progress:50};
- function element(id){const el={id,innerHTML:'',value:'',disabled:false,classList:classes(id==='homologadorModal'?['hidden']:[]),cloneNode(){return element(id)},parentNode:{replaceChild(next,old){registry[old.id]=next}}};return el;}
- ['homologadorModal','homologadorSelect','confirmHomologadorBtn','cancelHomologadorBtn'].forEach(id=>registry[id]=element(id));
+ const calls=[];const task={id:'FIX-1',status:'inprogress',progress:50,_etag:'v1'};
  const state={users:[{name:'Ana Exemplo',email:'ana@example.invalid',picture:'fixture.png'},{name:'DEFINIR'}],tasks:[task]};
- const context={state,document:{getElementById:id=>registry[id]},ui:{showToast:(text,type)=>calls.push(['toast',text,type]),renderKanbanView:()=>calls.push(['render'])},api:{async updateTask(id,payload){calls.push(['update',id,JSON.parse(JSON.stringify(payload))]);if(fail)throw new Error('Fixture failure')}},requestAnimationFrame:fn=>fn(),setTimeout:fn=>fn(),lucide:{createIcons(){}},updateDragAndDropState(){calls.push(['sortable'])},console:{error(){}}};
- vm.createContext(context);vm.runInContext(modalSource,context);context.openHomologadorModal(task,'inprogress','homologation');
- assert.equal(registry.homologadorModal.classList.contains('hidden'),false);assert.doesNotMatch(registry.homologadorSelect.innerHTML,/>DEFINIR</);
- if(action==='cancel')registry.cancelHomologadorBtn.onclick();
- else {registry.homologadorSelect.value=action==='confirm'?'Ana Exemplo':'';await registry.confirmHomologadorBtn.onclick();}
- return{task,registry,calls};
+ const context={...helpers,state,structuredClone,selectHomologador:async()=>action==='confirm'?'ana@example.invalid':null,document:{getElementById:()=>null},ui:{showToast:(text,type)=>calls.push(['toast',text,type]),updateActiveView:()=>calls.push(['render'])},api:{fetchUsers:async()=>state.users,async updateTask(id,payload){calls.push(['update',id,JSON.parse(JSON.stringify(payload))]);if(fail)throw new Error('Fixture failure');return {...task,...payload,_etag:'v2'};}},updateDragAndDropState(){calls.push(['sortable'])},console:{error(){}}};
+ vm.createContext(context);vm.runInContext(modalSource,context);await context.openHomologadorModal(task,'inprogress','homologation');
+ return{task,state,calls};
 }
-result=await modalCase('cancel');assert.equal(result.task.status,'inprogress');assert.equal(result.calls.length,0);assert.ok(result.registry.homologadorModal.classList.contains('hidden'));
-result=await modalCase('empty');assert.equal(result.calls[0][2],'info');assert.equal(result.task.status,'inprogress');
-result=await modalCase('confirm');assert.deepEqual(result.calls.find(x=>x[0]==='update')[2],{status:'homologation',oldStatus:'inprogress',homologador:{name:'Ana Exemplo',picture:'fixture.png',email:'ana@example.invalid'}});assert.ok(result.registry.homologadorModal.classList.contains('hidden'));
-result=await modalCase('confirm',true);assert.ok(result.calls.some(x=>x[0]==='toast'&&x[2]==='error'));assert.ok(!result.calls.some(x=>x[0]==='toast'&&x[2]==='success'));assert.equal(result.registry.confirmHomologadorBtn.disabled,false);assert.equal(result.registry.homologadorModal.classList.contains('hidden'),false);
-console.log(JSON.stringify({status:'passed',checks:['Same-lane reorder payload','Cross-lane transition payload','Publication preserves existing 100 percent assignment','Homologation intercept retains original lane until selection','Leaving homologation requires explicit decision, drag cannot bypass','Drag save error remains error','Dialog cancel performs no mutation','Missing selection does not save','Homologator payload and success close','Homologator save error enables retry without success styling'],knownGap:'Existing optimistic state is not rolled back after API failure; no backend transaction semantics changed',scope:'Real main.js functions in isolated DOM/API mocks; browser drag and server behavior not proven'},null,2));
+result=await modalCase('cancel');assert.equal(result.task.status,'inprogress');assert.equal(result.calls.length,0);
+result=await modalCase('empty');assert.equal(result.calls.length,0);assert.equal(result.task.status,'inprogress');
+result=await modalCase('confirm');assert.deepEqual(result.calls.find(x=>x[0]==='update')[2],{status:'homologation',homologador:{email:'ana@example.invalid'},expectedStatus:'inprogress',expectedEtag:'v1'});assert.equal(result.state.tasks[0].status,'homologation');assert.equal(result.task.status,'inprogress','Original snapshot is not mutated');
+result=await modalCase('confirm',true);assert.ok(result.calls.some(x=>x[0]==='toast'&&x[2]==='error'));assert.ok(!result.calls.some(x=>x[0]==='toast'&&x[2]==='success'));assert.equal(result.task.status,'inprogress');
+// Exercise the actual native selector, including empty choice, cancel, repeated opens,
+// unavailable candidates, and entry/recovery races in the focused TC473 suite.
+await import('./check_required_homologador_ui.mjs');
+console.log(JSON.stringify({status:'passed',checks:['Same-lane reorder payload','Cross-lane transition payload','Publication preserves existing 100 percent assignment','Homologation intercept retains original lane until selection','Leaving homologation requires explicit decision, drag cannot bypass','Drag save error remains error','Dialog cancel performs no mutation','Missing selection does not save','Email-only reviewer payload with opening status and ETag','Homologator save error preserves original task and permits later retry'],knownGap:'Ordinary non-homologation drag still uses existing optimistic behavior; homologation entry waits for server confirmation',scope:'Real main.js functions in isolated DOM/API mocks; browser drag and server behavior not proven'},null,2));

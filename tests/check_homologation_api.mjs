@@ -26,10 +26,11 @@ function fixture(initial=base) {
         }
     };}};
     const users={items:{query(spec){assert.equal(spec.parameters[0].name,'@email');return {async fetchAll(){return {resources:profiles.filter(p=>p.email.toLowerCase()===spec.parameters[0].value)};}};}}};
+    users.item=(id)=>({async read(){const profile=profiles.find(p=>p.email===id);return {resource:profile?clone({...profile,_etag:profile._etag||'user-v1'}):null};},async replace(value,options){const profile=profiles.find(p=>p.email===id);if(!profile)throw Object.assign(new Error('missing'),{code:404});if(options.accessCondition.condition!==(profile._etag||'user-v1'))throw Object.assign(new Error('stale'),{code:412});Object.assign(profile,clone(value));profile._etag=(profile._etag||'user-v1')+'x';return {resource:clone(profile)};}});
     const notifications={items:{async create(value){notices.push(clone(value));}}};
     const CosmosClient=class{database(){return {container(name){return {Tasks:tasks,Users:users,Notifications:notifications}[name];}};}};
     const module={exports:{}};
-    vm.runInNewContext(source,{module,require(name){if(name==='@azure/cosmos')return {CosmosClient};if(name==='axios')return {async post(url,payload){discord.push(payload);}};if(name==='crypto')return {randomUUID:()=>String(notices.length+1)};if(name==='../shared/homologation')return helpers;throw new Error(name);},process:{env:{DISCORD_WEBHOOK_URL:'mock://discord'}},console});
+    vm.runInNewContext(source,{module,require(name){if(name==='@azure/cosmos')return {CosmosClient};if(name==='axios')return {async post(url,payload){discord.push(payload);}};if(name==='crypto')return {randomUUID:()=>String(notices.length+1)};if(name==='../shared/homologation')return helpers;if(name==='../shared/reviewerGuard')return require('../api/shared/reviewerGuard.js');throw new Error(name);},process:{env:{DISCORD_WEBHOOK_URL:'mock://discord'}},console});
     async function call(body,actor=reviewer,roles=['authenticated','travelcash_user']) {
         const log=()=>{};log.error=()=>{};
         const context={bindingData:{id:base.id},bindings:{},log};
@@ -75,7 +76,7 @@ for(const patch of [{status:'publication'},{status:'todo'},{status:'inprogress'}
 {const f=fixture();f.failWrite=true;assert.equal((await f.call(request('reject'))).status,500);assert.equal(f.writes.length,0);assert.equal(f.task.status,'homologation');assert.equal(f.task.history.length,0);assert.equal(f.discord.length,0);assert.equal(f.signals.length,0);f.failWrite=false;assert.equal((await f.call(request('reject'))).status,undefined);assert.equal(f.writes.length,1);}
 {const f=fixture();assert.equal((await f.call(request('cancel'))).status,400);assert.equal(f.writes.length,0);}
 {const f=fixture();f.loseResponse=true;assert.equal((await f.call(request('approve'))).status,500);f.loseResponse=false;assert.equal((await f.call(request('approve'))).status,409);assert.equal(f.writes.length,1);assert.equal(f.task.history.length,1);assert.equal(f.notices.length,0);assert.equal(f.discord.length,0);}
-{const f=fixture({...base,status:'inprogress',homologador:null});assert.equal((await f.call({status:'homologation',homologador:{email:reviewer,name:'Reviewer'}})).status,undefined);assert.equal(f.notices.length,1);assert.equal(f.signals.length,1);assert.equal(f.discord.length,1);assert.equal(f.task.history.length,1);}
+{const f=fixture({...base,status:'inprogress',homologador:null});assert.equal((await f.call({status:'homologation',homologador:{email:reviewer,name:'Reviewer'},expectedStatus:'inprogress',expectedEtag:'v1'})).status,undefined);assert.equal(f.notices.length,1);assert.equal(f.signals.length,1);assert.equal(f.discord.length,1);assert.equal(f.task.history.length,1);}
 for(const invalid of [null,[],false,'invalid']){const f=fixture();assert.equal((await f.call(invalid)).status,400);assert.equal(f.writes.length,0);}
 assert.equal(helpers.actorEmail({headers:{'x-ms-client-principal':'malformed'}}),null);
 for(const roles of [[],['authenticated'],['admin']]) {const f=fixture();assert.equal((await f.call(request('approve'),reviewer,roles)).status,401);assert.equal(f.writes.length,0);}
@@ -105,7 +106,8 @@ for (const handler of ['addComment','deleteComment','editComment','signalRespons
             }
         };}};
         const users={item(){return {async read(){return {resource:{email:reviewer,name:reviewer}};}};},items:{readAll(){return {async fetchAll(){return {resources:[{email:other,name:'Old'}]};}};}}};
-        const notifications={items:{async create(value){if (scenario === 'notification-failure') throw new Error('notification unavailable');alerts.push(clone(value));}}};
+        users.item=(id)=>({async read(){const profile=profiles.find(p=>p.email===id);return {resource:profile?clone({...profile,_etag:profile._etag||'user-v1'}):null};},async replace(value,options){const profile=profiles.find(p=>p.email===id);if(!profile)throw Object.assign(new Error('missing'),{code:404});if(options.accessCondition.condition!==(profile._etag||'user-v1'))throw Object.assign(new Error('stale'),{code:412});Object.assign(profile,clone(value));profile._etag=(profile._etag||'user-v1')+'x';return {resource:clone(profile)};}});
+    const notifications={items:{async create(value){if (scenario === 'notification-failure') throw new Error('notification unavailable');alerts.push(clone(value));}}};
         const CosmosClient=class{database(){return {containers:{async createIfNotExists(){}},container(name){return {Tasks:tasks,Users:users,Notifications:notifications}[name];}};}};
         const module={exports:{}};
         vm.runInNewContext(readFileSync(new URL(`../api/${handler}/index.js`,import.meta.url),'utf8'),{module,Buffer,console,process:{env:{DISCORD_WEBHOOK_URL:'mock://discord'}},require(name){if(name==='@azure/cosmos')return {CosmosClient};if(name==='axios')return {async post(...args){external.push(args);}};if(name==='uuid')return {v4:()=>`uuid-${alerts.length}`};throw new Error(name);}});

@@ -43,7 +43,10 @@ module.exports = async function (context, req) {
             existingUser.picture = pictureClaim ? pictureClaim.val : existingUser.picture;
             
             // Opcional: fazer o upsert em background para não travar o login
-            usersContainer.items.upsert(existingUser).catch(e => context.log.error("Erro no upsert:", e));
+            await usersContainer.item(email, email).patch([
+                {op: 'set', path: '/name', value: existingUser.name || ''},
+                {op: 'set', path: '/picture', value: existingUser.picture || ''}
+            ]);
 
             const responsePayload = {
                 claims: {
