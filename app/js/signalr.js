@@ -1,3 +1,4 @@
+import { refreshProjectTaskCounts } from './project-task-counts.js';
 import { state } from './state.js';
 import { updateActiveView, renderTaskHistory, updateNotificationBadge } from './ui.js';
 import { fetchTasks } from './api.js';
@@ -8,6 +9,7 @@ export function connectToSignalR(onTasksUpdatedCallback) {
         .build();
 
     connection.on('taskCreated', (newTask) => {
+        refreshProjectTaskCounts();
         console.log('SignalR: Nova tarefa recebida!', newTask);
         state.tasks.push(newTask);
         updateActiveView();
@@ -15,6 +17,7 @@ export function connectToSignalR(onTasksUpdatedCallback) {
     });
 
     connection.on('taskUpdated', (updatedTask) => {
+        refreshProjectTaskCounts();
         console.log('SignalR: Tarefa atualizada!', updatedTask);
         const index = state.tasks.findIndex(t => t.id === updatedTask.id);
         
@@ -45,6 +48,7 @@ export function connectToSignalR(onTasksUpdatedCallback) {
     });
 
     connection.on('taskDeleted', (taskId) => {
+        refreshProjectTaskCounts();
         console.log('SignalR: Excluindo tarefa com ID:', taskId);
         state.tasks = state.tasks.filter(t => t.id !== taskId);
         updateActiveView();
@@ -61,6 +65,7 @@ export function connectToSignalR(onTasksUpdatedCallback) {
     async function start() {
         try {
             await connection.start();
+            refreshProjectTaskCounts();
             console.log("Conectado ao SignalR.");
         } catch (err) {
             console.log(err);

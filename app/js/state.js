@@ -2,6 +2,8 @@ export const state = {
     currentUser: null,
     users: [],
     tasks: [],
+    projectTaskCounts: [],
+    projectTaskCountsStatus: 'loading',
     notifications: [],
     currentView: 'home', 
     selectedProject: 'all',

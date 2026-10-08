@@ -969,7 +969,7 @@ export function populateProjectFilter() {
     const container = document.getElementById('orb-project-filters');
     if (!container) return; 
 
-    const projects = [...new Set([...state.tasks.map(t => t.project), ...(state.selectedProject && state.selectedProject !== 'all' ? [state.selectedProject] : [])].filter(Boolean))].sort();
+    const projects = [...new Set([...state.tasks.map(t => t.project), ...(state.projectTaskCounts || []).map(p => p.project), ...(state.selectedProject && state.selectedProject !== 'all' ? [state.selectedProject] : [])].filter(Boolean))].sort();
 
     container.innerHTML = '';
 

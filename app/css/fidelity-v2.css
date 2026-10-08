@@ -21,7 +21,7 @@ body.sb-fidelity-v2 .fidelity-project-link { width: 100%; display: flex; align-i
 body.sb-fidelity-v2 .fidelity-project-link:hover, body.sb-fidelity-v2 .fidelity-project-link[aria-pressed='true'] { background: #273344; color: #fff; }
 body.sb-fidelity-v2 .fidelity-project-dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
 body.sb-fidelity-v2 .fidelity-project-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-body.sb-fidelity-v2 .fidelity-project-count { margin-left: auto; color: #A8B6CB; font-size: 12px; }
+body.sb-fidelity-v2 .fidelity-project-count { flex-shrink: 0; white-space: nowrap; margin-left: auto; color: #A8B6CB; font-size: 12px; }
 body.sb-fidelity-v2 .fidelity-project-empty { padding: 8px 12px; font-size: 12px; color: #A8B6CB; }
 body.sb-fidelity-v2 .fidelity-sidebar-profile { width: 100%; margin-top: auto; padding: 19px 8px 0; border: 0; border-top: 1px solid #303B4F; display: flex; gap: 10px; align-items: center; background: transparent; text-align: left; color: #C4CEDC; cursor: pointer; }
 body.sb-fidelity-v2 #view-switcher-orb + .fidelity-sidebar-profile { margin-top: auto; }

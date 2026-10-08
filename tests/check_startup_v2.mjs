@@ -25,7 +25,7 @@ async function scenario(failure) {
     document: {documentElement:node(), getElementById:id=>elements[id], addEventListener:(name, cb)=> {if(name==='DOMContentLoaded')callback=cb;}},
     api: {getUserInfo:async()=>failure==='missing-session'?null:{userRoles:failure==='denied-role'?[]:['travelcash_user','admin']}, fetchUsers:async()=>{reads++;return[];},fetchTasks:async()=>{reads++;return[];}},
     ui: {populateProjectFilter(){},populateResponsibleFilter(){},updateNotificationBadge(){},updateActiveView(){}},
-    initializeShell(){if(failure==='shell')throw new Error('Simulated shell initialization failure');},
+    initializeProjectTaskCounts(){},initializeShell(){if(failure==='shell')throw new Error('Simulated shell initialization failure');},
     updateUserProfileUI(){},connectToSignalR(){},updateDragAndDropState(){},
     initializeEventListeners(){if(failure==='listeners')throw new Error('Simulated late listener/theme storage failure');},
     checkAndQueueAlerts(){if(failure==='alerts')throw new Error('Simulated late alert initialization failure');},

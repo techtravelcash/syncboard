@@ -1,6 +1,7 @@
+import { initializeProjectTaskCounts } from './project-task-counts.js';
 import { canDecideHomologation, openForwardDialog, canEditHomologationResponsible, homologationEditPayload, selectHomologador, homologationAssignmentPayload, canRecoverHomologador } from './homologation-v2.js';
 import { showApprovalSuccess } from './approval-success.js';
-import { isFidelityV2, hasFidelityFilters, initializeFidelityControls } from './fidelity-v2.js';
+import { isFidelityV2, hasFidelityFilters, initializeFidelityControls, syncFidelityProjectCounts } from './fidelity-v2.js';
 import { state } from './state.js';
 import { escapePeopleText, peopleAvatar } from './people-v2.js';
 import * as api from './api.js';
@@ -155,6 +156,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         ui.populateResponsibleFilter();
         ui.updateNotificationBadge();
         ui.updateActiveView();
+
+        initializeProjectTaskCounts(() => { ui.populateProjectFilter(); syncFidelityProjectCounts(state); });
 
         // 6. Conecta SignalR e Eventos
         connectToSignalR(updateDragAndDropState);

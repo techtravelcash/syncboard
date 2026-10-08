@@ -1,3 +1,4 @@
+import { refreshProjectTaskCounts } from './project-task-counts.js';
 export async function getUserInfo() {
     try {
         const response = await fetch('/.auth/me');
@@ -30,7 +31,9 @@ export async function createTask(taskPayload) {
         body: JSON.stringify(taskPayload),
     });
     if (!response.ok) throw new Error('Falha ao criar a tarefa.');
-    return await response.json();
+    const result = await response.json();
+    refreshProjectTaskCounts();
+    return result;
 }
 
 export async function updateTask(taskId, taskPayload) {
@@ -44,12 +47,15 @@ export async function updateTask(taskId, taskPayload) {
         error.status = response.status;
         throw error;
     }
-    return await response.json();
+    const result = await response.json();
+    refreshProjectTaskCounts();
+    return result;
 }
 
 export async function deleteTask(taskId) {
     const response = await fetch(`/api/deleteTask/${taskId}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('Falha ao excluir a tarefa.');
+    refreshProjectTaskCounts();
 }
 
 export async function addComment(taskId, commentPayload) {
@@ -88,6 +94,7 @@ export async function updateProjectColor(projectName, newColor) {
         body: JSON.stringify({ projectName, newColor })
     });
     if (!response.ok) throw new Error('Falha ao atualizar a cor do projeto.');
+    refreshProjectTaskCounts();
 }
 
 export async function fetchArchivedTasks() {

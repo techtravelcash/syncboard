@@ -61,33 +61,47 @@ export function syncFidelityShell(state, filteredTasks) {
   if (dragNote) dragNote.hidden = state.currentView !== 'kanban' || !hasFidelityFilters(state);
   const add = document.getElementById('addTaskBtn');
   if (add) add.hidden = ['users', 'workspace', 'boards'].includes(state.currentView);
-  syncSelect('fidelity-project-filter', state.tasks.map(task => task.project), state.selectedProject, 'Todos os projetos');
   syncSelect('fidelity-responsible-filter', taskUserFilterOptions(state.tasks, state.selectedResponsible), state.selectedResponsible, 'Todos os usuários');
   syncSelect('fidelity-priority-filter', active.map(task => task.priority), localFilters.priority, 'Todas as prioridades');
   const status = document.getElementById('fidelity-status-filter');
   if (status) status.value = localFilters.status;
-  const projects = new Map();
-  state.tasks.forEach(task => {
-    if (!task.project) return;
-    if (!projects.has(task.project)) projects.set(task.project, { count: 0, color: task.projectColor || '#97B5FB' });
-    if (task.status !== 'done') projects.get(task.project).count++;
-  });
-  const links = document.getElementById('fidelity-project-links');
-  if (links) {
-    // Preserve focus on a project link across loaded-data refreshes.
-    const focusedProject = links.contains(document.activeElement) ? document.activeElement.dataset.fidelityProject : undefined;
-    links.innerHTML = [...projects].sort(([a], [b]) => a.localeCompare(b, 'pt')).map(([name, data]) => `<button type="button" class="fidelity-project-link" data-fidelity-project="${escapeText(name)}" aria-label="Filtrar projeto ${escapeText(name)}: ${data.count} tarefas ativas carregadas" aria-pressed="${normalized(state.selectedProject) === normalized(name)}"><span class="fidelity-project-dot" aria-hidden="true"></span><span class="fidelity-project-name">${escapeText(name)}</span><span class="fidelity-project-count">${data.count}</span></button>`).join('') || '<p class="fidelity-project-empty">Nenhum projeto carregado.</p>';
-    [...links.querySelectorAll('[data-fidelity-project]')].forEach(button => {
-      button.querySelector('.fidelity-project-dot').style.backgroundColor = projects.get(button.dataset.fidelityProject).color;
-      if (button.dataset.fidelityProject === focusedProject) button.focus({preventScroll: true});
-    });
-  }
+  syncFidelityProjectCounts(state);
   // Use exactly the resolved production profile, including the guarded photo fallback.
   setText('fidelity-profile-name', document.getElementById('user-name-display')?.textContent || 'Utilizador');
   setText('fidelity-profile-role', document.getElementById('user-role-display')?.textContent || '');
   const avatar = document.getElementById('fidelity-profile-avatar');
   const source = document.getElementById('user-avatar-menu');
   if (avatar && source && avatar.innerHTML !== source.innerHTML) avatar.innerHTML = source.innerHTML;
+}
+// Refresh counts without replacing the active view or unsaved forms.
+export function syncFidelityProjectCounts(state) {
+  if (!isFidelityV2()) return;
+  syncSelect('fidelity-project-filter', [...state.tasks.map(task => task.project), ...(state.projectTaskCounts || []).map(row => row.project)], state.selectedProject, 'Todos os projetos');
+  const projects = new Map();
+  state.tasks.forEach(task => {
+    if (!task.project) return;
+    if (!projects.has(task.project)) projects.set(task.project, { count: 0, color: task.projectColor || '#97B5FB' });
+    if (task.status !== 'done') projects.get(task.project).count++;
+  });
+  const countsReady = state.projectTaskCountsStatus === 'ready';
+  const projectColors = new Map([...projects].map(([name, data]) => [name, data.color]));
+  if (countsReady) projects.clear(); // The aggregate response is authoritative, including an empty result.
+  for (const row of state.projectTaskCounts || []) {
+    const color = projectColors.get(row.project) || '#97B5FB';
+    projects.set(row.project, { count: row.active, total: row.total, color });
+  }
+  const countLabel = data => countsReady && Number.isSafeInteger(data.total) ? `${data.count}/${data.total}` : '—/—';
+  const countDescription = data => countsReady && Number.isSafeInteger(data.total) ? `${data.count} tarefas ativas de ${data.total} no total, incluindo arquivadas` : state.projectTaskCountsStatus === 'error' ? 'Totais indisponíveis; atualize a página para tentar novamente' : 'Carregando totais';
+  const links = document.getElementById('fidelity-project-links');
+  if (links) {
+    // Preserve focus on a project link across loaded-data refreshes.
+    const focusedProject = links.contains(document.activeElement) ? document.activeElement.dataset.fidelityProject : undefined;
+    links.innerHTML = [...projects].sort(([a], [b]) => a.localeCompare(b, 'pt')).map(([name, data]) => `<button type="button" class="fidelity-project-link" data-fidelity-project="${escapeText(name)}" aria-label="Filtrar projeto ${escapeText(name)}: ${escapeText(countDescription(data))}" aria-pressed="${normalized(state.selectedProject) === normalized(name)}"><span class="fidelity-project-dot" aria-hidden="true"></span><span class="fidelity-project-name">${escapeText(name)}</span><span class="fidelity-project-count" title="${escapeText(countDescription(data))}">${countLabel(data)}</span></button>`).join('') || `<p class="fidelity-project-empty">${countsReady ? 'Nenhum projeto com tarefas.' : state.projectTaskCountsStatus === 'error' ? 'Totais dos projetos indisponíveis.' : 'Carregando projetos…'}</p>`;
+    [...links.querySelectorAll('[data-fidelity-project]')].forEach(button => {
+      button.querySelector('.fidelity-project-dot').style.backgroundColor = projects.get(button.dataset.fidelityProject).color;
+      if (button.dataset.fidelityProject === focusedProject) button.focus({preventScroll: true});
+    });
+  }
 }
 export function finishFidelityView(state) {
   setText('current-view-label', (viewCopy[state.currentView] || viewCopy.home)[0]);
